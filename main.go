@@ -121,6 +121,7 @@ func sendServerError(errorMessage string, w http.ResponseWriter) {
 }
 
 func sendSingleError(errorMessage string, w http.ResponseWriter) {
+	log.Error().Msg(errorMessage)
 	errs := make([]HttpResponseError, 1, 1)
 	errs[0] = HttpResponseError{400, errorMessage}
 	sendSeveralErrors(errs, w)
@@ -141,6 +142,7 @@ func sendSeveralErrors(errors []HttpResponseError, w http.ResponseWriter) {
 		sendServerError(message, w)
 		return
 	}
+	log.Error().Msg("Validation error message sent")
 }
 
 func sendOKAnswer(data interface{}, w http.ResponseWriter) {
@@ -149,7 +151,13 @@ func sendOKAnswer(data interface{}, w http.ResponseWriter) {
 		Errors []error     `json:"errors"`
 	}
 	serializedData, _ := json.Marshal(response{Data: data})
-	_, _ = w.Write(serializedData)
+	_, err := w.Write(serializedData)
+	if err != nil {
+		message := fmt.Sprintf("HttpResponseError while writing is socket: %s", err.Error())
+		sendServerError(message, w)
+		return
+	}
+	log.Error().Msg("OK message sent")
 }
 
 // ====================Validator======================
@@ -199,6 +207,8 @@ func getValidationErrors(err error, trans ut.Translator) []HttpResponseError {
 	return errs
 }
 
+// ====================Handlers======================
+
 func registerHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
@@ -237,10 +247,23 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 
 var owners = NewOwnersStorage()
 
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Do stuff here
+		msg := fmt.Sprintf("URL: %s, METHOD: %s", r.RequestURI, r.Method)
+		log.Info().Msg(msg)
+		// Call the next handler, which can be another middleware in the chain, or the final handler.
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/api/v1/owner", registerHandler).Methods("POST")
+
 	r.Use(mux.CORSMethodMiddleware(r))
+	r.Use(loggingMiddleware)
+
 	http.Handle("/", r)
 	log.Info().Msg("starting server at :8080")
 	srv := &http.Server{
