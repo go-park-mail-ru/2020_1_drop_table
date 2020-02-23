@@ -395,6 +395,8 @@ func sendForbidden(w http.ResponseWriter) {
 }
 
 func getOwnerHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
 	owner, err := owners.Get(id)
 	if err != nil {
