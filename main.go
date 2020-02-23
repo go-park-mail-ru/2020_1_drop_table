@@ -13,6 +13,7 @@ import (
 	enTranslations "gopkg.in/go-playground/validator.v9/translations/en"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -44,7 +45,7 @@ func (ds *OwnersStorage) append(value Owner) Owner {
 }
 
 func (ds *OwnersStorage) get(index int) (Owner, error) {
-	if ds.count() > index {
+	if ds.count() > index && index > 0 {
 		item := ds.owners[index]
 		return item, nil
 	}
@@ -175,6 +176,14 @@ func (s *SessionsStorage) getOwnerByCookie(cookie string) (Owner, error) {
 	return owners.Get(-1)
 }
 
+func hasPermission(owner Owner, cookie string) bool {
+	actualOwner, err := sessions.getOwnerByCookie(cookie)
+	if err != nil {
+		return false
+	}
+	return actualOwner.ID == owner.ID
+}
+
 // ====================HttpResponses======================
 
 type HttpResponseError struct {
@@ -292,6 +301,8 @@ func getValidationErrors(err error, trans ut.Translator) []HttpResponseError {
 // ====================Handlers======================
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
 	jsonData := r.FormValue("jsonData")
 	if jsonData == "" {
 		sendSingleError("empty jsonData field", w)
@@ -326,6 +337,8 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
 	data, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
@@ -371,9 +384,33 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		Name:     "authCookie",
 		Value:    token,
 		Expires:  time.Time{}.AddDate(0, 1, 0),
+		Path:     "/",
 		HttpOnly: true,
 	}
 	http.SetCookie(w, &cookie)
+}
+
+func sendForbidden(w http.ResponseWriter) {
+	sendSingleError("no permissions", w)
+}
+
+func getOwnerHandler(w http.ResponseWriter, r *http.Request) {
+	id, _ := strconv.Atoi(mux.Vars(r)["id"])
+	owner, err := owners.Get(id)
+	if err != nil {
+		sendForbidden(w)
+		return
+	}
+	authCookie, err := r.Cookie("authCookie")
+	if err != nil {
+		sendForbidden(w)
+		return
+	}
+	if !hasPermission(owner, authCookie.Value) {
+		sendForbidden(w)
+		return
+	}
+	sendOKAnswer(owner, w)
 }
 
 // ====================Middleware======================
@@ -393,8 +430,10 @@ var sessions = NewSessionsStorage()
 
 func main() {
 	r := mux.NewRouter()
+
 	r.HandleFunc("/api/v1/owner", registerHandler).Methods("POST")
 	r.HandleFunc("/api/v1/owner/login", loginHandler).Methods("POST")
+	r.HandleFunc("/api/v1/owner/{id:[0-9]+}", getOwnerHandler).Methods("GET")
 
 	r.Use(mux.CORSMethodMiddleware(r))
 	r.Use(loggingMiddleware)
