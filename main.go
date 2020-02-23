@@ -7,9 +7,11 @@ import (
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
 	"github.com/gorilla/mux"
+	"github.com/nu7hatch/gouuid"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/go-playground/validator.v9"
 	enTranslations "gopkg.in/go-playground/validator.v9/translations/en"
+	"io/ioutil"
 	"net/http"
 	"sync"
 	"time"
@@ -46,25 +48,28 @@ func (ds *OwnersStorage) get(index int) (Owner, error) {
 		item := ds.owners[index]
 		return item, nil
 	}
-	return Owner{}, nil
+	notFoundErrorMessage := fmt.Sprintf("Owner not fount")
+	return Owner{}, errors.New(notFoundErrorMessage)
 }
 
 func (ds *OwnersStorage) count() int {
 	return len(ds.owners)
 }
 
-func (ds *OwnersStorage) isRegistered(email string) bool {
+func (ds *OwnersStorage) isRegistered(email, password string) (int, Owner) {
 	for i := 0; i < ds.count(); i++ {
 		owner, _ := ds.Get(i)
-		if owner.Email == email {
-			return true
+		if owner.Email == email && owner.Password == password {
+			return 2, owner
+		} else if owner.Email == email {
+			return 1, Owner{}
 		}
 	}
-	return false
+	return 0, Owner{}
 }
 
 func (ds *OwnersStorage) Append(value Owner) (error, Owner) {
-	if ds.isRegistered(value.Email) {
+	if n, _ := ds.isRegistered(value.Email, ""); n > 0 {
 		err := errors.New("user with this email already existed")
 		return err, Owner{}
 	}
@@ -91,6 +96,83 @@ func (ds *OwnersStorage) Count() int {
 	ds.Lock()
 	defer ds.Unlock()
 	return ds.count()
+}
+
+func (ds *OwnersStorage) Existed(email string, password string) (bool, Owner) {
+	code, owner := ds.isRegistered(email, password)
+	return code == 2, owner
+}
+
+// ====================Session and SessionStorage======================
+
+type Session struct {
+	UserID      int
+	CookieToken string
+}
+
+type SessionsStorage struct {
+	sync.Mutex
+	sessions []Session
+}
+
+func NewSessionsStorage() *SessionsStorage {
+	return &SessionsStorage{}
+}
+
+func (s *SessionsStorage) Count() int {
+	s.Lock()
+	defer s.Unlock()
+	return len(s.sessions)
+}
+
+func (s *SessionsStorage) get(index int) (Session, error) {
+	if len(s.sessions) > index {
+		item := s.sessions[index]
+		return item, nil
+	}
+	return Session{}, nil
+}
+
+func (s *SessionsStorage) Get(index int) (Session, error) {
+	s.Lock()
+	defer s.Unlock()
+	return s.get(index)
+}
+
+func (s *SessionsStorage) createNewSession(userID int) string {
+	u, _ := uuid.NewV4()
+	session := Session{
+		UserID:      userID,
+		CookieToken: u.String(),
+	}
+	s.sessions = append(s.sessions, session)
+	return u.String()
+}
+
+func (s *SessionsStorage) CreateNewSession(value Owner) string {
+	s.Lock()
+	defer s.Unlock()
+	return s.createNewSession(value.ID)
+}
+
+func (s *SessionsStorage) Login(email string, password string) (string, error) {
+	existed, owner := owners.Existed(email, password)
+	if !existed {
+		err := errors.New("user with given login and password does not exist")
+		return "", err
+	}
+	sessionToken := s.CreateNewSession(owner)
+	return sessionToken, nil
+}
+
+func (s *SessionsStorage) getOwnerByCookie(cookie string) (Owner, error) {
+	for i := 0; i < s.Count(); i++ {
+		session, _ := s.Get(i)
+		if session.CookieToken == cookie {
+			return owners.Get(session.UserID)
+		}
+	}
+	return owners.Get(-1)
 }
 
 // ====================HttpResponses======================
@@ -181,14 +263,14 @@ func getValidator() (*validator.Validate, ut.Translator, error) {
 	}
 
 	_ = v.RegisterTranslation("required", trans, func(ut ut.Translator) error {
-		return ut.Add("required", "{0} is a required field", true) // see universal-translator for details
+		return ut.Add("required", "{{0} is a required field aaa}", true)
 	}, func(ut ut.Translator, fe validator.FieldError) string {
 		t, _ := ut.T("required", fe.Field())
 		return t
 	})
 
 	_ = v.RegisterTranslation("email", trans, func(ut ut.Translator) error {
-		return ut.Add("email", "{0} must be a valid email", true) // see universal-translator for details
+		return ut.Add("email", "{0} must be a valid email", true)
 	}, func(ut ut.Translator, fe validator.FieldError) string {
 		t, _ := ut.T("email", fe.Field())
 		return t
@@ -210,8 +292,6 @@ func getValidationErrors(err error, trans ut.Translator) []HttpResponseError {
 // ====================Handlers======================
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
 	jsonData := r.FormValue("jsonData")
 	if jsonData == "" {
 		sendSingleError("empty jsonData field", w)
@@ -245,21 +325,76 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-var owners = NewOwnersStorage()
+func loginHandler(w http.ResponseWriter, r *http.Request) {
+	data, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	if err != nil {
+		message := fmt.Sprintf("HttpResponseError while writing is socket: %s", err.Error())
+		sendServerError(message, w)
+		return
+	}
+
+	if len(data) == 0 {
+		sendSingleError("no JSON body received", w)
+		return
+	}
+
+	type loginForm struct {
+		Email    string `validate:"required"`
+		Password string `validate:"required"`
+	}
+	var form loginForm
+	err = json.Unmarshal(data, &form)
+	if err != nil {
+		message := fmt.Sprintf("HttpResponseError while unmarshelling: %s", err.Error())
+		sendServerError(message, w)
+		return
+	}
+
+	validation, trans, err := getValidator()
+	if err != nil {
+		message := fmt.Sprintf("HttpResponseError in validator: %s", err.Error())
+		sendServerError(message, w)
+		return
+	}
+	if err := validation.Struct(form); err != nil {
+		errs := getValidationErrors(err, trans)
+		sendSeveralErrors(errs, w)
+		return
+	}
+	token, err := sessions.Login(form.Email, form.Password)
+	if err != nil {
+		sendSingleError(err.Error(), w)
+		return
+	}
+	cookie := http.Cookie{
+		Name:     "authCookie",
+		Value:    token,
+		Expires:  time.Time{}.AddDate(0, 1, 0),
+		HttpOnly: true,
+	}
+	http.SetCookie(w, &cookie)
+}
+
+// ====================Middleware======================
 
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Do stuff here
 		msg := fmt.Sprintf("URL: %s, METHOD: %s", r.RequestURI, r.Method)
 		log.Info().Msg(msg)
-		// Call the next handler, which can be another middleware in the chain, or the final handler.
+
 		next.ServeHTTP(w, r)
 	})
 }
 
+// ====================Storage======================
+var owners = NewOwnersStorage()
+var sessions = NewSessionsStorage()
+
 func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/api/v1/owner", registerHandler).Methods("POST")
+	r.HandleFunc("/api/v1/owner/login", loginHandler).Methods("POST")
 
 	r.Use(mux.CORSMethodMiddleware(r))
 	r.Use(loggingMiddleware)
