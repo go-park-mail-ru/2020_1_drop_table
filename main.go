@@ -15,8 +15,11 @@ import (
 	"time"
 )
 
+// ====================Owner and owner storage======================
+
 //ToDo make photos available
 type Owner struct {
+	ID        int       `json:"id"`
 	Name      string    `json:"name" validate:"required,min=2,max=100"`
 	Email     string    `json:"email" validate:"required,email"`
 	Password  string    `json:"password" validate:"required,min=8,max=100"`
@@ -32,8 +35,10 @@ func NewOwnersStorage() *OwnersStorage {
 	return &OwnersStorage{}
 }
 
-func (ds *OwnersStorage) append(value Owner) {
+func (ds *OwnersStorage) append(value Owner) Owner {
+	value.ID = ds.count()
 	ds.owners = append(ds.owners, value)
+	return value
 }
 
 func (ds *OwnersStorage) get(index int) (Owner, error) {
@@ -58,17 +63,16 @@ func (ds *OwnersStorage) isRegistered(email string) bool {
 	return false
 }
 
-func (ds *OwnersStorage) Append(value Owner) error {
+func (ds *OwnersStorage) Append(value Owner) (error, Owner) {
 	if ds.isRegistered(value.Email) {
 		err := errors.New("user with this email already existed")
-		return err
+		return err, Owner{}
 	}
 
 	ds.Lock()
 	defer ds.Unlock()
-	ds.append(value)
-
-	return nil
+	value = ds.append(value)
+	return nil, value
 }
 
 func (ds *OwnersStorage) Get(index int) (Owner, error) {
@@ -89,25 +93,66 @@ func (ds *OwnersStorage) Count() int {
 	return ds.count()
 }
 
-type HttpError struct {
+// ====================HttpResponses======================
+
+type HttpResponseError struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
 }
 
-func (e *HttpError) Error() string {
+func (e *HttpResponseError) Error() string {
 	return fmt.Sprintf("Error: '%s', with status code: %d", e.Message, e.Code)
 }
 
-func createNewHttpError(code int, message string) *HttpError {
-	return &HttpError{
+func createNewHttpError(code int, message string) *HttpResponseError {
+	return &HttpResponseError{
 		Code:    code,
 		Message: message,
 	}
 }
 
 type HttpErrorsSlice struct {
-	Errors []HttpError `json:"errors"`
+	Errors []HttpResponseError `json:"errors"`
 }
+
+func sendServerError(errorMessage string, w http.ResponseWriter) {
+	log.Error().Msg(errorMessage)
+	w.WriteHeader(http.StatusInternalServerError)
+}
+
+func sendSingleError(errorMessage string, w http.ResponseWriter) {
+	errs := make([]HttpResponseError, 1, 1)
+	errs[0] = HttpResponseError{400, errorMessage}
+	sendSeveralErrors(errs, w)
+}
+
+func sendSeveralErrors(errors []HttpResponseError, w http.ResponseWriter) {
+	errs := HttpErrorsSlice{Errors: errors}
+	serializedError, err := json.Marshal(errs)
+	if err != nil {
+		message := fmt.Sprintf("HttpResponseError is json serializing: %s", err.Error())
+		sendServerError(message, w)
+		return
+	}
+
+	_, err = w.Write(serializedError)
+	if err != nil {
+		message := fmt.Sprintf("HttpResponseError while writing is socket: %s", err.Error())
+		sendServerError(message, w)
+		return
+	}
+}
+
+func sendOKAnswer(data interface{}, w http.ResponseWriter) {
+	type response struct {
+		Data   interface{} `json:"data"`
+		Errors []error     `json:"errors"`
+	}
+	serializedData, _ := json.Marshal(response{Data: data})
+	_, _ = w.Write(serializedData)
+}
+
+// ====================Validator======================
 
 //ToDo refactor function
 func getValidator() (*validator.Validate, ut.Translator, error) {
@@ -143,9 +188,9 @@ func getValidator() (*validator.Validate, ut.Translator, error) {
 	return v, trans, nil
 }
 
-func getValidationErrors(err error, trans ut.Translator) []HttpError {
+func getValidationErrors(err error, trans ut.Translator) []HttpResponseError {
 	errorsCount := len(err.(validator.ValidationErrors))
-	errs := make([]HttpError, errorsCount, errorsCount)
+	errs := make([]HttpResponseError, errorsCount, errorsCount)
 
 	for i, e := range err.(validator.ValidationErrors) {
 		validationError := createNewHttpError(400, e.Translate(trans))
@@ -154,38 +199,9 @@ func getValidationErrors(err error, trans ut.Translator) []HttpError {
 	return errs
 }
 
-func sendServerError(errorMessage string, w http.ResponseWriter) {
-	log.Error().Msg(errorMessage)
-	w.WriteHeader(500)
-}
+func registerHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-func sendSingleError(errorMessage string, w http.ResponseWriter) {
-	errs := make([]HttpError, 1, 1)
-	errs[0] = HttpError{400, errorMessage}
-	sendSeveralErrors(errs, w)
-}
-
-func sendSeveralErrors(errors []HttpError, w http.ResponseWriter) {
-	errs := HttpErrorsSlice{}
-	for _, err := range errors {
-		errs.Errors = append(errs.Errors, err)
-	}
-	serializedError, err := json.Marshal(errs)
-	if err != nil {
-		message := fmt.Sprintf("HttpError is json serializing: %s", err.Error())
-		sendServerError(message, w)
-		return
-	}
-
-	_, err = w.Write(serializedError)
-	if err != nil {
-		message := fmt.Sprintf("HttpError while writing is socket: %s", err.Error())
-		sendServerError(message, w)
-		return
-	}
-}
-
-func registerView(w http.ResponseWriter, r *http.Request) {
 	jsonData := r.FormValue("jsonData")
 	if jsonData == "" {
 		sendSingleError("empty jsonData field", w)
@@ -200,7 +216,7 @@ func registerView(w http.ResponseWriter, r *http.Request) {
 
 	validation, trans, err := getValidator()
 	if err != nil {
-		message := fmt.Sprintf("HttpError in validator: %s", err.Error())
+		message := fmt.Sprintf("HttpResponseError in validator: %s", err.Error())
 		sendServerError(message, w)
 		return
 	}
@@ -210,10 +226,11 @@ func registerView(w http.ResponseWriter, r *http.Request) {
 		sendSeveralErrors(errs, w)
 		return
 	}
-
-	if err := owners.Append(ownerObj); err != nil {
+	err, owner := owners.Append(ownerObj)
+	if err != nil {
 		sendSingleError("User with this email already existed", w)
 	}
+	sendOKAnswer(owner, w)
 	return
 }
 
@@ -221,7 +238,8 @@ var owners = NewOwnersStorage()
 
 func main() {
 	r := mux.NewRouter()
-	r.HandleFunc("/api/v1/owner", registerView).Methods("POST")
+	r.HandleFunc("/api/v1/owner", registerHandler).Methods("POST")
+	r.Use(mux.CORSMethodMiddleware(r))
 	http.Handle("/", r)
 	log.Info().Msg("starting server at :8080")
 	srv := &http.Server{
