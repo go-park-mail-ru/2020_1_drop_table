@@ -229,6 +229,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	err, owner := owners.Append(ownerObj)
 	if err != nil {
 		sendSingleError("User with this email already existed", w)
+		return
 	}
 	sendOKAnswer(owner, w)
 	return
