@@ -316,6 +316,24 @@ func getValidationErrors(err error, trans ut.Translator) []HttpResponseError {
 	return errs
 }
 
+// ====================Cookies======================
+
+func setAuthCookie(w http.ResponseWriter, email, password string) {
+	token, err := sessions.Login(email, password)
+	if err != nil {
+		sendSingleError(err.Error(), w)
+		return
+	}
+	cookie := http.Cookie{
+		Name:     "authCookie",
+		Value:    token,
+		Expires:  time.Time{}.AddDate(0, 1, 0),
+		Path:     "/",
+		HttpOnly: true,
+	}
+	http.SetCookie(w, &cookie)
+}
+
 // ====================Handlers======================
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
@@ -350,7 +368,9 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		sendSingleError("User with this email already existed", w)
 		return
 	}
-	//ToDo make auto login
+
+	setAuthCookie(w, owner.Email, owner.Password)
+
 	sendOKAnswer(owner, w)
 	return
 }
@@ -394,19 +414,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		sendSeveralErrors(errs, w)
 		return
 	}
-	token, err := sessions.Login(form.Email, form.Password)
-	if err != nil {
-		sendSingleError(err.Error(), w)
-		return
-	}
-	cookie := http.Cookie{
-		Name:     "authCookie",
-		Value:    token,
-		Expires:  time.Time{}.AddDate(0, 1, 0),
-		Path:     "/",
-		HttpOnly: true,
-	}
-	http.SetCookie(w, &cookie)
+	setAuthCookie(w, form.Email, form.Password)
 }
 
 func sendForbidden(w http.ResponseWriter) {
