@@ -45,7 +45,6 @@ func (ds *OwnersStorage) append(value Owner) Owner {
 }
 
 func (ds *OwnersStorage) set(i int, value Owner) Owner {
-	value.ID = ds.count()
 	ds.owners[i] = value
 	return value
 }
@@ -215,6 +214,10 @@ type Cafe struct {
 	CloseTime   time.Time `json:"closeTime"`
 }
 
+func (c *Cafe) hasPermission(owner Owner) bool {
+	return c.OwnerID == owner.ID
+}
+
 type CafesStorage struct {
 	sync.Mutex
 	cafes []Cafe
@@ -231,7 +234,6 @@ func (cs *CafesStorage) append(value Cafe) Cafe {
 }
 
 func (cs *CafesStorage) set(i int, value Cafe) Cafe {
-	value.ID = cs.count()
 	cs.cafes[i] = value
 	return value
 }
@@ -283,6 +285,18 @@ func (cs *CafesStorage) getOwnerCafes(owner Owner) []Cafe {
 		}
 	}
 	return ownerCafes
+}
+
+func (cs *CafesStorage) Set(i int, value Cafe) (Cafe, error) {
+	if i > cs.Count() {
+		err := errors.New(fmt.Sprintf("no user with id: %d", i))
+		return Cafe{}, err
+	}
+	value.ID = i
+	cs.Lock()
+	defer cs.Unlock()
+	value = cs.set(i, value)
+	return value, nil
 }
 
 // ====================HttpResponses======================
@@ -564,17 +578,19 @@ func EditOwnerHandler(w http.ResponseWriter, r *http.Request) {
 func getOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
+	authCookie, err := r.Cookie("authCookie")
+	if err != nil {
+		sendForbidden(w)
+		return
+	}
+
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
 	owner, err := owners.Get(id)
 	if err != nil {
 		sendForbidden(w)
 		return
 	}
-	authCookie, err := r.Cookie("authCookie")
-	if err != nil {
-		sendForbidden(w)
-		return
-	}
+
 	if !hasPermission(owner, authCookie.Value) {
 		sendForbidden(w)
 		return
@@ -648,6 +664,93 @@ func getCafesListHandler(w http.ResponseWriter, r *http.Request) {
 	sendOKAnswer(ownerCafes, w)
 }
 
+func getCafeHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	authCookie, err := r.Cookie("authCookie")
+	if err != nil {
+		sendForbidden(w)
+		return
+	}
+
+	owner, err := sessions.getOwnerByCookie(authCookie.Value)
+	if err != nil {
+		sendForbidden(w)
+		return
+	}
+
+	id, _ := strconv.Atoi(mux.Vars(r)["id"])
+	cafe, err := cafes.Get(id)
+	if err != nil {
+		sendForbidden(w)
+		return
+	}
+
+	if !cafe.hasPermission(owner) {
+		sendForbidden(w)
+		return
+	}
+	sendOKAnswer(cafe, w)
+}
+
+func EditCafeHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	authCookie, err := r.Cookie("authCookie")
+	if err != nil {
+		sendForbidden(w)
+		return
+	}
+
+	owner, err := sessions.getOwnerByCookie(authCookie.Value)
+	if err != nil {
+		sendForbidden(w)
+		return
+	}
+
+	id, _ := strconv.Atoi(mux.Vars(r)["id"])
+	cafe, err := cafes.Get(id)
+	if err != nil {
+		sendForbidden(w)
+		return
+	}
+
+	if !cafe.hasPermission(owner) {
+		sendForbidden(w)
+		return
+	}
+
+	jsonData := r.FormValue("jsonData")
+	if jsonData == "" {
+		sendSingleError("empty jsonData field", w)
+		return
+	}
+
+	if err := json.Unmarshal([]byte(jsonData), &cafe); err != nil {
+		sendSingleError("json parsing error", w)
+		return
+	}
+
+	validation, trans, err := getValidator()
+	if err != nil {
+		message := fmt.Sprintf("HttpResponseError in validator: %s", err.Error())
+		sendServerError(message, w)
+		return
+	}
+
+	if err := validation.Struct(cafe); err != nil {
+		errs := getValidationErrors(err, trans)
+		sendSeveralErrors(errs, w)
+		return
+	}
+	cafe, err = cafes.Set(id, cafe)
+	if err != nil {
+		sendSingleError(err.Error(), w)
+		return
+	}
+	sendOKAnswer(cafe, w)
+}
+
 // ====================Middleware======================
 
 func loggingMiddleware(next http.Handler) http.Handler {
@@ -675,6 +778,8 @@ func main() {
 	//cafe handlers
 	r.HandleFunc("/api/v1/cafe", createCafeHandler).Methods("POST")
 	r.HandleFunc("/api/v1/cafe", getCafesListHandler).Methods("GET")
+	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}", getCafeHandler).Methods("GET")
+	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}", EditCafeHandler).Methods("PUT")
 
 	r.Use(mux.CORSMethodMiddleware(r))
 	r.Use(loggingMiddleware)
