@@ -427,7 +427,7 @@ func setAuthCookie(w http.ResponseWriter, email, password string) error {
 	cookie := http.Cookie{
 		Name:     "authCookie",
 		Value:    token,
-		Expires:  time.Now().AddDate(0, 1, 0),
+		Expires:  time.Now().Add(time.Hour * 24 * 365),
 		Path:     "/",
 		HttpOnly: true,
 	}
@@ -826,6 +826,10 @@ func MyCORSMethodMiddleware(r *mux.Router) mux.MiddlewareFunc {
 			w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
+
+			if req.Method == "OPTIONS" {
+				return
+			}
 
 			next.ServeHTTP(w, req)
 		})
