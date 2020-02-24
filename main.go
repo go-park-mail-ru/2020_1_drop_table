@@ -429,7 +429,7 @@ func setAuthCookie(w http.ResponseWriter, email, password string) error {
 		Value:    token,
 		Expires:  time.Now().Add(time.Hour * 24 * 365),
 		Path:     "/",
-		HttpOnly: true,
+		HttpOnly: false,
 	}
 	http.SetCookie(w, &cookie)
 	return nil
