@@ -22,11 +22,11 @@ import (
 
 //ToDo make photos available
 type Owner struct {
-	ID        int       `json:"id"`
-	Name      string    `json:"name" validate:"required,min=2,max=100"`
-	Email     string    `json:"email" validate:"required,email"`
-	Password  string    `json:"password" validate:"required,min=8,max=100"`
-	CreatedAt time.Time `json:"createdAt" validate:"required"`
+	ID       int       `json:"id"`
+	Name     string    `json:"name" validate:"required,min=2,max=100"`
+	Email    string    `json:"email" validate:"required,email"`
+	Password string    `json:"password" validate:"required,min=8,max=100"`
+	EditedAt time.Time `json:"editedAt" validate:"required"`
 }
 
 type OwnersStorage struct {
@@ -44,8 +44,14 @@ func (ds *OwnersStorage) append(value Owner) Owner {
 	return value
 }
 
+func (ds *OwnersStorage) set(i int, value Owner) Owner {
+	value.ID = ds.count()
+	ds.owners[i] = value
+	return value
+}
+
 func (ds *OwnersStorage) get(index int) (Owner, error) {
-	if ds.count() > index && index > 0 {
+	if ds.count() > index && index >= 0 {
 		item := ds.owners[index]
 		return item, nil
 	}
@@ -79,6 +85,18 @@ func (ds *OwnersStorage) Append(value Owner) (error, Owner) {
 	defer ds.Unlock()
 	value = ds.append(value)
 	return nil, value
+}
+
+func (ds *OwnersStorage) Set(i int, value Owner) (Owner, error) {
+	if i > ds.Count() {
+		err := errors.New(fmt.Sprintf("no user with id: %d", i))
+		return Owner{}, err
+	}
+
+	ds.Lock()
+	defer ds.Unlock()
+	value = ds.set(i, value)
+	return value, nil
 }
 
 func (ds *OwnersStorage) Get(index int) (Owner, error) {
@@ -308,7 +326,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		sendSingleError("empty jsonData field", w)
 		return
 	}
-	ownerObj := Owner{CreatedAt: time.Now()}
+	ownerObj := Owner{EditedAt: time.Now()}
 
 	if err := json.Unmarshal([]byte(jsonData), &ownerObj); err != nil {
 		sendSingleError("json parsing error", w)
@@ -332,6 +350,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		sendSingleError("User with this email already existed", w)
 		return
 	}
+	//ToDo make auto login
 	sendOKAnswer(owner, w)
 	return
 }
@@ -394,6 +413,58 @@ func sendForbidden(w http.ResponseWriter) {
 	sendSingleError("no permissions", w)
 }
 
+func EditOwnerHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	id, _ := strconv.Atoi(mux.Vars(r)["id"])
+	owner, err := owners.Get(id)
+	if err != nil {
+		sendForbidden(w)
+		return
+	}
+	authCookie, err := r.Cookie("authCookie")
+	if err != nil {
+		sendForbidden(w)
+		return
+	}
+	if !hasPermission(owner, authCookie.Value) {
+		sendForbidden(w)
+		return
+	}
+
+	jsonData := r.FormValue("jsonData")
+	if jsonData == "" {
+		sendSingleError("empty jsonData field", w)
+		return
+	}
+	ownerObj := Owner{EditedAt: time.Now()}
+
+	if err := json.Unmarshal([]byte(jsonData), &ownerObj); err != nil {
+		sendSingleError("json parsing error", w)
+		return
+	}
+
+	validation, trans, err := getValidator()
+	if err != nil {
+		message := fmt.Sprintf("HttpResponseError in validator: %s", err.Error())
+		sendServerError(message, w)
+		return
+	}
+
+	if err := validation.Struct(ownerObj); err != nil {
+		errs := getValidationErrors(err, trans)
+		sendSeveralErrors(errs, w)
+		return
+	}
+
+	owner, err = owners.Set(id, ownerObj)
+	if err != nil {
+		sendSingleError(err.Error(), w)
+		return
+	}
+	sendOKAnswer(owner, w)
+}
+
 func getOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
@@ -436,6 +507,7 @@ func main() {
 	r.HandleFunc("/api/v1/owner", registerHandler).Methods("POST")
 	r.HandleFunc("/api/v1/owner/login", loginHandler).Methods("POST")
 	r.HandleFunc("/api/v1/owner/{id:[0-9]+}", getOwnerHandler).Methods("GET")
+	r.HandleFunc("/api/v1/owner/{id:[0-9]+}", EditOwnerHandler).Methods("PUT")
 
 	r.Use(mux.CORSMethodMiddleware(r))
 	r.Use(loggingMiddleware)
