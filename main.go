@@ -318,11 +318,12 @@ func getValidationErrors(err error, trans ut.Translator) []HttpResponseError {
 
 // ====================Cookies======================
 
-func setAuthCookie(w http.ResponseWriter, email, password string) {
+func setAuthCookie(w http.ResponseWriter, email, password string) error {
 	token, err := sessions.Login(email, password)
 	if err != nil {
 		sendSingleError(err.Error(), w)
-		return
+		err := errors.New("user with given email and password does not exist")
+		return err
 	}
 	cookie := http.Cookie{
 		Name:     "authCookie",
@@ -332,6 +333,7 @@ func setAuthCookie(w http.ResponseWriter, email, password string) {
 		HttpOnly: true,
 	}
 	http.SetCookie(w, &cookie)
+	return nil
 }
 
 // ====================Handlers======================
@@ -369,7 +371,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	setAuthCookie(w, owner.Email, owner.Password)
+	_ = setAuthCookie(w, owner.Email, owner.Password)
 
 	sendOKAnswer(owner, w)
 	return
@@ -414,7 +416,11 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		sendSeveralErrors(errs, w)
 		return
 	}
-	setAuthCookie(w, form.Email, form.Password)
+	err = setAuthCookie(w, form.Email, form.Password)
+	if err != nil {
+		return
+	}
+	sendOKAnswer("", w)
 }
 
 func sendForbidden(w http.ResponseWriter) {
