@@ -827,6 +827,7 @@ func MyCORSMethodMiddleware(r *mux.Router) mux.MiddlewareFunc {
 			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:63342")
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			w.Header().Set("Set-Cookie", "*")
+			w.Header().Set("Vary", "Accept, Cookie")
 			if req.Method == "OPTIONS" {
 				return
 			}
