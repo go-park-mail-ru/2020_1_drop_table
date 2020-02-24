@@ -427,7 +427,7 @@ func setAuthCookie(w http.ResponseWriter, email, password string) error {
 	cookie := http.Cookie{
 		Name:     "authCookie",
 		Value:    token,
-		Expires:  time.Time{}.AddDate(0, 1, 0),
+		Expires:  time.Now().AddDate(0, 1, 0),
 		Path:     "/",
 		HttpOnly: true,
 	}
