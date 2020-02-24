@@ -436,7 +436,6 @@ func setAuthCookie(w http.ResponseWriter, email, password string) error {
 // ====================Handlers======================
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	jsonData := r.FormValue("jsonData")
 	if jsonData == "" {
@@ -474,7 +473,6 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	data, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
@@ -524,7 +522,6 @@ func sendForbidden(w http.ResponseWriter) {
 }
 
 func EditOwnerHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
 	owner, err := owners.Get(id)
@@ -576,7 +573,6 @@ func EditOwnerHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getOwnerHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	authCookie, err := r.Cookie("authCookie")
 	if err != nil {
@@ -599,7 +595,6 @@ func getOwnerHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func createCafeHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	authCookie, err := r.Cookie("authCookie")
 	if err != nil {
@@ -648,7 +643,6 @@ func createCafeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getCafesListHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	authCookie, err := r.Cookie("authCookie")
 	if err != nil {
 		sendForbidden(w)
@@ -665,8 +659,6 @@ func getCafesListHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getCafeHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
 	authCookie, err := r.Cookie("authCookie")
 	if err != nil {
 		sendForbidden(w)
@@ -694,7 +686,6 @@ func getCafeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func EditCafeHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	authCookie, err := r.Cookie("authCookie")
 	if err != nil {
@@ -784,7 +775,7 @@ func main() {
 	r.Use(mux.CORSMethodMiddleware(r))
 	r.Use(loggingMiddleware)
 
-	http.Handle("/", r)
+	http.Handle("/", &MyServer{r})
 	log.Info().Msg("starting server at :8080")
 	srv := &http.Server{
 		Handler:      r,
@@ -794,4 +785,22 @@ func main() {
 	}
 	log.Error().Msg(srv.ListenAndServe().Error())
 
+}
+
+type MyServer struct {
+	r *mux.Router
+}
+
+func (s *MyServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	rw.Header().Set("Content-Type", "*")
+	rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	rw.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	rw.Header().Set("Access-Control-Allow-Credentials", "true")
+	// Stop here if its Preflighted OPTIONS request
+	if req.Method == "OPTIONS" {
+		return
+	}
+	// Lets Gorilla work
+	s.r.ServeHTTP(rw, req)
 }
