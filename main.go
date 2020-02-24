@@ -11,8 +11,10 @@ import (
 	"github.com/rs/zerolog/log"
 	"gopkg.in/go-playground/validator.v9"
 	enTranslations "gopkg.in/go-playground/validator.v9/translations/en"
+	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -742,6 +744,31 @@ func EditCafeHandler(w http.ResponseWriter, r *http.Request) {
 	sendOKAnswer(cafe, w)
 }
 
+func ReceiveFile(w http.ResponseWriter, r *http.Request, folder string) error {
+	_ = r.ParseMultipartForm(32 << 20)
+	file, handler, err := r.FormFile("photo")
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	_, _ = fmt.Fprintf(w, "%v", handler.Header)
+
+	u, _ := uuid.NewV4()
+
+	path := fmt.Sprintf("%s%s", staticFolder, folder)
+	filename := fmt.Sprintf("%s%s", u.String(), handler.Filename)
+	_ = os.MkdirAll(path, os.ModePerm)
+
+	fullFilename := fmt.Sprintf("%s%s", path, filename)
+	f, err := os.OpenFile(fullFilename, os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	_, err = io.Copy(f, file)
+	return err
+}
+
 // ====================Middleware======================
 
 func loggingMiddleware(next http.Handler) http.Handler {
@@ -756,6 +783,10 @@ func loggingMiddleware(next http.Handler) http.Handler {
 var owners = NewOwnersStorage()
 var sessions = NewSessionsStorage()
 var cafes = NewCafesStorage()
+
+// ====================Static settings======================
+
+const staticFolder = "/static/"
 
 func main() {
 	r := mux.NewRouter()
@@ -772,10 +803,10 @@ func main() {
 	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}", getCafeHandler).Methods("GET")
 	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}", EditCafeHandler).Methods("PUT")
 
-	r.Use(mux.CORSMethodMiddleware(r))
+	r.Use(MyCORSMethodMiddleware(r))
 	r.Use(loggingMiddleware)
 
-	http.Handle("/", &MyServer{r})
+	http.Handle("/", r)
 	log.Info().Msg("starting server at :8080")
 	srv := &http.Server{
 		Handler:      r,
@@ -787,20 +818,16 @@ func main() {
 
 }
 
-type MyServer struct {
-	r *mux.Router
-}
+func MyCORSMethodMiddleware(r *mux.Router) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+			w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
 
-func (s *MyServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	rw.Header().Set("Content-Type", "*")
-	rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-	rw.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
-	rw.Header().Set("Access-Control-Allow-Origin", "*")
-	rw.Header().Set("Access-Control-Allow-Credentials", "true")
-	// Stop here if its Preflighted OPTIONS request
-	if req.Method == "OPTIONS" {
-		return
+			next.ServeHTTP(w, req)
+		})
 	}
-	// Lets Gorilla work
-	s.r.ServeHTTP(rw, req)
 }
