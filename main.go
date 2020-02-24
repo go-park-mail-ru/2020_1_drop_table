@@ -202,6 +202,89 @@ func hasPermission(owner Owner, cookie string) bool {
 	return actualOwner.ID == owner.ID
 }
 
+// ====================Cafe and CafeStorage======================
+
+//ToDo make photos available
+type Cafe struct {
+	ID          int       `json:"id"`
+	Name        string    `json:"name" validate:"required,min=2,max=100"`
+	Address     string    `json:"address" validate:"required"`
+	Description string    `json:"description" validate:"required"`
+	OwnerID     int       `json:"ownerID"`
+	OpenTime    time.Time `json:"openTime"`
+	CloseTime   time.Time `json:"closeTime"`
+}
+
+type CafesStorage struct {
+	sync.Mutex
+	cafes []Cafe
+}
+
+func NewCafesStorage() *CafesStorage {
+	return &CafesStorage{}
+}
+
+func (cs *CafesStorage) append(value Cafe) Cafe {
+	value.ID = cs.count()
+	cs.cafes = append(cs.cafes, value)
+	return value
+}
+
+func (cs *CafesStorage) set(i int, value Cafe) Cafe {
+	value.ID = cs.count()
+	cs.cafes[i] = value
+	return value
+}
+
+func (cs *CafesStorage) get(index int) (Cafe, error) {
+	if cs.count() > index && index >= 0 {
+		item := cs.cafes[index]
+		return item, nil
+	}
+	notFoundErrorMessage := fmt.Sprintf("Cafe not fount")
+	return Cafe{}, errors.New(notFoundErrorMessage)
+}
+
+func (cs *CafesStorage) count() int {
+	return len(cs.cafes)
+}
+
+func (cs *CafesStorage) Print() {
+	cs.Lock()
+	defer cs.Unlock()
+	fmt.Println(cs.cafes)
+}
+
+func (cs *CafesStorage) Append(value Cafe) (error, Cafe) {
+	cs.Lock()
+	defer cs.Unlock()
+	value = cs.append(value)
+	return nil, value
+}
+
+func (cs *CafesStorage) Count() int {
+	cs.Lock()
+	defer cs.Unlock()
+	return cs.count()
+}
+
+func (cs *CafesStorage) Get(index int) (Cafe, error) {
+	cs.Lock()
+	defer cs.Unlock()
+	return cs.get(index)
+}
+
+func (cs *CafesStorage) getOwnerCafes(owner Owner) []Cafe {
+	var ownerCafes []Cafe
+	for i := 0; i < cs.Count(); i++ {
+		cafe, _ := cs.Get(i)
+		if cafe.OwnerID == owner.ID {
+			ownerCafes = append(ownerCafes, cafe)
+		}
+	}
+	return ownerCafes
+}
+
 // ====================HttpResponses======================
 
 type HttpResponseError struct {
@@ -372,7 +455,6 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_ = setAuthCookie(w, owner.Email, owner.Password)
-
 	sendOKAnswer(owner, w)
 	return
 }
@@ -500,13 +582,78 @@ func getOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	sendOKAnswer(owner, w)
 }
 
+func createCafeHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	authCookie, err := r.Cookie("authCookie")
+	if err != nil {
+		sendForbidden(w)
+		return
+	}
+
+	owner, err := sessions.getOwnerByCookie(authCookie.Value)
+	if err != nil {
+		sendForbidden(w)
+		return
+	}
+
+	jsonData := r.FormValue("jsonData")
+	if jsonData == "" {
+		sendSingleError("empty jsonData field", w)
+		return
+	}
+	cafeObj := Cafe{OwnerID: owner.ID}
+
+	if err := json.Unmarshal([]byte(jsonData), &cafeObj); err != nil {
+		sendSingleError("json parsing error", w)
+		return
+	}
+
+	validation, trans, err := getValidator()
+	if err != nil {
+		message := fmt.Sprintf("HttpResponseError in validator: %s", err.Error())
+		sendServerError(message, w)
+		return
+	}
+	if err := validation.Struct(cafeObj); err != nil {
+		errs := getValidationErrors(err, trans)
+		sendSeveralErrors(errs, w)
+		return
+	}
+
+	err, cafe := cafes.Append(cafeObj)
+	if err != nil {
+		sendSingleError("User with this email already existed", w)
+		return
+	}
+
+	sendOKAnswer(cafe, w)
+	return
+}
+
+func getCafesListHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	authCookie, err := r.Cookie("authCookie")
+	if err != nil {
+		sendForbidden(w)
+		return
+	}
+	cafes.Print()
+	owner, err := sessions.getOwnerByCookie(authCookie.Value)
+	if err != nil {
+		sendForbidden(w)
+		return
+	}
+	ownerCafes := cafes.getOwnerCafes(owner)
+	sendOKAnswer(ownerCafes, w)
+}
+
 // ====================Middleware======================
 
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		msg := fmt.Sprintf("URL: %s, METHOD: %s", r.RequestURI, r.Method)
 		log.Info().Msg(msg)
-
 		next.ServeHTTP(w, r)
 	})
 }
@@ -514,14 +661,20 @@ func loggingMiddleware(next http.Handler) http.Handler {
 // ====================Storage======================
 var owners = NewOwnersStorage()
 var sessions = NewSessionsStorage()
+var cafes = NewCafesStorage()
 
 func main() {
 	r := mux.NewRouter()
 
+	//Owner handlers
 	r.HandleFunc("/api/v1/owner", registerHandler).Methods("POST")
 	r.HandleFunc("/api/v1/owner/login", loginHandler).Methods("POST")
 	r.HandleFunc("/api/v1/owner/{id:[0-9]+}", getOwnerHandler).Methods("GET")
 	r.HandleFunc("/api/v1/owner/{id:[0-9]+}", EditOwnerHandler).Methods("PUT")
+
+	//cafe handlers
+	r.HandleFunc("/api/v1/cafe", createCafeHandler).Methods("POST")
+	r.HandleFunc("/api/v1/cafe", getCafesListHandler).Methods("GET")
 
 	r.Use(mux.CORSMethodMiddleware(r))
 	r.Use(loggingMiddleware)
