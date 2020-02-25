@@ -75,11 +75,11 @@ func (ds *OwnersStorage) isRegistered(email, password string) (int, Owner) {
 			return 1, Owner{}
 		}
 	}
-	return 0, Owner{}
+	return -1, Owner{}
 }
 
 func (ds *OwnersStorage) Append(value Owner) (error, Owner) {
-	if n, _ := ds.isRegistered(value.Email, ""); n > 0 {
+	if n, _ := ds.isRegistered(value.Email, ""); n != -1 {
 		err := errors.New("user with this email already existed")
 		return err, Owner{}
 	}
@@ -147,15 +147,15 @@ func (s *SessionsStorage) Count() int {
 	return len(s.sessions)
 }
 
-func (s *SessionsStorage) get(index int) (Session, error) {
+func (s *SessionsStorage) get(index int) Session {
 	if len(s.sessions) > index {
 		item := s.sessions[index]
-		return item, nil
+		return item
 	}
-	return Session{}, nil
+	return Session{}
 }
 
-func (s *SessionsStorage) Get(index int) (Session, error) {
+func (s *SessionsStorage) Get(index int) Session {
 	s.Lock()
 	defer s.Unlock()
 	return s.get(index)
@@ -189,7 +189,7 @@ func (s *SessionsStorage) Login(email string, password string) (string, error) {
 
 func (s *SessionsStorage) getOwnerByCookie(cookie string) (Owner, error) {
 	for i := 0; i < s.Count(); i++ {
-		session, _ := s.Get(i)
+		session := s.Get(i)
 		if session.CookieToken == cookie {
 			return owners.Get(session.UserID)
 		}
@@ -361,8 +361,12 @@ func sendOKAnswer(data interface{}, w http.ResponseWriter) {
 		Data   interface{} `json:"data"`
 		Errors []error     `json:"errors"`
 	}
-	serializedData, _ := json.Marshal(response{Data: data})
-	_, err := w.Write(serializedData)
+	serializedData, err := json.Marshal(response{Data: data})
+	if err != nil {
+		log.Error().Msg(err.Error())
+		sendServerError("Server JSON encoding error", w)
+	}
+	_, err = w.Write(serializedData)
 	if err != nil {
 		message := fmt.Sprintf("HttpResponseError while writing is socket: %s", err.Error())
 		sendServerError(message, w)
@@ -404,6 +408,7 @@ func getValidator() (*validator.Validate, ut.Translator, error) {
 		t, _ := ut.T("email", fe.Field())
 		return t
 	})
+
 	return v, trans, nil
 }
 
@@ -441,7 +446,6 @@ func setAuthCookie(w http.ResponseWriter, email, password string) error {
 // ====================Handlers======================
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
-
 	jsonData := r.FormValue("jsonData")
 	if jsonData == "" {
 		sendSingleError("empty jsonData field", w)
@@ -534,7 +538,12 @@ func sendForbidden(w http.ResponseWriter) {
 
 func EditOwnerHandler(w http.ResponseWriter, r *http.Request) {
 
-	id, _ := strconv.Atoi(mux.Vars(r)["id"])
+	id, err := strconv.Atoi(mux.Vars(r)["id"])
+	if err != nil {
+		message := fmt.Sprintf("bad id: %s", mux.Vars(r)["id"])
+		sendSingleError(message, w)
+	}
+
 	owner, err := owners.Get(id)
 	if err != nil {
 		sendForbidden(w)
@@ -595,7 +604,12 @@ func getOwnerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, _ := strconv.Atoi(mux.Vars(r)["id"])
+	id, err := strconv.Atoi(mux.Vars(r)["id"])
+	if err != nil {
+		message := fmt.Sprintf("bad id: %s", mux.Vars(r)["id"])
+		sendSingleError(message, w)
+	}
+
 	owner, err := owners.Get(id)
 	if err != nil {
 		sendForbidden(w)
@@ -691,7 +705,12 @@ func getCafeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, _ := strconv.Atoi(mux.Vars(r)["id"])
+	id, err := strconv.Atoi(mux.Vars(r)["id"])
+	if err != nil {
+		message := fmt.Sprintf("bad id: %s", mux.Vars(r)["id"])
+		sendSingleError(message, w)
+	}
+
 	cafe, err := cafes.Get(id)
 	if err != nil {
 		sendForbidden(w)
@@ -719,7 +738,12 @@ func EditCafeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, _ := strconv.Atoi(mux.Vars(r)["id"])
+	id, err := strconv.Atoi(mux.Vars(r)["id"])
+	if err != nil {
+		message := fmt.Sprintf("bad id: %s", mux.Vars(r)["id"])
+		sendSingleError(message, w)
+	}
+
 	cafeObj, err := cafes.Get(id)
 	if err != nil {
 		sendForbidden(w)
@@ -769,7 +793,11 @@ func EditCafeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func ReceiveFile(r *http.Request, folder string) (string, error) {
-	_ = r.ParseMultipartForm(32 << 20)
+	err := r.ParseMultipartForm(32 << 20)
+	if err != nil {
+		return "", err
+	}
+
 	file, handler, err := r.FormFile("photo")
 	if err != nil {
 		return "", err
@@ -788,7 +816,11 @@ func ReceiveFile(r *http.Request, folder string) (string, error) {
 
 	path := fmt.Sprintf("%s/%s/%s", mediaFolder, folder, string(folderName))
 	filename := fmt.Sprintf("%s.%s", uString, fileType)
+
 	err = os.MkdirAll(path, os.ModePerm)
+	if err != nil {
+		return "", nil
+	}
 
 	fullFilename := fmt.Sprintf("%s/%s", path, filename)
 
