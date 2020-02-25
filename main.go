@@ -13,6 +13,7 @@ import (
 	enTranslations "gopkg.in/go-playground/validator.v9/translations/en"
 	"io"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"strconv"
@@ -306,24 +307,25 @@ func (cs *CafesStorage) Set(i int, value Cafe) (Cafe, error) {
 
 // ====================HttpResponses======================
 
-type HttpResponseError struct {
+type HttpError struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
 }
 
-func (e *HttpResponseError) Error() string {
+type HttpResponse struct {
+	Data   interface{} `json:"data,omitempty"`
+	Errors []HttpError `json:"errors"`
+}
+
+func (e *HttpError) Error() string {
 	return fmt.Sprintf("Error: '%s', with status code: %d", e.Message, e.Code)
 }
 
-func createNewHttpError(code int, message string) *HttpResponseError {
-	return &HttpResponseError{
+func createNewHttpError(code int, message string) *HttpError {
+	return &HttpError{
 		Code:    code,
 		Message: message,
 	}
-}
-
-type HttpErrorsSlice struct {
-	Errors []HttpResponseError `json:"errors"`
 }
 
 func sendServerError(errorMessage string, w http.ResponseWriter) {
@@ -332,47 +334,46 @@ func sendServerError(errorMessage string, w http.ResponseWriter) {
 }
 
 func sendSingleError(errorMessage string, w http.ResponseWriter) {
-	log.Error().Msg(errorMessage)
-	errs := make([]HttpResponseError, 1, 1)
-	errs[0] = HttpResponseError{400, errorMessage}
+	log.Info().Msg(errorMessage)
+	errs := make([]HttpError, 1, 1)
+	errs[0] = HttpError{
+		Code:    400,
+		Message: errorMessage,
+	}
 	sendSeveralErrors(errs, w)
 }
 
-func sendSeveralErrors(errors []HttpResponseError, w http.ResponseWriter) {
-	errs := HttpErrorsSlice{Errors: errors}
-	serializedError, err := json.Marshal(errs)
+func sendSeveralErrors(errors []HttpError, w http.ResponseWriter) {
+	httpResponse := HttpResponse{Errors: errors}
+	serializedError, err := json.Marshal(httpResponse)
 	if err != nil {
-		message := fmt.Sprintf("HttpResponseError is json serializing: %s", err.Error())
+		message := fmt.Sprintf("HttpResponse is json serializing: %s", err.Error())
 		sendServerError(message, w)
 		return
 	}
 
 	_, err = w.Write(serializedError)
 	if err != nil {
-		message := fmt.Sprintf("HttpResponseError while writing is socket: %s", err.Error())
+		message := fmt.Sprintf("HttpResponse while writing is socket: %s", err.Error())
 		sendServerError(message, w)
 		return
 	}
-	log.Error().Msg("Validation error message sent")
+	log.Info().Msg("Validation error message sent")
 }
 
 func sendOKAnswer(data interface{}, w http.ResponseWriter) {
-	type response struct {
-		Data   interface{} `json:"data"`
-		Errors []error     `json:"errors"`
-	}
-	serializedData, err := json.Marshal(response{Data: data})
+	serializedData, err := json.Marshal(HttpResponse{Data: data})
 	if err != nil {
 		log.Error().Msg(err.Error())
 		sendServerError("Server JSON encoding error", w)
 	}
 	_, err = w.Write(serializedData)
 	if err != nil {
-		message := fmt.Sprintf("HttpResponseError while writing is socket: %s", err.Error())
+		message := fmt.Sprintf("HttpResponse while writing is socket: %s", err.Error())
 		sendServerError(message, w)
 		return
 	}
-	log.Error().Msg("OK message sent")
+	log.Info().Msg("OK message sent")
 }
 
 // ====================Validator======================
@@ -396,7 +397,7 @@ func getValidator() (*validator.Validate, ut.Translator, error) {
 	}
 
 	_ = v.RegisterTranslation("required", trans, func(ut ut.Translator) error {
-		return ut.Add("required", "{{0} is a required field aaa}", true)
+		return ut.Add("required", "{{0} is a required field}", true)
 	}, func(ut ut.Translator, fe validator.FieldError) string {
 		t, _ := ut.T("required", fe.Field())
 		return t
@@ -412,9 +413,9 @@ func getValidator() (*validator.Validate, ut.Translator, error) {
 	return v, trans, nil
 }
 
-func getValidationErrors(err error, trans ut.Translator) []HttpResponseError {
+func getValidationErrors(err error, trans ut.Translator) []HttpError {
 	errorsCount := len(err.(validator.ValidationErrors))
-	errs := make([]HttpResponseError, errorsCount, errorsCount)
+	errs := make([]HttpError, errorsCount, errorsCount)
 
 	for i, e := range err.(validator.ValidationErrors) {
 		validationError := createNewHttpError(400, e.Translate(trans))
@@ -425,22 +426,20 @@ func getValidationErrors(err error, trans ut.Translator) []HttpResponseError {
 
 // ====================Cookies======================
 
-func setAuthCookie(w http.ResponseWriter, email, password string) error {
+func getAuthCookie(email, password string) (http.Cookie, error) {
 	token, err := sessions.Login(email, password)
 	if err != nil {
-		sendSingleError(err.Error(), w)
 		err := errors.New("user with given email and password does not exist")
-		return err
+		return http.Cookie{}, err
 	}
 	cookie := http.Cookie{
 		Name:     "authCookie",
 		Value:    token,
-		Expires:  time.Now().Add(time.Hour * 24 * 365),
+		Expires:  time.Now().Add(time.Hour * 24 * 100),
 		Path:     "/",
-		HttpOnly: false,
+		HttpOnly: true,
 	}
-	http.SetCookie(w, &cookie)
-	return nil
+	return cookie, nil
 }
 
 // ====================Handlers======================
@@ -452,16 +451,17 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ownerObj := Owner{EditedAt: time.Now()}
+	ownerObj := Owner{}
 
 	if err := json.Unmarshal([]byte(jsonData), &ownerObj); err != nil {
 		sendSingleError("json parsing error", w)
 		return
 	}
+	ownerObj.EditedAt = time.Now()
 
 	validation, trans, err := getValidator()
 	if err != nil {
-		message := fmt.Sprintf("HttpResponseError in validator: %s", err.Error())
+		message := fmt.Sprintf("HttpResponse in validator: %s", err.Error())
 		sendServerError(message, w)
 		return
 	}
@@ -471,9 +471,15 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		sendSeveralErrors(errs, w)
 		return
 	}
-	filename, err := ReceiveFile(r, "owners")
+
+	err = r.ParseMultipartForm(32 << 20)
 	if err == nil {
-		ownerObj.Photo = fmt.Sprintf("%s/%s", serverUrl, filename)
+		if file, handler, err := r.FormFile("photo"); err == nil {
+			filename, err := ReceiveFile(file, handler, "owners")
+			if err == nil {
+				ownerObj.Photo = fmt.Sprintf("%s/%s", serverUrl, filename)
+			}
+		}
 	}
 
 	err, owner := owners.Append(ownerObj)
@@ -482,7 +488,15 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = setAuthCookie(w, owner.Email, owner.Password)
+	cookie, err := getAuthCookie(ownerObj.Email, ownerObj.Password)
+	if err != nil {
+		message := fmt.Sprintf("troubles with cookies %s", err)
+		log.Error().Msg(message)
+		return
+	} else {
+		http.SetCookie(w, &cookie)
+	}
+
 	sendOKAnswer(owner, w)
 	return
 }
@@ -492,7 +506,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
-		message := fmt.Sprintf("HttpResponseError while writing is socket: %s", err.Error())
+		message := fmt.Sprintf("HttpResponse while writing is socket: %s", err.Error())
 		sendServerError(message, w)
 		return
 	}
@@ -509,14 +523,14 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	var form loginForm
 	err = json.Unmarshal(data, &form)
 	if err != nil {
-		message := fmt.Sprintf("HttpResponseError while unmarshelling: %s", err.Error())
+		message := fmt.Sprintf("HttpResponse while unmarshelling: %s", err.Error())
 		sendServerError(message, w)
 		return
 	}
 
 	validation, trans, err := getValidator()
 	if err != nil {
-		message := fmt.Sprintf("HttpResponseError in validator: %s", err.Error())
+		message := fmt.Sprintf("HttpResponse in validator: %s", err.Error())
 		sendServerError(message, w)
 		return
 	}
@@ -525,10 +539,13 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		sendSeveralErrors(errs, w)
 		return
 	}
-	err = setAuthCookie(w, form.Email, form.Password)
+
+	cookie, err := getAuthCookie(form.Email, form.Password)
 	if err != nil {
+		sendSingleError("no user with given login and password", w)
 		return
 	}
+	http.SetCookie(w, &cookie)
 	sendOKAnswer("", w)
 }
 
@@ -564,16 +581,17 @@ func EditOwnerHandler(w http.ResponseWriter, r *http.Request) {
 		sendSingleError("empty jsonData field", w)
 		return
 	}
-	ownerObj := Owner{EditedAt: time.Now()}
+	ownerObj := Owner{}
 
 	if err := json.Unmarshal([]byte(jsonData), &ownerObj); err != nil {
 		sendSingleError("json parsing error", w)
 		return
 	}
+	ownerObj.EditedAt = time.Now()
 
 	validation, trans, err := getValidator()
 	if err != nil {
-		message := fmt.Sprintf("HttpResponseError in validator: %s", err.Error())
+		message := fmt.Sprintf("HttpResponse in validator: %s", err.Error())
 		sendServerError(message, w)
 		return
 	}
@@ -583,9 +601,15 @@ func EditOwnerHandler(w http.ResponseWriter, r *http.Request) {
 		sendSeveralErrors(errs, w)
 		return
 	}
-	filename, err := ReceiveFile(r, "owners")
+
+	err = r.ParseMultipartForm(32 << 20)
 	if err == nil {
-		ownerObj.Photo = fmt.Sprintf("%s/%s", serverUrl, filename)
+		if file, handler, err := r.FormFile("photo"); err == nil {
+			filename, err := ReceiveFile(file, handler, "owners")
+			if err == nil {
+				ownerObj.Photo = fmt.Sprintf("%s/%s", serverUrl, filename)
+			}
+		}
 	}
 
 	owner, err = owners.Set(id, ownerObj)
@@ -651,7 +675,7 @@ func createCafeHandler(w http.ResponseWriter, r *http.Request) {
 
 	validation, trans, err := getValidator()
 	if err != nil {
-		message := fmt.Sprintf("HttpResponseError in validator: %s", err.Error())
+		message := fmt.Sprintf("HttpResponse in validator: %s", err.Error())
 		sendServerError(message, w)
 		return
 	}
@@ -661,9 +685,14 @@ func createCafeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	filename, err := ReceiveFile(r, "cafes")
+	err = r.ParseMultipartForm(32 << 20)
 	if err == nil {
-		cafeObj.Photo = fmt.Sprintf("%s/%s", serverUrl, filename)
+		if file, handler, err := r.FormFile("photo"); err == nil {
+			filename, err := ReceiveFile(file, handler, "owners")
+			if err == nil {
+				cafeObj.Photo = fmt.Sprintf("%s/%s", serverUrl, filename)
+			}
+		}
 	}
 
 	err, cafe := cafes.Append(cafeObj)
@@ -768,7 +797,7 @@ func EditCafeHandler(w http.ResponseWriter, r *http.Request) {
 
 	validation, trans, err := getValidator()
 	if err != nil {
-		message := fmt.Sprintf("HttpResponseError in validator: %s", err.Error())
+		message := fmt.Sprintf("HttpResponse in validator: %s", err.Error())
 		sendServerError(message, w)
 		return
 	}
@@ -779,9 +808,14 @@ func EditCafeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	filename, err := ReceiveFile(r, "cafes")
+	err = r.ParseMultipartForm(32 << 20)
 	if err == nil {
-		cafeObj.Photo = fmt.Sprintf("%s/%s", serverUrl, filename)
+		if file, handler, err := r.FormFile("photo"); err == nil {
+			filename, err := ReceiveFile(file, handler, "cafe")
+			if err == nil {
+				cafeObj.Photo = fmt.Sprintf("%s/%s", serverUrl, filename)
+			}
+		}
 	}
 
 	cafeObj, err = cafes.Set(id, cafeObj)
@@ -792,16 +826,8 @@ func EditCafeHandler(w http.ResponseWriter, r *http.Request) {
 	sendOKAnswer(cafeObj, w)
 }
 
-func ReceiveFile(r *http.Request, folder string) (string, error) {
-	err := r.ParseMultipartForm(32 << 20)
-	if err != nil {
-		return "", err
-	}
+func ReceiveFile(file multipart.File, handler *multipart.FileHeader, folder string) (string, error) {
 
-	file, handler, err := r.FormFile("photo")
-	if err != nil {
-		return "", err
-	}
 	defer file.Close()
 
 	u, _ := uuid.NewV4()
@@ -817,7 +843,7 @@ func ReceiveFile(r *http.Request, folder string) (string, error) {
 	path := fmt.Sprintf("%s/%s/%s", mediaFolder, folder, string(folderName))
 	filename := fmt.Sprintf("%s.%s", uString, fileType)
 
-	err = os.MkdirAll(path, os.ModePerm)
+	err := os.MkdirAll(path, os.ModePerm)
 	if err != nil {
 		return "", nil
 	}
@@ -841,6 +867,25 @@ func loggingMiddleware(next http.Handler) http.Handler {
 		log.Info().Msg(msg)
 		next.ServeHTTP(w, r)
 	})
+}
+
+func MyCORSMethodMiddleware(r *mux.Router) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "*")
+			w.Header().Set("Access-Control-Allow-Methods",
+				"POST, GET, OPTIONS, PUT, DELETE")
+			w.Header().Set("Access-Control-Allow-Headers", "*")
+			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:63342")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+			w.Header().Set("Set-Cookie", "*")
+			w.Header().Set("Vary", "Accept, Cookie")
+			if req.Method == "OPTIONS" {
+				return
+			}
+			next.ServeHTTP(w, req)
+		})
+	}
 }
 
 // ====================Storage======================
@@ -884,23 +929,4 @@ func main() {
 	}
 	log.Error().Msg(srv.ListenAndServe().Error())
 
-}
-
-func MyCORSMethodMiddleware(r *mux.Router) mux.MiddlewareFunc {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			w.Header().Set("Content-Type", "*")
-			w.Header().Set("Access-Control-Allow-Methods",
-				"POST, GET, OPTIONS, PUT, DELETE")
-			w.Header().Set("Access-Control-Allow-Headers", "*")
-			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:63342")
-			w.Header().Set("Access-Control-Allow-Credentials", "true")
-			w.Header().Set("Set-Cookie", "*")
-			w.Header().Set("Vary", "Accept, Cookie")
-			if req.Method == "OPTIONS" {
-				return
-			}
-			next.ServeHTTP(w, req)
-		})
-	}
 }
