@@ -869,7 +869,7 @@ func loggingMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func MyCORSMethodMiddleware(r *mux.Router) mux.MiddlewareFunc {
+func MyCORSMethodMiddleware(_ *mux.Router) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			w.Header().Set("Content-Type", "*")
