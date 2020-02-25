@@ -16,6 +16,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -25,10 +26,11 @@ import (
 //ToDo make photos available
 type Owner struct {
 	ID       int       `json:"id"`
-	Name     string    `json:"name" validate:"required,min=2,max=100"`
+	Name     string    `json:"name" validate:"required,min=4,max=100"`
 	Email    string    `json:"email" validate:"required,email"`
 	Password string    `json:"password" validate:"required,min=8,max=100"`
 	EditedAt time.Time `json:"editedAt" validate:"required"`
+	Photo    string    `json:"photo"`
 }
 
 type OwnersStorage struct {
@@ -214,6 +216,7 @@ type Cafe struct {
 	OwnerID     int       `json:"ownerID"`
 	OpenTime    time.Time `json:"openTime"`
 	CloseTime   time.Time `json:"closeTime"`
+	Photo       string    `json:"photo"`
 }
 
 func (c *Cafe) hasPermission(owner Owner) bool {
@@ -444,6 +447,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		sendSingleError("empty jsonData field", w)
 		return
 	}
+
 	ownerObj := Owner{EditedAt: time.Now()}
 
 	if err := json.Unmarshal([]byte(jsonData), &ownerObj); err != nil {
@@ -463,6 +467,11 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		sendSeveralErrors(errs, w)
 		return
 	}
+	filename, err := ReceiveFile(r, "owners")
+	if err == nil {
+		ownerObj.Photo = fmt.Sprintf("%s/%s", serverUrl, filename)
+	}
+
 	err, owner := owners.Append(ownerObj)
 	if err != nil {
 		sendSingleError("User with this email already existed", w)
@@ -565,6 +574,10 @@ func EditOwnerHandler(w http.ResponseWriter, r *http.Request) {
 		sendSeveralErrors(errs, w)
 		return
 	}
+	filename, err := ReceiveFile(r, "owners")
+	if err == nil {
+		ownerObj.Photo = fmt.Sprintf("%s/%s", serverUrl, filename)
+	}
 
 	owner, err = owners.Set(id, ownerObj)
 	if err != nil {
@@ -632,6 +645,11 @@ func createCafeHandler(w http.ResponseWriter, r *http.Request) {
 		errs := getValidationErrors(err, trans)
 		sendSeveralErrors(errs, w)
 		return
+	}
+
+	filename, err := ReceiveFile(r, "cafes")
+	if err == nil {
+		cafeObj.Photo = fmt.Sprintf("%s/%s", serverUrl, filename)
 	}
 
 	err, cafe := cafes.Append(cafeObj)
@@ -702,13 +720,13 @@ func EditCafeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
-	cafe, err := cafes.Get(id)
+	cafeObj, err := cafes.Get(id)
 	if err != nil {
 		sendForbidden(w)
 		return
 	}
 
-	if !cafe.hasPermission(owner) {
+	if !cafeObj.hasPermission(owner) {
 		sendForbidden(w)
 		return
 	}
@@ -719,7 +737,7 @@ func EditCafeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := json.Unmarshal([]byte(jsonData), &cafe); err != nil {
+	if err := json.Unmarshal([]byte(jsonData), &cafeObj); err != nil {
 		sendSingleError("json parsing error", w)
 		return
 	}
@@ -731,42 +749,56 @@ func EditCafeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := validation.Struct(cafe); err != nil {
+	if err := validation.Struct(cafeObj); err != nil {
 		errs := getValidationErrors(err, trans)
 		sendSeveralErrors(errs, w)
 		return
 	}
-	cafe, err = cafes.Set(id, cafe)
+
+	filename, err := ReceiveFile(r, "cafes")
+	if err == nil {
+		cafeObj.Photo = fmt.Sprintf("%s/%s", serverUrl, filename)
+	}
+
+	cafeObj, err = cafes.Set(id, cafeObj)
 	if err != nil {
 		sendSingleError(err.Error(), w)
 		return
 	}
-	sendOKAnswer(cafe, w)
+	sendOKAnswer(cafeObj, w)
 }
 
-func ReceiveFile(w http.ResponseWriter, r *http.Request, folder string) error {
+func ReceiveFile(r *http.Request, folder string) (string, error) {
 	_ = r.ParseMultipartForm(32 << 20)
 	file, handler, err := r.FormFile("photo")
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer file.Close()
-	_, _ = fmt.Fprintf(w, "%v", handler.Header)
 
 	u, _ := uuid.NewV4()
+	uString := u.String()
+	folderName := []rune(uString)[:3]
+	separatedFilename := strings.Split(handler.Filename, ".")
+	if len(separatedFilename) <= 1 {
+		err := errors.New("bad filename")
+		return "", err
+	}
+	fileType := separatedFilename[len(separatedFilename)-1]
 
-	path := fmt.Sprintf("%s%s", staticFolder, folder)
-	filename := fmt.Sprintf("%s%s", u.String(), handler.Filename)
-	_ = os.MkdirAll(path, os.ModePerm)
+	path := fmt.Sprintf("%s/%s/%s", mediaFolder, folder, string(folderName))
+	filename := fmt.Sprintf("%s.%s", uString, fileType)
+	err = os.MkdirAll(path, os.ModePerm)
 
-	fullFilename := fmt.Sprintf("%s%s", path, filename)
+	fullFilename := fmt.Sprintf("%s/%s", path, filename)
+
 	f, err := os.OpenFile(fullFilename, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer f.Close()
 	_, err = io.Copy(f, file)
-	return err
+	return fullFilename, err
 }
 
 // ====================Middleware======================
@@ -786,12 +818,13 @@ var cafes = NewCafesStorage()
 
 // ====================Static settings======================
 
-const staticFolder = "/static/"
+const mediaFolder = "media"
+const serverUrl = "http://localhost:8080"
 
 func main() {
 	r := mux.NewRouter()
 
-	//Owner handlers
+	//owner handlers
 	r.HandleFunc("/api/v1/owner", registerHandler).Methods("POST")
 	r.HandleFunc("/api/v1/owner/login", loginHandler).Methods("POST")
 	r.HandleFunc("/api/v1/owner/{id:[0-9]+}", getOwnerHandler).Methods("GET")
@@ -802,6 +835,9 @@ func main() {
 	r.HandleFunc("/api/v1/cafe", getCafesListHandler).Methods("GET")
 	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}", getCafeHandler).Methods("GET")
 	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}", EditCafeHandler).Methods("PUT")
+
+	//static server
+	r.PathPrefix("/media/").Handler(http.StripPrefix("/media/", http.FileServer(http.Dir(mediaFolder))))
 
 	r.Use(MyCORSMethodMiddleware(r))
 	r.Use(loggingMiddleware)
@@ -822,7 +858,8 @@ func MyCORSMethodMiddleware(r *mux.Router) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			w.Header().Set("Content-Type", "*")
-			w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+			w.Header().Set("Access-Control-Allow-Methods",
+				"POST, GET, OPTIONS, PUT, DELETE")
 			w.Header().Set("Access-Control-Allow-Headers", "*")
 			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:63342")
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -831,7 +868,6 @@ func MyCORSMethodMiddleware(r *mux.Router) mux.MiddlewareFunc {
 			if req.Method == "OPTIONS" {
 				return
 			}
-
 			next.ServeHTTP(w, req)
 		})
 	}
