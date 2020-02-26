@@ -22,7 +22,7 @@ import (
 	"time"
 )
 
-// ====================Owner and owner storage======================
+//=====================Owner and owner storage======================
 
 //ToDo make photos available
 type Owner struct {
@@ -126,7 +126,7 @@ func (ds *OwnersStorage) Existed(email string, password string) (bool, Owner) {
 	return code == 2, owner
 }
 
-// ====================Session and SessionStorage======================
+//=====================Session and SessionStorage======================
 
 type Session struct {
 	UserID      int
@@ -212,7 +212,7 @@ func hasPermission(owner Owner, cookie string) bool {
 	return actualOwner.ID == owner.ID
 }
 
-// ====================Cafe and CafeStorage======================
+//=====================Cafe and CafeStorage======================
 
 //ToDo make photos available
 type Cafe struct {
@@ -311,7 +311,7 @@ func (cs *CafesStorage) Set(i int, value Cafe) (Cafe, error) {
 	return value, nil
 }
 
-// ====================HttpResponses======================
+//=====================HttpResponses======================
 
 type HttpError struct {
 	Code    int    `json:"code"`
@@ -382,7 +382,7 @@ func sendOKAnswer(data interface{}, w http.ResponseWriter) {
 	log.Info().Msgf("OK message sent")
 }
 
-// ====================Validator======================
+//=====================Validator======================
 
 //ToDo refactor function
 func getValidator() (*validator.Validate, ut.Translator, error) {
@@ -430,7 +430,7 @@ func getValidationErrors(err error, trans ut.Translator) []HttpError {
 	return errs
 }
 
-// ====================Cookies======================
+//=====================Cookies======================
 
 func getAuthCookie(email, password string) (http.Cookie, error) {
 	expiresDate := time.Now().Add(time.Hour * 24 * 100)
@@ -450,7 +450,7 @@ func getAuthCookie(email, password string) (http.Cookie, error) {
 	return cookie, nil
 }
 
-// ====================Handlers======================
+//=====================Handlers======================
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(32 << 20)
@@ -892,7 +892,7 @@ func ReceiveFile(file multipart.File, handler *multipart.FileHeader, folder stri
 	return fullFilename, err
 }
 
-// ====================Middleware======================
+//=====================Middleware======================
 
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -908,7 +908,8 @@ func MyCORSMethodMiddleware(_ *mux.Router) mux.MiddlewareFunc {
 			w.Header().Set("Content-Type", "*")
 			w.Header().Set("Access-Control-Allow-Methods",
 				"POST, GET, OPTIONS, PUT, DELETE")
-			w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
+			w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length,"+
+				" Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
 			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:63342")
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			w.Header().Set("Set-Cookie", "*")
@@ -921,18 +922,23 @@ func MyCORSMethodMiddleware(_ *mux.Router) mux.MiddlewareFunc {
 	}
 }
 
-// ====================Storage======================
+//=====================Storage======================
+
 var owners = NewOwnersStorage()
 var sessions = NewSessionsStorage()
 var cafes = NewCafesStorage()
 
-// ====================Static settings======================
+//=====================Static settings======================
 
 const mediaFolder = "media"
 const serverUrl = "http://localhost:8080"
 
 func main() {
 	r := mux.NewRouter()
+
+	//Middleware
+	r.Use(MyCORSMethodMiddleware(r))
+	r.Use(loggingMiddleware)
 
 	//owner handlers
 	r.HandleFunc("/api/v1/owner", registerHandler).Methods("POST")
@@ -947,11 +953,19 @@ func main() {
 	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}", getCafeHandler).Methods("GET")
 	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}", EditCafeHandler).Methods("PUT")
 
+	//OPTIONS
+	r.Methods("OPTIONS").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length,"+
+			" Accept-Encoding, X-CSRF-Token, Authorization, Access-Control-Request-Headers,"+
+			" Access-Control-Request-Method, Connection, Host, Origin, User-Agent, Referer, Cache-Control, X-header")
+		w.WriteHeader(http.StatusNoContent)
+		return
+	})
+
 	//static server
 	r.PathPrefix("/media/").Handler(http.StripPrefix("/media/", http.FileServer(http.Dir(mediaFolder))))
-
-	r.Use(MyCORSMethodMiddleware(r))
-	r.Use(loggingMiddleware)
 
 	http.Handle("/", r)
 	log.Info().Msgf("starting server at :8080")
