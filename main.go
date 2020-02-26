@@ -131,6 +131,7 @@ func (ds *OwnersStorage) Existed(email string, password string) (bool, Owner) {
 type Session struct {
 	UserID      int
 	CookieToken string
+	ExpiresDate time.Time
 }
 
 type SessionsStorage struct {
@@ -162,36 +163,41 @@ func (s *SessionsStorage) Get(index int) Session {
 	return s.get(index)
 }
 
-func (s *SessionsStorage) createNewSession(userID int) string {
-	u, _ := uuid.NewV4()
+func (s *SessionsStorage) createNewSession(userID int, expiresDate time.Time) (string, error) {
+	u, err := uuid.NewV4()
+	if err != nil {
+		return "", err
+	}
 	session := Session{
 		UserID:      userID,
 		CookieToken: u.String(),
+		ExpiresDate: expiresDate,
 	}
 	s.sessions = append(s.sessions, session)
-	return u.String()
+	return u.String(), nil
 }
 
-func (s *SessionsStorage) CreateNewSession(value Owner) string {
+func (s *SessionsStorage) CreateNewSession(value Owner, expiresDate time.Time) (string, error) {
 	s.Lock()
 	defer s.Unlock()
-	return s.createNewSession(value.ID)
+	return s.createNewSession(value.ID, expiresDate)
 }
 
-func (s *SessionsStorage) Login(email string, password string) (string, error) {
+func (s *SessionsStorage) Login(email string, password string, expiresDate time.Time) (string, error) {
 	existed, owner := owners.Existed(email, password)
 	if !existed {
 		err := errors.New("user with given login and password does not exist")
 		return "", err
 	}
-	sessionToken := s.CreateNewSession(owner)
-	return sessionToken, nil
+	sessionToken, err := s.CreateNewSession(owner, expiresDate)
+	return sessionToken, err
 }
 
 func (s *SessionsStorage) getOwnerByCookie(cookie string) (Owner, error) {
 	for i := 0; i < s.Count(); i++ {
 		session := s.Get(i)
-		if session.CookieToken == cookie {
+		timeDiff := session.ExpiresDate.Sub(time.Now())
+		if session.CookieToken == cookie && timeDiff > 0 {
 			return owners.Get(session.UserID)
 		}
 	}
@@ -329,12 +335,12 @@ func createNewHttpError(code int, message string) *HttpError {
 }
 
 func sendServerError(errorMessage string, w http.ResponseWriter) {
-	log.Error().Msg(errorMessage)
+	log.Error().Msgf(errorMessage)
 	w.WriteHeader(http.StatusInternalServerError)
 }
 
 func sendSingleError(errorMessage string, w http.ResponseWriter) {
-	log.Info().Msg(errorMessage)
+	log.Info().Msgf(errorMessage)
 	errs := make([]HttpError, 1, 1)
 	errs[0] = HttpError{
 		Code:    400,
@@ -358,13 +364,13 @@ func sendSeveralErrors(errors []HttpError, w http.ResponseWriter) {
 		sendServerError(message, w)
 		return
 	}
-	log.Info().Msg("Validation error message sent")
+	log.Info().Msgf("Validation error message sent")
 }
 
 func sendOKAnswer(data interface{}, w http.ResponseWriter) {
 	serializedData, err := json.Marshal(HttpResponse{Data: data})
 	if err != nil {
-		log.Error().Msg(err.Error())
+		log.Error().Msgf(err.Error())
 		sendServerError("Server JSON encoding error", w)
 	}
 	_, err = w.Write(serializedData)
@@ -373,7 +379,7 @@ func sendOKAnswer(data interface{}, w http.ResponseWriter) {
 		sendServerError(message, w)
 		return
 	}
-	log.Info().Msg("OK message sent")
+	log.Info().Msgf("OK message sent")
 }
 
 // ====================Validator======================
@@ -427,7 +433,9 @@ func getValidationErrors(err error, trans ut.Translator) []HttpError {
 // ====================Cookies======================
 
 func getAuthCookie(email, password string) (http.Cookie, error) {
-	token, err := sessions.Login(email, password)
+	expiresDate := time.Now().Add(time.Hour * 24 * 100)
+	token, err := sessions.Login(email, password, expiresDate)
+
 	if err != nil {
 		err := errors.New("user with given email and password does not exist")
 		return http.Cookie{}, err
@@ -435,7 +443,7 @@ func getAuthCookie(email, password string) (http.Cookie, error) {
 	cookie := http.Cookie{
 		Name:     "authCookie",
 		Value:    token,
-		Expires:  time.Now().Add(time.Hour * 24 * 100),
+		Expires:  expiresDate,
 		Path:     "/",
 		HttpOnly: true,
 	}
@@ -445,6 +453,12 @@ func getAuthCookie(email, password string) (http.Cookie, error) {
 // ====================Handlers======================
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseMultipartForm(32 << 20)
+	if err != nil {
+		sendSingleError("bad request", w)
+		return
+	}
+
 	jsonData := r.FormValue("jsonData")
 	if jsonData == "" {
 		sendSingleError("empty jsonData field", w)
@@ -472,13 +486,10 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = r.ParseMultipartForm(32 << 20)
-	if err == nil {
-		if file, handler, err := r.FormFile("photo"); err == nil {
-			filename, err := ReceiveFile(file, handler, "owners")
-			if err == nil {
-				ownerObj.Photo = fmt.Sprintf("%s/%s", serverUrl, filename)
-			}
+	if file, handler, err := r.FormFile("photo"); err == nil {
+		filename, err := ReceiveFile(file, handler, "owners")
+		if err == nil {
+			ownerObj.Photo = fmt.Sprintf("%s/%s", serverUrl, filename)
 		}
 	}
 
@@ -491,11 +502,10 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	cookie, err := getAuthCookie(ownerObj.Email, ownerObj.Password)
 	if err != nil {
 		message := fmt.Sprintf("troubles with cookies %s", err)
-		log.Error().Msg(message)
+		log.Error().Msgf(message)
 		return
-	} else {
-		http.SetCookie(w, &cookie)
 	}
+	http.SetCookie(w, &cookie)
 
 	sendOKAnswer(owner, w)
 	return
@@ -554,6 +564,11 @@ func sendForbidden(w http.ResponseWriter) {
 }
 
 func EditOwnerHandler(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseMultipartForm(32 << 20)
+	if err != nil {
+		sendSingleError("bad request", w)
+		return
+	}
 
 	id, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
@@ -602,13 +617,10 @@ func EditOwnerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = r.ParseMultipartForm(32 << 20)
-	if err == nil {
-		if file, handler, err := r.FormFile("photo"); err == nil {
-			filename, err := ReceiveFile(file, handler, "owners")
-			if err == nil {
-				ownerObj.Photo = fmt.Sprintf("%s/%s", serverUrl, filename)
-			}
+	if file, handler, err := r.FormFile("photo"); err == nil {
+		filename, err := ReceiveFile(file, handler, "owners")
+		if err == nil {
+			ownerObj.Photo = fmt.Sprintf("%s/%s", serverUrl, filename)
 		}
 	}
 
@@ -648,6 +660,11 @@ func getOwnerHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func createCafeHandler(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseMultipartForm(32 << 20)
+	if err != nil {
+		sendSingleError("bad request", w)
+		return
+	}
 
 	authCookie, err := r.Cookie("authCookie")
 	if err != nil {
@@ -685,13 +702,10 @@ func createCafeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = r.ParseMultipartForm(32 << 20)
-	if err == nil {
-		if file, handler, err := r.FormFile("photo"); err == nil {
-			filename, err := ReceiveFile(file, handler, "owners")
-			if err == nil {
-				cafeObj.Photo = fmt.Sprintf("%s/%s", serverUrl, filename)
-			}
+	if file, handler, err := r.FormFile("photo"); err == nil {
+		filename, err := ReceiveFile(file, handler, "owners")
+		if err == nil {
+			cafeObj.Photo = fmt.Sprintf("%s/%s", serverUrl, filename)
 		}
 	}
 
@@ -705,13 +719,26 @@ func createCafeHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+func getCurrentOwnerHandler(w http.ResponseWriter, r *http.Request) {
+	authCookie, err := r.Cookie("authCookie")
+	if err != nil {
+		sendForbidden(w)
+		return
+	}
+	owner, err := sessions.getOwnerByCookie(authCookie.Value)
+	if err != nil {
+		sendForbidden(w)
+		return
+	}
+	sendOKAnswer(owner, w)
+}
+
 func getCafesListHandler(w http.ResponseWriter, r *http.Request) {
 	authCookie, err := r.Cookie("authCookie")
 	if err != nil {
 		sendForbidden(w)
 		return
 	}
-	cafes.Print()
 	owner, err := sessions.getOwnerByCookie(authCookie.Value)
 	if err != nil {
 		sendForbidden(w)
@@ -754,6 +781,11 @@ func getCafeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func EditCafeHandler(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseMultipartForm(32 << 20)
+	if err != nil {
+		sendSingleError("bad request", w)
+		return
+	}
 
 	authCookie, err := r.Cookie("authCookie")
 	if err != nil {
@@ -808,13 +840,10 @@ func EditCafeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = r.ParseMultipartForm(32 << 20)
-	if err == nil {
-		if file, handler, err := r.FormFile("photo"); err == nil {
-			filename, err := ReceiveFile(file, handler, "cafe")
-			if err == nil {
-				cafeObj.Photo = fmt.Sprintf("%s/%s", serverUrl, filename)
-			}
+	if file, handler, err := r.FormFile("photo"); err == nil {
+		filename, err := ReceiveFile(file, handler, "cafe")
+		if err == nil {
+			cafeObj.Photo = fmt.Sprintf("%s/%s", serverUrl, filename)
 		}
 	}
 
@@ -830,7 +859,11 @@ func ReceiveFile(file multipart.File, handler *multipart.FileHeader, folder stri
 
 	defer file.Close()
 
-	u, _ := uuid.NewV4()
+	u, err := uuid.NewV4()
+	if err != nil {
+		return "", err
+	}
+
 	uString := u.String()
 	folderName := []rune(uString)[:3]
 	separatedFilename := strings.Split(handler.Filename, ".")
@@ -843,7 +876,7 @@ func ReceiveFile(file multipart.File, handler *multipart.FileHeader, folder stri
 	path := fmt.Sprintf("%s/%s/%s", mediaFolder, folder, string(folderName))
 	filename := fmt.Sprintf("%s.%s", uString, fileType)
 
-	err := os.MkdirAll(path, os.ModePerm)
+	err = os.MkdirAll(path, os.ModePerm)
 	if err != nil {
 		return "", nil
 	}
@@ -864,7 +897,7 @@ func ReceiveFile(file multipart.File, handler *multipart.FileHeader, folder stri
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		msg := fmt.Sprintf("URL: %s, METHOD: %s", r.RequestURI, r.Method)
-		log.Info().Msg(msg)
+		log.Info().Msgf(msg)
 		next.ServeHTTP(w, r)
 	})
 }
@@ -875,7 +908,7 @@ func MyCORSMethodMiddleware(_ *mux.Router) mux.MiddlewareFunc {
 			w.Header().Set("Content-Type", "*")
 			w.Header().Set("Access-Control-Allow-Methods",
 				"POST, GET, OPTIONS, PUT, DELETE")
-			w.Header().Set("Access-Control-Allow-Headers", "*")
+			w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
 			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:63342")
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			w.Header().Set("Set-Cookie", "*")
@@ -905,6 +938,7 @@ func main() {
 	r.HandleFunc("/api/v1/owner", registerHandler).Methods("POST")
 	r.HandleFunc("/api/v1/owner/login", loginHandler).Methods("POST")
 	r.HandleFunc("/api/v1/owner/{id:[0-9]+}", getOwnerHandler).Methods("GET")
+	r.HandleFunc("/api/v1/getCurrentOwner/", getCurrentOwnerHandler).Methods("GET")
 	r.HandleFunc("/api/v1/owner/{id:[0-9]+}", EditOwnerHandler).Methods("PUT")
 
 	//cafe handlers
@@ -920,13 +954,13 @@ func main() {
 	r.Use(loggingMiddleware)
 
 	http.Handle("/", r)
-	log.Info().Msg("starting server at :8080")
+	log.Info().Msgf("starting server at :8080")
 	srv := &http.Server{
 		Handler:      r,
 		Addr:         "127.0.0.1:8080",
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
-	log.Error().Msg(srv.ListenAndServe().Error())
+	log.Error().Msgf(srv.ListenAndServe().Error())
 
 }
