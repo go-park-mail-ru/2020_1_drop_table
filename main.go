@@ -711,7 +711,7 @@ func createCafeHandler(w http.ResponseWriter, r *http.Request) {
 
 	err, cafe := cafes.Append(cafeObj)
 	if err != nil {
-		sendSingleError("User with this email already existed", w)
+		sendSingleError("user with this email already existed", w)
 		return
 	}
 
