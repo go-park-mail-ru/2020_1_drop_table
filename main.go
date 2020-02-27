@@ -107,6 +107,7 @@ func (ds *OwnersStorage) Set(i int, value Owner) (Owner, error) {
 		err := errors.New(fmt.Sprintf("no user with id: %d", i))
 		return Owner{}, err
 	}
+	value.ID = i
 
 	ds.Lock()
 	defer ds.Unlock()
