@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -21,6 +23,14 @@ import (
 	"sync"
 	"time"
 )
+
+//=====================Hasher func======================
+
+func GetMD5Hash(text string) string {
+	hasher := md5.New()
+	hasher.Write([]byte(text))
+	return hex.EncodeToString(hasher.Sum(nil))
+}
 
 //=====================Owner and owner storage======================
 
@@ -68,6 +78,7 @@ func (ds *OwnersStorage) count() int {
 }
 
 func (ds *OwnersStorage) isRegistered(email, password string) (int, Owner) {
+	password = GetMD5Hash(password)
 	for i := 0; i < ds.count(); i++ {
 		owner, _ := ds.Get(i)
 		if owner.Email == email && owner.Password == password {
@@ -84,7 +95,7 @@ func (ds *OwnersStorage) Append(value Owner) (error, Owner) {
 		err := errors.New("user with this email already existed")
 		return err, Owner{}
 	}
-
+	value.Password = GetMD5Hash(value.Password)
 	ds.Lock()
 	defer ds.Unlock()
 	value = ds.append(value)
