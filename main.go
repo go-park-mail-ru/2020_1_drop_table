@@ -352,7 +352,6 @@ func sendServerError(errorMessage string, w http.ResponseWriter) {
 }
 
 func sendSingleError(errorMessage string, w http.ResponseWriter) {
-	log.Info().Msgf(errorMessage)
 	errs := make([]HttpError, 1, 1)
 	errs[0] = HttpError{
 		Code:    400,
@@ -376,7 +375,7 @@ func sendSeveralErrors(errors []HttpError, w http.ResponseWriter) {
 		sendServerError(message, w)
 		return
 	}
-	log.Info().Msgf("Validation error message sent")
+	log.Info().Msgf("errors sent")
 }
 
 func sendOKAnswer(data interface{}, w http.ResponseWriter) {
