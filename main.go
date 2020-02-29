@@ -524,7 +524,6 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
-
 	data, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
@@ -867,7 +866,7 @@ func EditCafeHandler(w http.ResponseWriter, r *http.Request) {
 	sendOKAnswer(cafeObj, w)
 }
 
-func ReceiveFile(file multipart.File, handler *multipart.FileHeader, folder string) (string, error) {
+func ReceiveFile(file multipart.File, header *multipart.FileHeader, folder string) (string, error) {
 
 	defer file.Close()
 
@@ -878,7 +877,7 @@ func ReceiveFile(file multipart.File, handler *multipart.FileHeader, folder stri
 
 	uString := u.String()
 	folderName := []rune(uString)[:3]
-	separatedFilename := strings.Split(handler.Filename, ".")
+	separatedFilename := strings.Split(header.Filename, ".")
 	if len(separatedFilename) <= 1 {
 		err := errors.New("bad filename")
 		return "", err
