@@ -121,12 +121,6 @@ func (ds *OwnersStorage) Get(index int) (Owner, error) {
 	return ds.get(index)
 }
 
-func (ds *OwnersStorage) Print() {
-	ds.Lock()
-	defer ds.Unlock()
-	fmt.Println(ds.owners)
-}
-
 func (ds *OwnersStorage) Count() int {
 	ds.Lock()
 	defer ds.Unlock()
@@ -273,12 +267,6 @@ func (cs *CafesStorage) get(index int) (Cafe, error) {
 
 func (cs *CafesStorage) count() int {
 	return len(cs.cafes)
-}
-
-func (cs *CafesStorage) Print() {
-	cs.Lock()
-	defer cs.Unlock()
-	fmt.Println(cs.cafes)
 }
 
 func (cs *CafesStorage) Append(value Cafe) (error, Cafe) {
@@ -471,7 +459,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonData := r.FormValue("jsonData")
-	if jsonData == "" {
+	if jsonData == "" || jsonData == "null" {
 		sendSingleError("empty jsonData field", w)
 		return
 	}
@@ -584,6 +572,7 @@ func EditOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		message := fmt.Sprintf("bad id: %s", mux.Vars(r)["id"])
 		sendSingleError(message, w)
+		return
 	}
 
 	owner, err := owners.Get(id)
@@ -607,7 +596,6 @@ func EditOwnerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ownerObj := Owner{}
-
 	if err := json.Unmarshal([]byte(jsonData), &ownerObj); err != nil {
 		sendSingleError("json parsing error", w)
 		return
@@ -643,17 +631,16 @@ func EditOwnerHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getOwnerHandler(w http.ResponseWriter, r *http.Request) {
-
 	authCookie, err := r.Cookie("authCookie")
 	if err != nil {
 		sendForbidden(w)
 		return
 	}
-
 	id, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
 		message := fmt.Sprintf("bad id: %s", mux.Vars(r)["id"])
 		sendSingleError(message, w)
+		return
 	}
 
 	owner, err := owners.Get(id)
@@ -721,7 +708,7 @@ func createCafeHandler(w http.ResponseWriter, r *http.Request) {
 
 	err, cafe := cafes.Append(cafeObj)
 	if err != nil {
-		sendSingleError("user with this email already existed", w)
+		sendSingleError("cafe with this this Name already existed", w)
 		return
 	}
 
@@ -775,6 +762,7 @@ func getCafeHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		message := fmt.Sprintf("bad id: %s", mux.Vars(r)["id"])
 		sendSingleError(message, w)
+		return
 	}
 
 	cafe, err := cafes.Get(id)
@@ -813,6 +801,7 @@ func EditCafeHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		message := fmt.Sprintf("bad id: %s", mux.Vars(r)["id"])
 		sendSingleError(message, w)
+		return
 	}
 
 	cafeObj, err := cafes.Get(id)
@@ -986,5 +975,4 @@ func main() {
 		ReadTimeout:  15 * time.Second,
 	}
 	log.Error().Msgf(srv.ListenAndServe().Error())
-
 }
