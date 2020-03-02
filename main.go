@@ -107,6 +107,7 @@ func (ds *OwnersStorage) Set(i int, value Owner) (Owner, error) {
 		err := errors.New(fmt.Sprintf("no user with id: %d", i))
 		return Owner{}, err
 	}
+	value.ID = i
 
 	ds.Lock()
 	defer ds.Unlock()
@@ -351,7 +352,6 @@ func sendServerError(errorMessage string, w http.ResponseWriter) {
 }
 
 func sendSingleError(errorMessage string, w http.ResponseWriter) {
-	log.Info().Msgf(errorMessage)
 	errs := make([]HttpError, 1, 1)
 	errs[0] = HttpError{
 		Code:    400,
@@ -375,7 +375,7 @@ func sendSeveralErrors(errors []HttpError, w http.ResponseWriter) {
 		sendServerError(message, w)
 		return
 	}
-	log.Info().Msgf("Validation error message sent")
+	log.Info().Msgf("errors sent")
 }
 
 func sendOKAnswer(data interface{}, w http.ResponseWriter) {
@@ -523,7 +523,6 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
-
 	data, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
@@ -866,7 +865,7 @@ func EditCafeHandler(w http.ResponseWriter, r *http.Request) {
 	sendOKAnswer(cafeObj, w)
 }
 
-func ReceiveFile(file multipart.File, handler *multipart.FileHeader, folder string) (string, error) {
+func ReceiveFile(file multipart.File, header *multipart.FileHeader, folder string) (string, error) {
 
 	defer file.Close()
 
@@ -877,7 +876,7 @@ func ReceiveFile(file multipart.File, handler *multipart.FileHeader, folder stri
 
 	uString := u.String()
 	folderName := []rune(uString)[:3]
-	separatedFilename := strings.Split(handler.Filename, ".")
+	separatedFilename := strings.Split(header.Filename, ".")
 	if len(separatedFilename) <= 1 {
 		err := errors.New("bad filename")
 		return "", err
