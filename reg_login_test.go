@@ -1,6 +1,8 @@
 package main
 
 import (
+	"2020_1_drop_table/owners"
+	"2020_1_drop_table/responses"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -19,7 +21,7 @@ type HttpTestCase struct {
 	Context    map[string]string
 	Cookie     http.Cookie
 	Request    interface{}
-	Response   HttpResponse
+	Response   responses.HttpResponse
 	StatusCode int
 }
 
@@ -41,13 +43,13 @@ func createMultipartFormData(t *testing.T, data string) (bytes.Buffer, *multipar
 }
 
 func TestRegisterUser(t *testing.T) {
-	ownerObjOK := Owner{
+	ownerObjOK := owners.Owner{
 		Name:     "Василий Андреев",
 		Email:    "example@example.com",
 		Password: "PassWord1",
 	}
 
-	ownerObjNotOK := Owner{
+	ownerObjNotOK := owners.Owner{
 		Name:  "Василий Андреев",
 		Email: "example@example.com",
 	}
@@ -55,7 +57,7 @@ func TestRegisterUser(t *testing.T) {
 	testCases := []HttpTestCase{
 		{
 			Request: ownerObjOK,
-			Response: HttpResponse{
+			Response: responses.HttpResponse{
 				Data:   ownerObjOK,
 				Errors: nil,
 			},
@@ -63,9 +65,9 @@ func TestRegisterUser(t *testing.T) {
 		},
 		{
 			Request: ownerObjNotOK,
-			Response: HttpResponse{
+			Response: responses.HttpResponse{
 				Data: nil,
-				Errors: []HttpError{
+				Errors: []responses.HttpError{
 					{
 						Code:    http.StatusBadRequest,
 						Message: "Password is a required field",
@@ -76,9 +78,9 @@ func TestRegisterUser(t *testing.T) {
 		},
 		{
 			Request: nil,
-			Response: HttpResponse{
+			Response: responses.HttpResponse{
 				Data: nil,
-				Errors: []HttpError{
+				Errors: []responses.HttpError{
 					{
 						Code:    http.StatusBadRequest,
 						Message: "empty jsonData field",
@@ -89,9 +91,9 @@ func TestRegisterUser(t *testing.T) {
 		},
 		{
 			Request: ownerObjOK,
-			Response: HttpResponse{
+			Response: responses.HttpResponse{
 				Data: nil,
-				Errors: []HttpError{
+				Errors: []responses.HttpError{
 					{
 						Code:    http.StatusBadRequest,
 						Message: "User with this email already existed",
@@ -116,7 +118,7 @@ func TestRegisterUser(t *testing.T) {
 
 		respWriter := httptest.NewRecorder()
 
-		registerHandler(respWriter, req)
+		owners.RegisterHandler(respWriter, req)
 
 		resp := respWriter.Result()
 		if resp.StatusCode != item.StatusCode {
@@ -126,7 +128,7 @@ func TestRegisterUser(t *testing.T) {
 
 		body, _ := ioutil.ReadAll(resp.Body)
 
-		var responseObject HttpResponse
+		var responseObject responses.HttpResponse
 
 		err := json.Unmarshal(body, &responseObject)
 		if err != nil {
@@ -136,7 +138,7 @@ func TestRegisterUser(t *testing.T) {
 		if responseObject.Data != nil {
 			//Data equals
 			responseData := responseObject.Data.(map[string]interface{})
-			expectedData := item.Response.Data.(Owner)
+			expectedData := item.Response.Data.(owners.Owner)
 
 			if responseData["name"] != expectedData.Name {
 				t.Errorf("[%d] wrong Name field in response data: got %+v, expected %+v",
@@ -169,8 +171,8 @@ func TestRegisterUser(t *testing.T) {
 	}
 }
 
-func createUserForTest(email, password string) (error, Owner) {
-	return owners.Append(Owner{
+func createUserForTest(email, password string) (error, owners.Owner) {
+	return owners.Storage.Append(owners.Owner{
 		Name:     "Василий Андреев",
 		Email:    email,
 		Password: password,
@@ -192,7 +194,7 @@ func TestLoginUser(t *testing.T) {
 		{
 			Request: fmt.Sprintf(`{"email":  "%s",  "password": "%s"}`,
 				email, password),
-			Response: HttpResponse{
+			Response: responses.HttpResponse{
 				Data:   "",
 				Errors: nil,
 			},
@@ -201,9 +203,9 @@ func TestLoginUser(t *testing.T) {
 		{
 			Request: fmt.Sprintf(`{"email":  "%s",  "password": "%sWrongPassword"}`,
 				email, password),
-			Response: HttpResponse{
+			Response: responses.HttpResponse{
 				Data: "",
-				Errors: []HttpError{
+				Errors: []responses.HttpError{
 					{
 						Code:    400,
 						Message: "no user with given login and password",
@@ -214,9 +216,9 @@ func TestLoginUser(t *testing.T) {
 		},
 		{
 			Request: fmt.Sprintf(`{"email":  "%ssWrongEmail",  "password": "%s"}`, email, password),
-			Response: HttpResponse{
+			Response: responses.HttpResponse{
 				Data: "",
-				Errors: []HttpError{
+				Errors: []responses.HttpError{
 					{
 						Code:    400,
 						Message: "no user with given login and password",
@@ -227,9 +229,9 @@ func TestLoginUser(t *testing.T) {
 		},
 		{
 			Request: fmt.Sprintf(`{"email":  "%ssWrongEmail",  "password": "%sWrongPassword"}`, email, password),
-			Response: HttpResponse{
+			Response: responses.HttpResponse{
 				Data: "",
-				Errors: []HttpError{
+				Errors: []responses.HttpError{
 					{
 						Code:    400,
 						Message: "no user with given login and password",
@@ -240,9 +242,9 @@ func TestLoginUser(t *testing.T) {
 		},
 		{
 			Request: fmt.Sprintf(`{"email":  "%ssWrongEmail",  "password": "%sWrongPassword"}`, email, password),
-			Response: HttpResponse{
+			Response: responses.HttpResponse{
 				Data: "",
-				Errors: []HttpError{
+				Errors: []responses.HttpError{
 					{
 						Code:    400,
 						Message: "no user with given login and password",
@@ -253,9 +255,9 @@ func TestLoginUser(t *testing.T) {
 		},
 		{
 			Request: fmt.Sprintf(`{"email":  "%ssWrongEmail"}`, email),
-			Response: HttpResponse{
+			Response: responses.HttpResponse{
 				Data: "",
-				Errors: []HttpError{
+				Errors: []responses.HttpError{
 					{
 						Code:    400,
 						Message: "Password is a required field",
@@ -271,7 +273,7 @@ func TestLoginUser(t *testing.T) {
 		req := httptest.NewRequest("POST", url, reader)
 
 		respWriter := httptest.NewRecorder()
-		loginHandler(respWriter, req)
+		owners.LoginHandler(respWriter, req)
 		resp := respWriter.Result()
 
 		if resp.StatusCode != item.StatusCode {
@@ -281,7 +283,7 @@ func TestLoginUser(t *testing.T) {
 
 		body, _ := ioutil.ReadAll(resp.Body)
 
-		var trueResponse HttpResponse
+		var trueResponse responses.HttpResponse
 		err := json.Unmarshal(body, &trueResponse)
 		if err != nil {
 			t.Errorf("[%d] unmarshaling error: %s", caseNum, err)
@@ -306,7 +308,7 @@ func TestLoginUser(t *testing.T) {
 				//Add new statement if new COOKIE will be added
 				switch cookie.Name {
 				case "authCookie":
-					ownerFromCookie, err := sessions.getOwnerByCookie(cookie.Value)
+					ownerFromCookie, err := owners.StorageSession.GetOwnerByCookie(cookie.Value)
 
 					if err != nil {
 						t.Errorf("[%d] error while getting error by Cookie: %+v:", caseNum, err)
@@ -344,8 +346,8 @@ func TestGetOwner(t *testing.T) {
 		{
 			Context: map[string]string{"id": strconv.Itoa(owner2.ID)},
 			Request: nil,
-			Response: HttpResponse{
-				Data: Owner{
+			Response: responses.HttpResponse{
+				Data: owners.Owner{
 					ID:    owner2.ID,
 					Email: owner2.Email,
 				},
@@ -356,9 +358,9 @@ func TestGetOwner(t *testing.T) {
 		{
 			Context: map[string]string{"id": strconv.Itoa(owner1.ID)},
 			Request: nil,
-			Response: HttpResponse{
+			Response: responses.HttpResponse{
 				Data: nil,
-				Errors: []HttpError{
+				Errors: []responses.HttpError{
 					{
 						Code:    http.StatusBadRequest,
 						Message: "no permissions",
@@ -370,9 +372,9 @@ func TestGetOwner(t *testing.T) {
 		{
 			Context: map[string]string{"id": "I'm not int"},
 			Request: nil,
-			Response: HttpResponse{
+			Response: responses.HttpResponse{
 				Data: nil,
-				Errors: []HttpError{
+				Errors: []responses.HttpError{
 					{
 						Code:    http.StatusBadRequest,
 						Message: "bad id: I'm not int",
@@ -383,7 +385,7 @@ func TestGetOwner(t *testing.T) {
 		},
 	}
 
-	authCookieOwner1, err := getAuthCookie(email2, password)
+	authCookieOwner1, err := owners.GetAuthCookie(email2, password)
 	if err != nil {
 		t.Errorf("auth error: %s", err)
 	}
@@ -397,7 +399,7 @@ func TestGetOwner(t *testing.T) {
 
 		req = mux.SetURLVars(req, item.Context)
 
-		getOwnerHandler(respWriter, req)
+		owners.GetOwnerHandler(respWriter, req)
 
 		resp := respWriter.Result()
 		if resp.StatusCode != item.StatusCode {
@@ -407,7 +409,7 @@ func TestGetOwner(t *testing.T) {
 
 		body, _ := ioutil.ReadAll(resp.Body)
 
-		var responseObject HttpResponse
+		var responseObject responses.HttpResponse
 
 		err := json.Unmarshal(body, &responseObject)
 		if err != nil {
@@ -422,7 +424,7 @@ func TestGetOwner(t *testing.T) {
 		switch responseObject.Errors {
 		case nil:
 			responseData := responseObject.Data.(map[string]interface{})
-			expectedData := item.Response.Data.(Owner)
+			expectedData := item.Response.Data.(owners.Owner)
 
 			if responseData["id"].(float64) != float64(expectedData.ID) {
 				t.Errorf("[%d] wrong Name field in response data: got %+v, expected %+v",
@@ -463,7 +465,7 @@ func TestGetCurrentOwner(t *testing.T) {
 	testCases := []HttpTestCase{
 		{
 			Request: nil,
-			Response: HttpResponse{
+			Response: responses.HttpResponse{
 				Data:   owner1,
 				Errors: nil,
 			},
@@ -471,7 +473,7 @@ func TestGetCurrentOwner(t *testing.T) {
 		},
 	}
 
-	authCookieOwner1, err := getAuthCookie(email1, password)
+	authCookieOwner1, err := owners.GetAuthCookie(email1, password)
 	if err != nil {
 		t.Errorf("auth error: %s", err)
 	}
@@ -483,7 +485,7 @@ func TestGetCurrentOwner(t *testing.T) {
 
 		req.AddCookie(&authCookieOwner1)
 
-		getCurrentOwnerHandler(respWriter, req)
+		owners.GetCurrentOwnerHandler(respWriter, req)
 
 		resp := respWriter.Result()
 		if resp.StatusCode != item.StatusCode {
@@ -493,7 +495,7 @@ func TestGetCurrentOwner(t *testing.T) {
 
 		body, _ := ioutil.ReadAll(resp.Body)
 
-		var responseObject HttpResponse
+		var responseObject responses.HttpResponse
 
 		err := json.Unmarshal(body, &responseObject)
 		if err != nil {
@@ -508,7 +510,7 @@ func TestGetCurrentOwner(t *testing.T) {
 		switch responseObject.Errors {
 		case nil:
 			responseData := responseObject.Data.(map[string]interface{})
-			expectedData := item.Response.Data.(Owner)
+			expectedData := item.Response.Data.(owners.Owner)
 
 			if responseData["id"].(float64) != float64(expectedData.ID) {
 				t.Errorf("[%d] wrong Name field in response data: got %+v, expected %+v",
@@ -548,15 +550,15 @@ func TestEditOwnerHandler(t *testing.T) {
 	}
 	owner2.Email = "EDITED@EMAIL.com"
 
-	authCookieOwner2, err := getAuthCookie(email2, password)
+	authCookieOwner2, err := owners.GetAuthCookie(email2, password)
 	//Test
 	testCases := []HttpTestCase{
 		{
 			Cookie:  authCookieOwner2,
 			Context: map[string]string{"id": strconv.Itoa(owner2.ID)},
 			Request: owner2,
-			Response: HttpResponse{
-				Data: Owner{
+			Response: responses.HttpResponse{
+				Data: owners.Owner{
 					ID:    owner2.ID,
 					Email: owner2.Email,
 				},
@@ -568,8 +570,8 @@ func TestEditOwnerHandler(t *testing.T) {
 			Cookie:  authCookieOwner2,
 			Context: map[string]string{"id": strconv.Itoa(owner1.ID)},
 			Request: nil,
-			Response: HttpResponse{
-				Errors: []HttpError{
+			Response: responses.HttpResponse{
+				Errors: []responses.HttpError{
 					{
 						Code:    400,
 						Message: "no permissions",
@@ -582,8 +584,8 @@ func TestEditOwnerHandler(t *testing.T) {
 			Cookie:  http.Cookie{},
 			Context: map[string]string{"id": "123456757"},
 			Request: nil,
-			Response: HttpResponse{
-				Errors: []HttpError{
+			Response: responses.HttpResponse{
+				Errors: []responses.HttpError{
 					{
 						Code:    400,
 						Message: "no permissions",
@@ -616,7 +618,7 @@ func TestEditOwnerHandler(t *testing.T) {
 
 		req = mux.SetURLVars(req, item.Context)
 
-		EditOwnerHandler(respWriter, req)
+		owners.EditOwnerHandler(respWriter, req)
 
 		resp := respWriter.Result()
 		if resp.StatusCode != item.StatusCode {
@@ -626,7 +628,7 @@ func TestEditOwnerHandler(t *testing.T) {
 
 		body, _ := ioutil.ReadAll(resp.Body)
 
-		var TrueResponse HttpResponse
+		var TrueResponse responses.HttpResponse
 
 		err := json.Unmarshal(body, &TrueResponse)
 		if err != nil {
@@ -637,7 +639,7 @@ func TestEditOwnerHandler(t *testing.T) {
 		case nil:
 			//Data equals
 			responseData := TrueResponse.Data.(map[string]interface{})
-			expectedData := item.Response.Data.(Owner)
+			expectedData := item.Response.Data.(owners.Owner)
 
 			if responseData["id"].(float64) != float64(expectedData.ID) {
 				t.Errorf("[%d] wrong ID field in response data: got %+v, expected %+v",
