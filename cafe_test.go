@@ -1,6 +1,9 @@
 package main
 
 import (
+	"2020_1_drop_table/cafes"
+	"2020_1_drop_table/owners"
+	"2020_1_drop_table/responses"
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"io/ioutil"
@@ -19,20 +22,20 @@ func TestCafeCreation(t *testing.T) {
 		t.Errorf("can't create new user, error: %+v", err)
 	}
 
-	cafeOK := Cafe{
+	cafeOK := cafes.Cafe{
 		Name:        "Пушкин",
 		Address:     "Тверской б-р, 26А, Москва, 125009",
 		Description: "Описание",
 	}
 
-	cafeNotOK := Cafe{
+	cafeNotOK := cafes.Cafe{
 		Address:     "Тверской б-р, 26А, Москва, 125009",
 		Description: "Описание",
 	}
 	testCases := []HttpTestCase{
 		{
 			Request: cafeOK,
-			Response: HttpResponse{
+			Response: responses.HttpResponse{
 				Data:   cafeOK,
 				Errors: nil,
 			},
@@ -40,9 +43,9 @@ func TestCafeCreation(t *testing.T) {
 		},
 		{
 			Request: cafeNotOK,
-			Response: HttpResponse{
+			Response: responses.HttpResponse{
 				Data: cafeOK,
-				Errors: []HttpError{
+				Errors: []responses.HttpError{
 					{
 						Code:    400,
 						Message: "Name is a required field",
@@ -53,7 +56,7 @@ func TestCafeCreation(t *testing.T) {
 		},
 	}
 
-	authCookieOwner1, err := getAuthCookie(email, password)
+	authCookieOwner1, err := owners.GetAuthCookie(email, password)
 	if err != nil {
 		t.Errorf("auth error: %s", err)
 	}
@@ -74,7 +77,7 @@ func TestCafeCreation(t *testing.T) {
 
 		req.AddCookie(&authCookieOwner1)
 
-		createCafeHandler(respWriter, req)
+		cafes.CreateCafeHandler(respWriter, req)
 
 		resp := respWriter.Result()
 		if resp.StatusCode != item.StatusCode {
@@ -84,7 +87,7 @@ func TestCafeCreation(t *testing.T) {
 
 		body, _ := ioutil.ReadAll(resp.Body)
 
-		var TrueResponse HttpResponse
+		var TrueResponse responses.HttpResponse
 
 		err := json.Unmarshal(body, &TrueResponse)
 		if err != nil {
@@ -95,7 +98,7 @@ func TestCafeCreation(t *testing.T) {
 		case nil:
 			//Data equals
 			responseData := TrueResponse.Data.(map[string]interface{})
-			expectedData := item.Response.Data.(Cafe)
+			expectedData := item.Response.Data.(cafes.Cafe)
 
 			if responseData["name"] != expectedData.Name {
 				t.Errorf("[%d] wrong Name field in response data: got %+v, expected %+v",
@@ -129,14 +132,14 @@ func TestCafeCreation(t *testing.T) {
 	}
 }
 
-func createCafeForTest(cafeName string, ownerID int) (error, Cafe) {
-	cafe := Cafe{
+func createCafeForTest(cafeName string, ownerID int) (error, cafes.Cafe) {
+	cafe := cafes.Cafe{
 		Name:        cafeName,
 		Address:     "Тверской б-р, 26А, Москва, 125009",
 		Description: "Описание",
 		OwnerID:     ownerID,
 	}
-	return cafes.Append(cafe)
+	return cafes.Storage.Append(cafe)
 }
 
 func TestGetCafeList(t *testing.T) {
@@ -149,7 +152,7 @@ func TestGetCafeList(t *testing.T) {
 		t.Errorf("can't create new user, error: %+v", err)
 	}
 
-	authCookieOwner1, err := getAuthCookie(email1, password)
+	authCookieOwner1, err := owners.GetAuthCookie(email1, password)
 	if err != nil {
 		t.Errorf("auth error: %s", err)
 	}
@@ -159,7 +162,7 @@ func TestGetCafeList(t *testing.T) {
 		t.Errorf("can't create new user, error: %+v", err)
 	}
 
-	authCookieOwner2, err := getAuthCookie(email2, password)
+	authCookieOwner2, err := owners.GetAuthCookie(email2, password)
 	if err != nil {
 		t.Errorf("auth error: %s", err)
 	}
@@ -186,8 +189,8 @@ func TestGetCafeList(t *testing.T) {
 		{
 			Request: nil,
 			Cookie:  authCookieOwner1,
-			Response: HttpResponse{
-				Data: []Cafe{
+			Response: responses.HttpResponse{
+				Data: []cafes.Cafe{
 					cafe1,
 					cafe2,
 				},
@@ -198,8 +201,8 @@ func TestGetCafeList(t *testing.T) {
 		{
 			Request: nil,
 			Cookie:  authCookieOwner2,
-			Response: HttpResponse{
-				Data: []Cafe{
+			Response: responses.HttpResponse{
+				Data: []cafes.Cafe{
 					cafe3,
 				},
 				Errors: nil,
@@ -209,9 +212,9 @@ func TestGetCafeList(t *testing.T) {
 		{
 			Request: nil,
 			Cookie:  http.Cookie{},
-			Response: HttpResponse{
+			Response: responses.HttpResponse{
 				Data: nil,
-				Errors: []HttpError{
+				Errors: []responses.HttpError{
 					{
 						Code:    400,
 						Message: "no permissions",
@@ -231,7 +234,7 @@ func TestGetCafeList(t *testing.T) {
 
 		req.AddCookie(&item.Cookie)
 
-		getCafesListHandler(respWriter, req)
+		cafes.GetCafesListHandler(respWriter, req)
 
 		resp := respWriter.Result()
 		if resp.StatusCode != item.StatusCode {
@@ -241,7 +244,7 @@ func TestGetCafeList(t *testing.T) {
 
 		body, _ := ioutil.ReadAll(resp.Body)
 
-		var TrueResponse HttpResponse
+		var TrueResponse responses.HttpResponse
 
 		err = json.Unmarshal(body, &TrueResponse)
 		if err != nil {
@@ -252,7 +255,7 @@ func TestGetCafeList(t *testing.T) {
 		case nil:
 			//Data equals
 			trueResponse := TrueResponse.Data.([]interface{})
-			expectedData := item.Response.Data.([]Cafe)
+			expectedData := item.Response.Data.([]cafes.Cafe)
 
 			if len(trueResponse) != len(expectedData) {
 				t.Errorf("[%d] wrong cafe slice len: got %+v, expected %+v",
@@ -299,7 +302,7 @@ func TestGetCafeHandler(t *testing.T) {
 		t.Errorf("can't create new user, error: %+v", err)
 	}
 
-	authCookieOwner1, err := getAuthCookie(email1, password)
+	authCookieOwner1, err := owners.GetAuthCookie(email1, password)
 	if err != nil {
 		t.Errorf("auth error: %s", err)
 	}
@@ -309,7 +312,7 @@ func TestGetCafeHandler(t *testing.T) {
 		t.Errorf("can't create new user, error: %+v", err)
 	}
 
-	authCookieOwner2, err := getAuthCookie(email2, password)
+	authCookieOwner2, err := owners.GetAuthCookie(email2, password)
 	if err != nil {
 		t.Errorf("auth error: %s", err)
 	}
@@ -331,7 +334,7 @@ func TestGetCafeHandler(t *testing.T) {
 			Context: map[string]string{"id": strconv.Itoa(cafe1.ID)},
 			Request: nil,
 			Cookie:  authCookieOwner1,
-			Response: HttpResponse{
+			Response: responses.HttpResponse{
 				Data:   cafe1,
 				Errors: nil,
 			},
@@ -341,7 +344,7 @@ func TestGetCafeHandler(t *testing.T) {
 			Context: map[string]string{"id": strconv.Itoa(cafe2.ID)},
 			Request: nil,
 			Cookie:  authCookieOwner2,
-			Response: HttpResponse{
+			Response: responses.HttpResponse{
 				Data:   cafe2,
 				Errors: nil,
 			},
@@ -351,9 +354,9 @@ func TestGetCafeHandler(t *testing.T) {
 			Context: map[string]string{"id": strconv.Itoa(cafe1.ID)},
 			Request: nil,
 			Cookie:  authCookieOwner2,
-			Response: HttpResponse{
+			Response: responses.HttpResponse{
 				Data: nil,
-				Errors: []HttpError{
+				Errors: []responses.HttpError{
 					{
 						Code:    400,
 						Message: "no permissions",
@@ -366,9 +369,9 @@ func TestGetCafeHandler(t *testing.T) {
 			Context: map[string]string{"id": strconv.Itoa(cafe2.ID)},
 			Request: nil,
 			Cookie:  authCookieOwner1,
-			Response: HttpResponse{
+			Response: responses.HttpResponse{
 				Data: nil,
-				Errors: []HttpError{
+				Errors: []responses.HttpError{
 					{
 						Code:    400,
 						Message: "no permissions",
@@ -390,7 +393,7 @@ func TestGetCafeHandler(t *testing.T) {
 
 		req = mux.SetURLVars(req, item.Context)
 
-		getCafeHandler(respWriter, req)
+		cafes.GetCafeHandler(respWriter, req)
 
 		resp := respWriter.Result()
 		if resp.StatusCode != item.StatusCode {
@@ -400,7 +403,7 @@ func TestGetCafeHandler(t *testing.T) {
 
 		body, _ := ioutil.ReadAll(resp.Body)
 
-		var TrueResponse HttpResponse
+		var TrueResponse responses.HttpResponse
 
 		err = json.Unmarshal(body, &TrueResponse)
 		if err != nil {
@@ -411,7 +414,7 @@ func TestGetCafeHandler(t *testing.T) {
 		case nil:
 			//Data equals
 			trueResponse := TrueResponse.Data.(map[string]interface{})
-			expectedData := item.Response.Data.(Cafe)
+			expectedData := item.Response.Data.(cafes.Cafe)
 
 			if trueResponse["name"] != expectedData.Name {
 				t.Errorf("[%d] wrong Name field in response data: got %+v, expected %+v",
@@ -450,7 +453,7 @@ func TestEditCafeHandler(t *testing.T) {
 		t.Errorf("can't create new user, error: %+v", err)
 	}
 
-	authCookieOwner1, err := getAuthCookie(email1, password)
+	authCookieOwner1, err := owners.GetAuthCookie(email1, password)
 	if err != nil {
 		t.Errorf("auth error: %s", err)
 	}
@@ -460,7 +463,7 @@ func TestEditCafeHandler(t *testing.T) {
 		t.Errorf("can't create new user, error: %+v", err)
 	}
 
-	authCookieOwner2, err := getAuthCookie(email2, password)
+	authCookieOwner2, err := owners.GetAuthCookie(email2, password)
 	if err != nil {
 		t.Errorf("auth error: %s", err)
 	}
@@ -489,7 +492,7 @@ func TestEditCafeHandler(t *testing.T) {
 			Context: map[string]string{"id": strconv.Itoa(cafe1.ID)},
 			Request: cafe1,
 			Cookie:  authCookieOwner1,
-			Response: HttpResponse{
+			Response: responses.HttpResponse{
 				Data:   cafe1,
 				Errors: nil,
 			},
@@ -499,7 +502,7 @@ func TestEditCafeHandler(t *testing.T) {
 			Context: map[string]string{"id": strconv.Itoa(cafe2.ID)},
 			Request: cafe2,
 			Cookie:  authCookieOwner2,
-			Response: HttpResponse{
+			Response: responses.HttpResponse{
 				Data:   cafe2,
 				Errors: nil,
 			},
@@ -509,9 +512,9 @@ func TestEditCafeHandler(t *testing.T) {
 			Context: map[string]string{"id": strconv.Itoa(cafe1.ID)},
 			Request: cafe1,
 			Cookie:  authCookieOwner2,
-			Response: HttpResponse{
+			Response: responses.HttpResponse{
 				Data: nil,
-				Errors: []HttpError{
+				Errors: []responses.HttpError{
 					{
 						Code:    400,
 						Message: "no permissions",
@@ -524,9 +527,9 @@ func TestEditCafeHandler(t *testing.T) {
 			Context: map[string]string{"id": strconv.Itoa(cafe1.ID)},
 			Request: cafe1,
 			Cookie:  http.Cookie{},
-			Response: HttpResponse{
+			Response: responses.HttpResponse{
 				Data: nil,
-				Errors: []HttpError{
+				Errors: []responses.HttpError{
 					{
 						Code:    400,
 						Message: "no permissions",
@@ -539,9 +542,9 @@ func TestEditCafeHandler(t *testing.T) {
 			Context: map[string]string{"id": "This is not ID"},
 			Request: cafe1,
 			Cookie:  authCookieOwner1,
-			Response: HttpResponse{
+			Response: responses.HttpResponse{
 				Data: nil,
-				Errors: []HttpError{
+				Errors: []responses.HttpError{
 					{
 						Code:    400,
 						Message: "bad id: This is not ID",
@@ -554,9 +557,9 @@ func TestEditCafeHandler(t *testing.T) {
 			Context: map[string]string{"id": "1234567890"},
 			Request: cafe1,
 			Cookie:  authCookieOwner1,
-			Response: HttpResponse{
+			Response: responses.HttpResponse{
 				Data: nil,
-				Errors: []HttpError{
+				Errors: []responses.HttpError{
 					{
 						Code:    400,
 						Message: "no permissions",
@@ -567,15 +570,15 @@ func TestEditCafeHandler(t *testing.T) {
 		},
 		{
 			Context: map[string]string{"id": strconv.Itoa(cafe1.ID)},
-			Request: Cafe{
+			Request: cafes.Cafe{
 				ID:      1,
 				Name:    "Name",
 				Address: "Address",
 			},
 			Cookie: authCookieOwner1,
-			Response: HttpResponse{
+			Response: responses.HttpResponse{
 				Data: cafe1,
-				Errors: []HttpError{
+				Errors: []responses.HttpError{
 					{
 						Code:    400,
 						Message: "Description is a required field",
@@ -605,7 +608,7 @@ func TestEditCafeHandler(t *testing.T) {
 
 		req = mux.SetURLVars(req, item.Context)
 
-		EditCafeHandler(respWriter, req)
+		cafes.EditCafeHandler(respWriter, req)
 
 		resp := respWriter.Result()
 		if resp.StatusCode != item.StatusCode {
@@ -615,7 +618,7 @@ func TestEditCafeHandler(t *testing.T) {
 
 		body, _ := ioutil.ReadAll(resp.Body)
 
-		var TrueResponse HttpResponse
+		var TrueResponse responses.HttpResponse
 
 		err = json.Unmarshal(body, &TrueResponse)
 		if err != nil {
@@ -626,7 +629,7 @@ func TestEditCafeHandler(t *testing.T) {
 		case nil:
 			//Data equals
 			responseData := TrueResponse.Data.(map[string]interface{})
-			expectedData := item.Response.Data.(Cafe)
+			expectedData := item.Response.Data.(cafes.Cafe)
 
 			if responseData["name"] != expectedData.Name {
 				t.Errorf("[%d] wrong Name field in response data: got %+v, expected %+v",
