@@ -8,7 +8,7 @@ import (
 func generate(str string, qrSize int) ([]byte, error) {
 	_, err := url.ParseRequestURI(str)
 	if err != nil {
-		return []byte(nil), err
+		return nil, err
 	}
 
 	var image []byte
