@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/2020_1_drop_table/owners"
+	"2020_1_drop_table/owners"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
