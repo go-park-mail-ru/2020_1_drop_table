@@ -33,7 +33,7 @@ func (s *OwnerStorage) Append(own Owner) (Owner, error) {
 		logErr(err, "When trying to connect to bd", own)
 		return Owner{}, err
 	}
-	_, err = tx.Exec("insert into owner(OwnerId, name, email, password, editedat, photo) values ($1,$2,$3,$4,$5,$6)", own.OwnerId, own.Name, own.Email, own.Password, own.EditedAt, own.Photo)
+	_, err = tx.Exec("insert into owner(name, email, password, editedat, photo) values ($1,$2,$3,$4,$5)", own.Name, own.Email, own.Password, own.EditedAt, own.Photo)
 	if err != nil {
 		logErr(err, "When trying to append data", own)
 		return Owner{}, err
@@ -65,7 +65,7 @@ func (s *OwnerStorage) AppendList(owners []Owner) error {
 func (s *OwnerStorage) CreateTable() error {
 	schema := `CREATE TABLE IF NOT EXISTS Owner
 (
-    OwnerID  integer NOT NULL PRIMARY KEY,
+    OwnerID  serial PRIMARY KEY,
     Name     text,
     Email    text,
     Password text,

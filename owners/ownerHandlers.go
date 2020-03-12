@@ -78,7 +78,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	http.SetCookie(w, &cookie)
 
-	responses.SendOKAnswer(ownerObj, w)
+	responses.SendOKAnswer(own, w)
 	return
 }
 
