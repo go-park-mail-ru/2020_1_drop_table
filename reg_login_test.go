@@ -177,8 +177,8 @@ func createUserForTest(email, password string) (error, owners.Owner) {
 		Email:    email,
 		Password: password,
 	}
-	err := owners.Storage.Append(user)
-	return err, user
+	own, err := owners.Storage.Append(user)
+	return err, own
 }
 
 func TestLoginUser(t *testing.T) {

@@ -64,13 +64,13 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	err = Storage.Append(ownerObj)
-	if err != nil {
+	own, appendErr := Storage.Append(ownerObj)
+	if appendErr != nil {
 		responses.SendSingleError("User with this email already existed", w)
 		return
 	}
 
-	cookie, err := GetAuthCookie(ownerObj.Email, ownerObj.Password)
+	cookie, err := GetAuthCookie(own.Email, own.Password)
 	if err != nil {
 		message := fmt.Sprintf("troubles with cookies %s", err)
 		log.Error().Msgf(message)

@@ -26,20 +26,20 @@ func logErr(err error, message string, where Owner) {
 	log.Error().Msgf("Error: %v, %s,  in -> %v", err, message, where)
 }
 
-func (s *OwnerStorage) Append(own Owner) error {
+func (s *OwnerStorage) Append(own Owner) (Owner, error) {
 	tx, err := s.db.Begin()
 	own.Password = GetMD5Hash(own.Password)
 	if err != nil {
 		logErr(err, "When trying to connect to bd", own)
-		return err
+		return Owner{}, err
 	}
 	_, err = tx.Exec("insert into owner(OwnerId, name, email, password, editedat, photo) values ($1,$2,$3,$4,$5,$6)", own.OwnerId, own.Name, own.Email, own.Password, own.EditedAt, own.Photo)
 	if err != nil {
 		logErr(err, "When trying to append data", own)
-		return err
+		return Owner{}, err
 	}
 	err = tx.Commit()
-	return err
+	return own, err
 
 }
 
@@ -79,7 +79,7 @@ func (s *OwnerStorage) CreateTable() error {
 }
 
 func isOwnerEmpty(own *Owner) bool {
-	if own.OwnerId == 0 {
+	if own.OwnerId == 0 && own.Name == "" {
 		log.Info().Msgf("Owner not found")
 		return true
 	}
@@ -88,7 +88,6 @@ func isOwnerEmpty(own *Owner) bool {
 
 func (s *OwnerStorage) GetByEmailAndPassword(email string, password string) (Owner, error) {
 	own := Owner{}
-	password = GetMD5Hash(password)
 	err := s.db.Get(&own, "select * from owner where password=$1 AND email=$2", password, email)
 	if isOwnerEmpty(&own) {
 		notFoundErrorMessage := fmt.Sprintf("Owner not found")
@@ -127,13 +126,16 @@ func (s *OwnerStorage) Existed(email string, password string) (bool, Owner, erro
 			return false, Owner{}, nil
 		}
 	}
-	return own.OwnerId != 0, own, err
+	isEmpty := isOwnerEmpty(&own)
+	return !isEmpty, own, err
 }
 
 func NewOwnerStorage(user string, password string, port string) (OwnerStorage, error) {
 	connStr := fmt.Sprintf("user=%s password=%s dbname=postgres sslmode=disable port=%s", user, password, port) //TODO поменять порт
 	db, err := sqlx.Open("postgres", connStr)
-	return OwnerStorage{db}, err
+	ownStorage := OwnerStorage{db}
+	ownStorage.Clear()
+	return ownStorage, err
 }
 
 func (s *OwnerStorage) Count() (int, error) {

@@ -18,7 +18,7 @@ func TestAppend(t *testing.T) {
 		EditedAt: time.Now(),
 		Photo:    "asd",
 	}
-	err := Storage.Append(own)
+	_, err := Storage.Append(own)
 	assert.Nil(t, err, "No errors")
 	own2 := owners.Owner{
 		OwnerId:  228,
@@ -28,9 +28,9 @@ func TestAppend(t *testing.T) {
 		EditedAt: time.Now(),
 		Photo:    "asd",
 	}
-	err2 := Storage.Append(own2)
+	_, err2 := Storage.Append(own2)
 	assert.Nil(t, err2, "No erros")
-	cantAppend := Storage.Append(own)
+	_, cantAppend := Storage.Append(own)
 	assert.Equal(t, cantAppend.Error(), "pq: duplicate key value violates unique constraint \"owner_pkey\"")
 }
 
@@ -65,7 +65,7 @@ func TestOwnerStorage_GetByEmailAndPassword(t *testing.T) {
 	}
 	Storage.Append(own)
 	own.Password = owners.GetMD5Hash(own.Password)
-	dbOwner, err := Storage.GetByEmailAndPassword("email", "password")
+	dbOwner, err := Storage.GetByEmailAndPassword("email", owners.GetMD5Hash("password"))
 	assert.Nil(t, err)
 	assert.Equal(t, own, dbOwner)
 }
@@ -153,7 +153,7 @@ func TestOwnerStorage_AppendList(t *testing.T) {
 func TestOwnerStorage_Existed(t *testing.T) {
 	Storage, _ := owners.NewOwnerStorage("postgres", "", "5431")
 	Storage.Clear()
-	isExist, _, err := Storage.Existed("email", "password")
+	isExist, _, err := Storage.Existed("email", owners.GetMD5Hash("password"))
 	assert.Nil(t, err)
 	assert.Equal(t, false, isExist)
 
@@ -167,7 +167,7 @@ func TestOwnerStorage_Existed(t *testing.T) {
 	}
 	Storage.Append(own)
 
-	isExist, _, err = Storage.Existed("email", "password")
+	isExist, _, err = Storage.Existed("email", owners.GetMD5Hash("password"))
 	assert.Nil(t, err)
 	assert.Equal(t, true, isExist)
 }

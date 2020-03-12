@@ -85,7 +85,7 @@ func (s *sessionStorage) GetOwnerByCookie(cookie string) (Owner, error) {
 }
 
 func GetAuthCookie(email, password string) (http.Cookie, error) {
-	expiresDate := time.Now().Add(time.Hour * 24 * 100)
+	expiresDate := time.Now().Add(time.Hour * 24 * 100).UTC()
 	token, err := StorageSession.Login(email, password, expiresDate)
 
 	if err != nil {
