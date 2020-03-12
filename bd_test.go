@@ -1,14 +1,13 @@
 package main
 
 import (
-	"2020_1_drop_table/owners"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 )
 
 func TestAppend(t *testing.T) {
-	Storage, _ := newOwnerStorage("postgres", "")
+	Storage, _ := NewOwnerStorage("postgres", "", "5431")
 	Storage.PrepareForTest()
 	own := Owner{
 		OwnerId:  229,
@@ -35,7 +34,7 @@ func TestAppend(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
-	Storage, _ := newOwnerStorage("postgres", "")
+	Storage, _ := NewOwnerStorage("postgres", "", "5431")
 	Storage.PrepareForTest()
 	own := Owner{
 		OwnerId:  229,
@@ -48,11 +47,12 @@ func TestGet(t *testing.T) {
 	Storage.Append(own)
 	dbOwner, err := Storage.Get(229)
 	assert.Nil(t, err)
+	own.Password = GetMD5Hash(own.Password)
 	assert.Equal(t, own, dbOwner)
 }
 
 func TestOwnerStorage_GetByEmailAndPassword(t *testing.T) {
-	Storage, _ := newOwnerStorage("postgres", "")
+	Storage, _ := NewOwnerStorage("postgres", "", "5431")
 	Storage.PrepareForTest()
 	own := Owner{
 		OwnerId:  229,
@@ -63,14 +63,14 @@ func TestOwnerStorage_GetByEmailAndPassword(t *testing.T) {
 		Photo:    "asd",
 	}
 	Storage.Append(own)
-
+	own.Password = GetMD5Hash(own.Password)
 	dbOwner, err := Storage.GetByEmailAndPassword("email", "password")
 	assert.Nil(t, err)
 	assert.Equal(t, own, dbOwner)
 }
 
 func TestOwnerStorage_Set(t *testing.T) {
-	Storage, _ := newOwnerStorage("postgres", "")
+	Storage, _ := NewOwnerStorage("postgres", "", "5431")
 	Storage.PrepareForTest()
 	own := Owner{
 		OwnerId:  229,
@@ -93,11 +93,12 @@ func TestOwnerStorage_Set(t *testing.T) {
 	Storage.Set(229, newOwn)
 	dBOwner, err := Storage.Get(229)
 	assert.Nil(t, err)
+	newOwn.Password = GetMD5Hash(newOwn.Password)
 	assert.Equal(t, newOwn, dBOwner)
 }
 
 func TestOwnerStorage_Count(t *testing.T) {
-	Storage, _ := newOwnerStorage("postgres", "")
+	Storage, _ := NewOwnerStorage("postgres", "", "5431")
 	Storage.PrepareForTest()
 	count, err := Storage.Count()
 	assert.Nil(t, err)
@@ -120,7 +121,7 @@ func TestOwnerStorage_Count(t *testing.T) {
 }
 
 func TestOwnerStorage_AppendList(t *testing.T) {
-	Storage, _ := newOwnerStorage("postgres", "")
+	Storage, _ := NewOwnerStorage("postgres", "", "5431")
 	Storage.PrepareForTest()
 
 	own := Owner{
@@ -149,7 +150,7 @@ func TestOwnerStorage_AppendList(t *testing.T) {
 }
 
 func TestOwnerStorage_Existed(t *testing.T) {
-	Storage, _ := newOwnerStorage("postgres", "")
+	Storage, _ := NewOwnerStorage("postgres", "", "5431")
 	Storage.PrepareForTest()
 	isExist, err := Storage.Existed("email", "password")
 	assert.Nil(t, err)

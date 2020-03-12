@@ -238,4 +238,4 @@ func GetCurrentOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	responses.SendOKAnswer(owner, w)
 }
 
-var Storage = NewOwnersStorage()
+var Storage, _ = NewOwnerStorage("postgres", "", "5431")
