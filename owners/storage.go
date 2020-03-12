@@ -28,6 +28,10 @@ func logErr(err error, message string, where Owner) {
 
 func (s *OwnerStorage) Append(own Owner) (Owner, error) {
 	tx, err := s.db.Begin()
+	isExisted, _, _ := s.Existed(own.Email, own.Password)
+	if isExisted {
+		return Owner{}, errors.New("User already in base")
+	}
 	own.Password = GetMD5Hash(own.Password)
 	if err != nil {
 		logErr(err, "When trying to connect to bd", own)
@@ -88,6 +92,7 @@ func isOwnerEmpty(own *Owner) bool {
 
 func (s *OwnerStorage) GetByEmailAndPassword(email string, password string) (Owner, error) {
 	own := Owner{}
+	password = GetMD5Hash(password)
 	err := s.db.Get(&own, "select * from owner where password=$1 AND email=$2", password, email)
 	if isOwnerEmpty(&own) {
 		notFoundErrorMessage := fmt.Sprintf("Owner not found")
@@ -111,11 +116,11 @@ func (s *OwnerStorage) Get(id int) (Owner, error) {
 	return own, err
 }
 
-func (s *OwnerStorage) Set(id int, newOwner Owner) error {
+func (s *OwnerStorage) Set(id int, newOwner Owner) (Owner, error) {
 	newOwner.Password = GetMD5Hash(newOwner.Password)
 	_, err := s.db.Exec("UPDATE owner SET name = $1,email=$2,password=$3,editedat=$4,photo=$5 WHERE ownerid = $6", newOwner.Name, newOwner.Email, newOwner.Password, newOwner.EditedAt, newOwner.Photo, id)
 
-	return err
+	return newOwner, err
 }
 
 func (s *OwnerStorage) Existed(email string, password string) (bool, Owner, error) {
