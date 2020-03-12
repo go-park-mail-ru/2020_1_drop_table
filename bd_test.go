@@ -1,15 +1,16 @@
 package main
 
 import (
+	"2020_1_drop_tableznbxcnz/owners"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 )
 
 func TestAppend(t *testing.T) {
-	Storage, _ := NewOwnerStorage("postgres", "", "5431")
+	Storage, _ := owners.NewOwnerStorage("postgres", "", "5431")
 	Storage.Clear()
-	own := Owner{
+	own := owners.Owner{
 		OwnerId:  229,
 		Name:     "asd",
 		Email:    "asd",
@@ -19,7 +20,7 @@ func TestAppend(t *testing.T) {
 	}
 	err := Storage.Append(own)
 	assert.Nil(t, err, "No errors")
-	own2 := Owner{
+	own2 := owners.Owner{
 		OwnerId:  228,
 		Name:     "asd",
 		Email:    "asd",
@@ -34,9 +35,9 @@ func TestAppend(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
-	Storage, _ := NewOwnerStorage("postgres", "", "5431")
+	Storage, _ := owners.NewOwnerStorage("postgres", "", "5431")
 	Storage.Clear()
-	own := Owner{
+	own := owners.Owner{
 		OwnerId:  229,
 		Name:     "asd",
 		Email:    "asd",
@@ -47,14 +48,14 @@ func TestGet(t *testing.T) {
 	Storage.Append(own)
 	dbOwner, err := Storage.Get(229)
 	assert.Nil(t, err)
-	own.Password = GetMD5Hash(own.Password)
+	own.Password = owners.GetMD5Hash(own.Password)
 	assert.Equal(t, own, dbOwner)
 }
 
 func TestOwnerStorage_GetByEmailAndPassword(t *testing.T) {
-	Storage, _ := NewOwnerStorage("postgres", "", "5431")
+	Storage, _ := owners.NewOwnerStorage("postgres", "", "5431")
 	Storage.Clear()
-	own := Owner{
+	own := owners.Owner{
 		OwnerId:  229,
 		Name:     "asd",
 		Email:    "email",
@@ -63,16 +64,16 @@ func TestOwnerStorage_GetByEmailAndPassword(t *testing.T) {
 		Photo:    "asd",
 	}
 	Storage.Append(own)
-	own.Password = GetMD5Hash(own.Password)
+	own.Password = owners.GetMD5Hash(own.Password)
 	dbOwner, err := Storage.GetByEmailAndPassword("email", "password")
 	assert.Nil(t, err)
 	assert.Equal(t, own, dbOwner)
 }
 
 func TestOwnerStorage_Set(t *testing.T) {
-	Storage, _ := NewOwnerStorage("postgres", "", "5431")
+	Storage, _ := owners.NewOwnerStorage("postgres", "", "5431")
 	Storage.Clear()
-	own := Owner{
+	own := owners.Owner{
 		OwnerId:  229,
 		Name:     "asd",
 		Email:    "email",
@@ -81,7 +82,7 @@ func TestOwnerStorage_Set(t *testing.T) {
 		Photo:    "asd",
 	}
 
-	newOwn := Owner{
+	newOwn := owners.Owner{
 		OwnerId:  229,
 		Name:     "newasd",
 		Email:    "newemail",
@@ -93,18 +94,18 @@ func TestOwnerStorage_Set(t *testing.T) {
 	Storage.Set(229, newOwn)
 	dBOwner, err := Storage.Get(229)
 	assert.Nil(t, err)
-	newOwn.Password = GetMD5Hash(newOwn.Password)
+	newOwn.Password = owners.GetMD5Hash(newOwn.Password)
 	assert.Equal(t, newOwn, dBOwner)
 }
 
 func TestOwnerStorage_Count(t *testing.T) {
-	Storage, _ := NewOwnerStorage("postgres", "", "5431")
+	Storage, _ := owners.NewOwnerStorage("postgres", "", "5431")
 	Storage.Clear()
 	count, err := Storage.Count()
 	assert.Nil(t, err)
 	assert.Equal(t, 0, count)
 
-	own := Owner{
+	own := owners.Owner{
 		OwnerId:  229,
 		Name:     "asd",
 		Email:    "email",
@@ -121,10 +122,10 @@ func TestOwnerStorage_Count(t *testing.T) {
 }
 
 func TestOwnerStorage_AppendList(t *testing.T) {
-	Storage, _ := NewOwnerStorage("postgres", "", "5431")
+	Storage, _ := owners.NewOwnerStorage("postgres", "", "5431")
 	Storage.Clear()
 
-	own := Owner{
+	own := owners.Owner{
 		OwnerId:  229,
 		Name:     "asd",
 		Email:    "email",
@@ -133,7 +134,7 @@ func TestOwnerStorage_AppendList(t *testing.T) {
 		Photo:    "asd",
 	}
 
-	own2 := Owner{
+	own2 := owners.Owner{
 		OwnerId:  230,
 		Name:     "asd2",
 		Email:    "email",
@@ -142,7 +143,7 @@ func TestOwnerStorage_AppendList(t *testing.T) {
 		Photo:    "asd",
 	}
 
-	ownerList := []Owner{own, own2}
+	ownerList := []owners.Owner{own, own2}
 	err := Storage.AppendList(ownerList)
 
 	assert.Nil(t, err)
@@ -150,13 +151,13 @@ func TestOwnerStorage_AppendList(t *testing.T) {
 }
 
 func TestOwnerStorage_Existed(t *testing.T) {
-	Storage, _ := NewOwnerStorage("postgres", "", "5431")
+	Storage, _ := owners.NewOwnerStorage("postgres", "", "5431")
 	Storage.Clear()
 	isExist, _, err := Storage.Existed("email", "password")
 	assert.Nil(t, err)
 	assert.Equal(t, false, isExist)
 
-	own := Owner{
+	own := owners.Owner{
 		OwnerId:  229,
 		Name:     "asd",
 		Email:    "email",

@@ -64,7 +64,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	err, owner := Storage.Append(ownerObj)
+	err = Storage.Append(ownerObj)
 	if err != nil {
 		responses.SendSingleError("User with this email already existed", w)
 		return
@@ -78,7 +78,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	http.SetCookie(w, &cookie)
 
-	responses.SendOKAnswer(owner, w)
+	responses.SendOKAnswer(ownerObj, w)
 	return
 }
 
@@ -190,7 +190,7 @@ func EditOwnerHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	owner, err = Storage.Set(id, ownerObj)
+	err = Storage.Set(id, ownerObj)
 	if err != nil {
 		responses.SendSingleError(err.Error(), w)
 		return
