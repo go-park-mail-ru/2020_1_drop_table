@@ -8,7 +8,7 @@ import (
 
 func TestAppend(t *testing.T) {
 	Storage, _ := NewOwnerStorage("postgres", "", "5431")
-	Storage.PrepareForTest()
+	Storage.Clear()
 	own := Owner{
 		OwnerId:  229,
 		Name:     "asd",
@@ -35,7 +35,7 @@ func TestAppend(t *testing.T) {
 
 func TestGet(t *testing.T) {
 	Storage, _ := NewOwnerStorage("postgres", "", "5431")
-	Storage.PrepareForTest()
+	Storage.Clear()
 	own := Owner{
 		OwnerId:  229,
 		Name:     "asd",
@@ -53,7 +53,7 @@ func TestGet(t *testing.T) {
 
 func TestOwnerStorage_GetByEmailAndPassword(t *testing.T) {
 	Storage, _ := NewOwnerStorage("postgres", "", "5431")
-	Storage.PrepareForTest()
+	Storage.Clear()
 	own := Owner{
 		OwnerId:  229,
 		Name:     "asd",
@@ -71,7 +71,7 @@ func TestOwnerStorage_GetByEmailAndPassword(t *testing.T) {
 
 func TestOwnerStorage_Set(t *testing.T) {
 	Storage, _ := NewOwnerStorage("postgres", "", "5431")
-	Storage.PrepareForTest()
+	Storage.Clear()
 	own := Owner{
 		OwnerId:  229,
 		Name:     "asd",
@@ -99,7 +99,7 @@ func TestOwnerStorage_Set(t *testing.T) {
 
 func TestOwnerStorage_Count(t *testing.T) {
 	Storage, _ := NewOwnerStorage("postgres", "", "5431")
-	Storage.PrepareForTest()
+	Storage.Clear()
 	count, err := Storage.Count()
 	assert.Nil(t, err)
 	assert.Equal(t, 0, count)
@@ -122,7 +122,7 @@ func TestOwnerStorage_Count(t *testing.T) {
 
 func TestOwnerStorage_AppendList(t *testing.T) {
 	Storage, _ := NewOwnerStorage("postgres", "", "5431")
-	Storage.PrepareForTest()
+	Storage.Clear()
 
 	own := Owner{
 		OwnerId:  229,
@@ -151,8 +151,8 @@ func TestOwnerStorage_AppendList(t *testing.T) {
 
 func TestOwnerStorage_Existed(t *testing.T) {
 	Storage, _ := NewOwnerStorage("postgres", "", "5431")
-	Storage.PrepareForTest()
-	isExist, err := Storage.Existed("email", "password")
+	Storage.Clear()
+	isExist, _, err := Storage.Existed("email", "password")
 	assert.Nil(t, err)
 	assert.Equal(t, false, isExist)
 
@@ -166,7 +166,7 @@ func TestOwnerStorage_Existed(t *testing.T) {
 	}
 	Storage.Append(own)
 
-	isExist, err = Storage.Existed("email", "password")
+	isExist, _, err = Storage.Existed("email", "password")
 	assert.Nil(t, err)
 	assert.Equal(t, true, isExist)
 }

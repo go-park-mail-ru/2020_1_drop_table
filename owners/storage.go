@@ -119,15 +119,15 @@ func (s *OwnerStorage) Set(id int, newOwner Owner) error {
 	return err
 }
 
-func (s *OwnerStorage) Existed(email string, password string) (bool, error) {
+func (s *OwnerStorage) Existed(email string, password string) (bool, Owner, error) {
 	own, err := s.GetByEmailAndPassword(email, password)
 
 	if err != nil {
 		if err.Error() == "Owner not found" {
-			return false, nil
+			return false, Owner{}, nil
 		}
 	}
-	return own.OwnerId != 0, err
+	return own.OwnerId != 0, own, err
 }
 
 func NewOwnerStorage(user string, password string, port string) (OwnerStorage, error) {
@@ -142,12 +142,12 @@ func (s *OwnerStorage) Count() (int, error) {
 	return res, err
 }
 
-func (s *OwnerStorage) Delete() error {
+func (s *OwnerStorage) Drop() error {
 	_, err := s.db.Exec("DROP TABLE IF EXISTS owner CASCADE")
 	return err
 }
 
-func (s *OwnerStorage) PrepareForTest() {
-	s.Delete()
+func (s *OwnerStorage) Clear() {
+	s.Drop()
 	s.CreateTable()
 }
