@@ -49,7 +49,7 @@ func (s *OwnerStorage) Append(own Owner) (Owner, error) {
 func (s *OwnerStorage) CreateTable() error {
 	schema := `CREATE TABLE IF NOT EXISTS Owner
 (
-    OwnerID  serial PRIMARY KEY,
+    OwnerID  Bigserial PRIMARY KEY,
     Name     text,
     Email    text,
     Password text,
