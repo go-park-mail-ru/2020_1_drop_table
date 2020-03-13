@@ -64,7 +64,7 @@ func TestOwnerStorage_GetByEmailAndPassword(t *testing.T) {
 	}
 	Storage.Append(own)
 	own.Password = owners.GetMD5Hash(own.Password)
-	dbOwner, err := Storage.GetByEmailAndPassword("email", owners.GetMD5Hash("password"))
+	dbOwner, err := Storage.GetByEmailAndPassword("email", "password")
 	assert.Nil(t, err)
 	assert.Equal(t, own, dbOwner)
 }
@@ -123,7 +123,7 @@ func TestOwnerStorage_Count(t *testing.T) {
 func TestOwnerStorage_Existed(t *testing.T) {
 	Storage, _ := owners.NewOwnerStorage("postgres", "", "5431")
 	Storage.Clear()
-	isExist, _, err := Storage.Existed("email", owners.GetMD5Hash("password"))
+	isExist, _, err := Storage.Existed("email", "password")
 	assert.Nil(t, err)
 	assert.Equal(t, false, isExist)
 
@@ -137,7 +137,7 @@ func TestOwnerStorage_Existed(t *testing.T) {
 	}
 	Storage.Append(own)
 
-	isExist, _, err = Storage.Existed("email", owners.GetMD5Hash("password"))
+	isExist, _, err = Storage.Existed("email", "password")
 	assert.Nil(t, err)
 	assert.Equal(t, true, isExist)
 }

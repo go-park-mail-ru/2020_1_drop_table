@@ -182,17 +182,6 @@ func createUserForTest(email, password string) (error, owners.Owner) {
 	return err, own
 }
 
-func createUserForTestWithId(email, password string, id int) (error, owners.Owner) {
-	user := owners.Owner{
-		OwnerId:  id,
-		Name:     "Василий Андреев",
-		Email:    email,
-		Password: password,
-	}
-	own, err := owners.Storage.Append(user)
-	return err, own
-}
-
 func TestLoginUser(t *testing.T) {
 	//Preparing for test
 	email := "testLoginUser@example.com"
@@ -466,7 +455,7 @@ func TestGetCurrentOwner(t *testing.T) {
 	password := "PassWord1"
 	owners.Storage.Clear()
 
-	err, owner1 := createUserForTestWithId(email1, password, 1) //TODO рассказать Диме что исправил так как индексы в бдшке начинаются с 1
+	err, owner1 := createUserForTest(email1, password)
 	if err != nil {
 		t.Errorf("can't create new user, error: %+v", err)
 	}
@@ -546,7 +535,6 @@ func TestGetCurrentOwner(t *testing.T) {
 	}
 }
 
-//TODO валится этот тест
 func TestEditOwnerHandler(t *testing.T) {
 	//Preparing for test
 	email1 := "testEditOwner1@example.com"
