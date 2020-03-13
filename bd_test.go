@@ -23,7 +23,7 @@ func TestAppend(t *testing.T) {
 	assert.Nil(t, err, "No errors")
 	own2 := owners.Owner{
 		Name:     "asd",
-		Email:    "asd",
+		Email:    "assd",
 		Password: "asd",
 		EditedAt: time.Now(),
 		Photo:    "asd",
@@ -117,35 +117,6 @@ func TestOwnerStorage_Count(t *testing.T) {
 	count, err = Storage.Count()
 	assert.Nil(t, err)
 	assert.Equal(t, 1, count)
-
-}
-
-func TestOwnerStorage_AppendList(t *testing.T) {
-	Storage, _ := owners.NewOwnerStorage("postgres", "", "5431")
-	Storage.Clear()
-
-	own := owners.Owner{
-		OwnerId:  229,
-		Name:     "asd",
-		Email:    "email",
-		Password: "password",
-		EditedAt: time.Now().UTC(),
-		Photo:    "asd",
-	}
-
-	own2 := owners.Owner{
-		OwnerId:  230,
-		Name:     "asd2",
-		Email:    "email",
-		Password: "password",
-		EditedAt: time.Now().UTC(),
-		Photo:    "asd",
-	}
-
-	ownerList := []owners.Owner{own, own2}
-	err := Storage.AppendList(ownerList)
-
-	assert.Nil(t, err)
 
 }
 

@@ -27,43 +27,23 @@ func logErr(err error, message string, where Owner) {
 }
 
 func (s *OwnerStorage) Append(own Owner) (Owner, error) {
-	tx, err := s.db.Begin()
-	isExisted, _, _ := s.Existed(own.Email, own.Password)
+	isExisted, _, err := s.Existed(own.Email, own.Password)
 	if isExisted {
 		return Owner{}, errors.New("User already in base")
 	}
 	own.Password = GetMD5Hash(own.Password)
 	if err != nil {
-		logErr(err, "When trying to connect to bd", own)
+		logErr(err, "error when trying to check is existed", own)
 		return Owner{}, err
 	}
-	_, err = tx.Exec("insert into owner(name, email, password, editedat, photo) values ($1,$2,$3,$4,$5)", own.Name, own.Email, own.Password, own.EditedAt, own.Photo)
+	dbOwner := Owner{}
+	err = s.db.Get(&dbOwner, "insert into owner(name, email, password, editedat, photo) values ($1,$2,$3,$4,$5) returning *", own.Name, own.Email, own.Password, own.EditedAt, own.Photo)
 	if err != nil {
 		logErr(err, "When trying to append data", own)
 		return Owner{}, err
 	}
-	err = tx.Commit()
-	return own, err
+	return dbOwner, err
 
-}
-
-func (s *OwnerStorage) AppendList(owners []Owner) error {
-	tx, err := s.db.Begin()
-	if err != nil {
-		logErr(err, "When trying to connect to bd", owners[0])
-		return err
-	}
-	for _, own := range owners {
-
-		own.Password = GetMD5Hash(own.Password)
-		_, err := tx.Exec("insert into owner(OwnerId, name, email, password, editedat, photo) values ($1,$2,$3,$4,$5,$6)", own.OwnerId, own.Name, own.Email, own.Password, own.EditedAt, own.Photo)
-		if err != nil {
-			logErr(err, "When trying to append data", own)
-			return err
-		}
-	}
-	err = tx.Commit()
-	return err
 }
 
 func (s *OwnerStorage) CreateTable() error {

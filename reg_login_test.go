@@ -178,6 +178,7 @@ func createUserForTest(email, password string) (error, owners.Owner) {
 		Password: password,
 	}
 	own, err := owners.Storage.Append(user)
+
 	return err, own
 }
 
@@ -338,7 +339,7 @@ func TestLoginUser(t *testing.T) {
 	}
 }
 
-func чTestGetOwner(t *testing.T) {
+func TestGetOwner(t *testing.T) {
 	//Preparing for test
 	email1 := "testGetOwner1@example.com"
 	email2 := "testGetOwner2@example.com"
