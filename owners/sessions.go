@@ -57,10 +57,10 @@ func (s *sessionStorage) createNewSession(userID int, expiresDate time.Time) (st
 	return u.String(), nil
 }
 
-func (s *sessionStorage) CreateNewSession(value Owner, expiresDate time.Time) (string, error) {
+func (s *sessionStorage) CreateNewSession(value Stuff, expiresDate time.Time) (string, error) {
 	s.Lock()
 	defer s.Unlock()
-	return s.createNewSession(value.OwnerID, expiresDate)
+	return s.createNewSession(value.StuffID, expiresDate)
 }
 
 func (s *sessionStorage) Login(email string, password string, expiresDate time.Time) (string, error) {
@@ -73,7 +73,7 @@ func (s *sessionStorage) Login(email string, password string, expiresDate time.T
 	return sessionToken, err
 }
 
-func (s *sessionStorage) GetOwnerByCookie(cookie string) (Owner, error) {
+func (s *sessionStorage) GetOwnerByCookie(cookie string) (Stuff, error) {
 	for i := 0; i < s.Count(); i++ {
 		session := s.Get(i)
 		timeDiff := session.ExpiresDate.Sub(time.Now())

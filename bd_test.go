@@ -9,9 +9,9 @@ import (
 )
 
 func TestAppend(t *testing.T) {
-	Storage, _ := owners.NewOwnerStorage("postgres", "", "5431")
+	Storage, _ := owners.NewStuffStorage("postgres", "", "5431")
 	Storage.Clear()
-	own := owners.Owner{
+	own := owners.Stuff{
 		Name:     "asd",
 		Email:    "asd",
 		Password: "asd",
@@ -21,7 +21,7 @@ func TestAppend(t *testing.T) {
 	_, err := Storage.Append(own)
 	fmt.Println(err)
 	assert.Nil(t, err, "No errors")
-	own2 := owners.Owner{
+	own2 := owners.Stuff{
 		Name:     "asd",
 		Email:    "assd",
 		Password: "asd",
@@ -34,10 +34,10 @@ func TestAppend(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
-	Storage, _ := owners.NewOwnerStorage("postgres", "", "5431")
+	Storage, _ := owners.NewStuffStorage("postgres", "", "5431")
 	Storage.Clear()
-	own := owners.Owner{
-		OwnerID:  1,
+	own := owners.Stuff{
+		StuffID:  1,
 		Name:     "asd",
 		Email:    "asd",
 		Password: "asd",
@@ -51,11 +51,11 @@ func TestGet(t *testing.T) {
 	assert.Equal(t, own, dbOwner)
 }
 
-func TestOwnerStorage_GetByEmailAndPassword(t *testing.T) {
-	Storage, _ := owners.NewOwnerStorage("postgres", "", "5431")
+func TestStuffStorage_GetByEmailAndPassword(t *testing.T) {
+	Storage, _ := owners.NewStuffStorage("postgres", "", "5431")
 	Storage.Clear()
-	own := owners.Owner{
-		OwnerID:  1,
+	own := owners.Stuff{
+		StuffID:  1,
 		Name:     "asd",
 		Email:    "email",
 		Password: "password",
@@ -69,11 +69,11 @@ func TestOwnerStorage_GetByEmailAndPassword(t *testing.T) {
 	assert.Equal(t, own, dbOwner)
 }
 
-func TestOwnerStorage_Set(t *testing.T) {
-	Storage, _ := owners.NewOwnerStorage("postgres", "", "5431")
+func TestStuffStorage_Set(t *testing.T) {
+	Storage, _ := owners.NewStuffStorage("postgres", "", "5431")
 	Storage.Clear()
-	own := owners.Owner{
-		OwnerID:  1,
+	own := owners.Stuff{
+		StuffID:  1,
 		Name:     "asd",
 		Email:    "email",
 		Password: "password",
@@ -81,8 +81,8 @@ func TestOwnerStorage_Set(t *testing.T) {
 		Photo:    "asd",
 	}
 
-	newOwn := owners.Owner{
-		OwnerID:  1,
+	newOwn := owners.Stuff{
+		StuffID:  1,
 		Name:     "newasd",
 		Email:    "newemail",
 		Password: "password",
@@ -97,15 +97,15 @@ func TestOwnerStorage_Set(t *testing.T) {
 	assert.Equal(t, newOwn, dBOwner)
 }
 
-func TestOwnerStorage_Count(t *testing.T) {
-	Storage, _ := owners.NewOwnerStorage("postgres", "", "5431")
+func TestStuffStorage_Count(t *testing.T) {
+	Storage, _ := owners.NewStuffStorage("postgres", "", "5431")
 	Storage.Clear()
 	count, err := Storage.Count()
 	assert.Nil(t, err)
 	assert.Equal(t, 0, count)
 
-	own := owners.Owner{
-		OwnerID:  229,
+	own := owners.Stuff{
+		StuffID:  229,
 		Name:     "asd",
 		Email:    "email",
 		Password: "password",
@@ -120,15 +120,15 @@ func TestOwnerStorage_Count(t *testing.T) {
 
 }
 
-func TestOwnerStorage_Existed(t *testing.T) {
-	Storage, _ := owners.NewOwnerStorage("postgres", "", "5431")
+func TestStuffStorage_Existed(t *testing.T) {
+	Storage, _ := owners.NewStuffStorage("postgres", "", "5431")
 	Storage.Clear()
 	isExist, _, err := Storage.Existed("email", "password")
 	assert.Nil(t, err)
 	assert.Equal(t, false, isExist)
 
-	own := owners.Owner{
-		OwnerID:  229,
+	own := owners.Stuff{
+		StuffID:  229,
 		Name:     "asd",
 		Email:    "email",
 		Password: "password",
