@@ -37,14 +37,14 @@ func TestGet(t *testing.T) {
 	Storage, _ := owners.NewOwnerStorage("postgres", "", "5431")
 	Storage.Clear()
 	own := owners.Owner{
-		OwnerId:  1,
+		OwnerID:  1,
 		Name:     "asd",
 		Email:    "asd",
 		Password: "asd",
 		EditedAt: time.Now().UTC(),
 		Photo:    "asd",
 	}
-	Storage.Append(own)
+	_, _ = Storage.Append(own)
 	dbOwner, err := Storage.Get(1)
 	assert.Nil(t, err)
 	own.Password = owners.GetMD5Hash(own.Password)
@@ -55,14 +55,14 @@ func TestOwnerStorage_GetByEmailAndPassword(t *testing.T) {
 	Storage, _ := owners.NewOwnerStorage("postgres", "", "5431")
 	Storage.Clear()
 	own := owners.Owner{
-		OwnerId:  1,
+		OwnerID:  1,
 		Name:     "asd",
 		Email:    "email",
 		Password: "password",
 		EditedAt: time.Now().UTC(),
 		Photo:    "asd",
 	}
-	Storage.Append(own)
+	_, _ = Storage.Append(own)
 	own.Password = owners.GetMD5Hash(own.Password)
 	dbOwner, err := Storage.GetByEmailAndPassword("email", "password")
 	assert.Nil(t, err)
@@ -73,7 +73,7 @@ func TestOwnerStorage_Set(t *testing.T) {
 	Storage, _ := owners.NewOwnerStorage("postgres", "", "5431")
 	Storage.Clear()
 	own := owners.Owner{
-		OwnerId:  1,
+		OwnerID:  1,
 		Name:     "asd",
 		Email:    "email",
 		Password: "password",
@@ -82,15 +82,15 @@ func TestOwnerStorage_Set(t *testing.T) {
 	}
 
 	newOwn := owners.Owner{
-		OwnerId:  1,
+		OwnerID:  1,
 		Name:     "newasd",
 		Email:    "newemail",
 		Password: "password",
 		EditedAt: time.Now().UTC(),
 		Photo:    "asd",
 	}
-	Storage.Append(own)
-	Storage.Set(1, newOwn)
+	_, _ = Storage.Append(own)
+	_, _ = Storage.Set(1, newOwn)
 	dBOwner, err := Storage.Get(1)
 	assert.Nil(t, err)
 	newOwn.Password = owners.GetMD5Hash(newOwn.Password)
@@ -105,14 +105,14 @@ func TestOwnerStorage_Count(t *testing.T) {
 	assert.Equal(t, 0, count)
 
 	own := owners.Owner{
-		OwnerId:  229,
+		OwnerID:  229,
 		Name:     "asd",
 		Email:    "email",
 		Password: "password",
 		EditedAt: time.Now().UTC(),
 		Photo:    "asd",
 	}
-	Storage.Append(own)
+	_, _ = Storage.Append(own)
 
 	count, err = Storage.Count()
 	assert.Nil(t, err)
@@ -128,14 +128,14 @@ func TestOwnerStorage_Existed(t *testing.T) {
 	assert.Equal(t, false, isExist)
 
 	own := owners.Owner{
-		OwnerId:  229,
+		OwnerID:  229,
 		Name:     "asd",
 		Email:    "email",
 		Password: "password",
 		EditedAt: time.Now().UTC(),
 		Photo:    "asd",
 	}
-	Storage.Append(own)
+	_, _ = Storage.Append(own)
 
 	isExist, _, err = Storage.Existed("email", "password")
 	assert.Nil(t, err)

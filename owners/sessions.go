@@ -60,7 +60,7 @@ func (s *sessionStorage) createNewSession(userID int, expiresDate time.Time) (st
 func (s *sessionStorage) CreateNewSession(value Owner, expiresDate time.Time) (string, error) {
 	s.Lock()
 	defer s.Unlock()
-	return s.createNewSession(value.OwnerId, expiresDate)
+	return s.createNewSession(value.OwnerID, expiresDate)
 }
 
 func (s *sessionStorage) Login(email string, password string, expiresDate time.Time) (string, error) {

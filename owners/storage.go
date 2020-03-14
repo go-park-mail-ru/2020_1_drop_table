@@ -10,7 +10,7 @@ import (
 )
 
 type Owner struct {
-	OwnerId  int       `json:"id"`
+	OwnerID  int       `json:"id"`
 	Name     string    `json:"name" validate:"required,min=4,max=100"`
 	Email    string    `json:"email" validate:"required,email"`
 	Password string    `json:"password" validate:"required,min=8,max=100"`
@@ -63,7 +63,7 @@ func (s *OwnerStorage) CreateTable() error {
 }
 
 func isOwnerEmpty(own *Owner) bool {
-	if own.OwnerId == 0 && own.Name == "" {
+	if own.OwnerID == 0 && own.Name == "" {
 		log.Info().Msgf("Owner not found")
 		return true
 	}
@@ -134,8 +134,8 @@ func (s *OwnerStorage) Drop() error {
 }
 
 func (s *OwnerStorage) Clear() {
-	s.Drop()
-	s.CreateTable()
+	_ = s.Drop()
+	_ = s.CreateTable()
 }
 
 func hasPermission(owner Owner, cookie string) bool {
@@ -143,5 +143,5 @@ func hasPermission(owner Owner, cookie string) bool {
 	if err != nil {
 		return false
 	}
-	return actualOwner.OwnerId == owner.OwnerId
+	return actualOwner.OwnerID == owner.OwnerID
 }
