@@ -1,7 +1,7 @@
 package main
 
 import (
-	"2020_1_drop_tableznbxcnz/owners"
+	"2020_1_drop_table/owners"
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"
