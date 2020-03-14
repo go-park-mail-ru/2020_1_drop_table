@@ -168,19 +168,19 @@ func TestGetCafeList(t *testing.T) {
 	}
 
 	cafeName1 := "TestGetCafeList1"
-	err, cafe1 := createCafeForTest(cafeName1, owner1.ID)
+	err, cafe1 := createCafeForTest(cafeName1, owner1.OwnerId)
 	if err != nil {
 		t.Errorf("got error while creationg cafe: %+v", err)
 	}
 
 	cafeName2 := "TestGetCafeList2"
-	err, cafe2 := createCafeForTest(cafeName2, owner1.ID)
+	err, cafe2 := createCafeForTest(cafeName2, owner1.OwnerId)
 	if err != nil {
 		t.Errorf("got error while creationg cafe: %+v", err)
 	}
 
 	cafeName3 := "TestGetCafeList3"
-	err, cafe3 := createCafeForTest(cafeName3, owner2.ID)
+	err, cafe3 := createCafeForTest(cafeName3, owner2.OwnerId)
 	if err != nil {
 		t.Errorf("got error while creationg cafe: %+v", err)
 	}
@@ -318,13 +318,13 @@ func TestGetCafeHandler(t *testing.T) {
 	}
 
 	cafeName1 := "TestGetCafeList1"
-	err, cafe1 := createCafeForTest(cafeName1, owner1.ID)
+	err, cafe1 := createCafeForTest(cafeName1, owner1.OwnerId)
 	if err != nil {
 		t.Errorf("got error while creationg cafe: %+v", err)
 	}
 
 	cafeName2 := "TestGetCafeList2"
-	err, cafe2 := createCafeForTest(cafeName2, owner2.ID)
+	err, cafe2 := createCafeForTest(cafeName2, owner2.OwnerId)
 	if err != nil {
 		t.Errorf("got error while creationg cafe: %+v", err)
 	}
@@ -468,20 +468,20 @@ func TestEditCafeHandler(t *testing.T) {
 		t.Errorf("auth error: %s", err)
 	}
 
-	err, _ = createCafeForTest("TestGetCafeList1", owner1.ID)
+	err, _ = createCafeForTest("TestGetCafeList1", owner1.OwnerId)
 	if err != nil {
 		t.Errorf("got error while creationg cafe: %+v", err)
 	}
 
 	cafeName1 := "TestGetCafeList2"
-	err, cafe1 := createCafeForTest(cafeName1, owner1.ID)
+	err, cafe1 := createCafeForTest(cafeName1, owner1.OwnerId)
 	if err != nil {
 		t.Errorf("got error while creationg cafe: %+v", err)
 	}
 	cafe1.Name = "TestGetCafeList1EDITED"
 
 	cafeName2 := "TestGetCafeList2"
-	err, cafe2 := createCafeForTest(cafeName2, owner2.ID)
+	err, cafe2 := createCafeForTest(cafeName2, owner2.OwnerId)
 	if err != nil {
 		t.Errorf("got error while creationg cafe: %+v", err)
 	}

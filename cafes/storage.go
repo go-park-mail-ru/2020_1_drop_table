@@ -21,7 +21,7 @@ type Cafe struct {
 }
 
 func (c *Cafe) hasPermission(owner owners.Owner) bool {
-	return c.OwnerID == owner.ID
+	return c.OwnerID == owner.OwnerId
 }
 
 type cafesStorage struct {
@@ -80,7 +80,7 @@ func (cs *cafesStorage) getOwnerCafes(owner owners.Owner) []Cafe {
 	var ownerCafes []Cafe
 	for i := 0; i < cs.Count(); i++ {
 		cafe, _ := cs.Get(i)
-		if cafe.OwnerID == owner.ID {
+		if cafe.OwnerID == owner.OwnerId {
 			ownerCafes = append(ownerCafes, cafe)
 		}
 	}

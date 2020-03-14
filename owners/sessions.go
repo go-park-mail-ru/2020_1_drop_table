@@ -60,11 +60,11 @@ func (s *sessionStorage) createNewSession(userID int, expiresDate time.Time) (st
 func (s *sessionStorage) CreateNewSession(value Owner, expiresDate time.Time) (string, error) {
 	s.Lock()
 	defer s.Unlock()
-	return s.createNewSession(value.ID, expiresDate)
+	return s.createNewSession(value.OwnerId, expiresDate)
 }
 
 func (s *sessionStorage) Login(email string, password string, expiresDate time.Time) (string, error) {
-	existed, owner := Storage.Existed(email, password)
+	existed, owner, _ := Storage.Existed(email, password)
 	if !existed {
 		err := errors.New("user with given login and password does not exist")
 		return "", err
@@ -85,7 +85,7 @@ func (s *sessionStorage) GetOwnerByCookie(cookie string) (Owner, error) {
 }
 
 func GetAuthCookie(email, password string) (http.Cookie, error) {
-	expiresDate := time.Now().Add(time.Hour * 24 * 100)
+	expiresDate := time.Now().Add(time.Hour * 24 * 100).UTC()
 	token, err := StorageSession.Login(email, password, expiresDate)
 
 	if err != nil {

@@ -64,7 +64,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	err, owner := Storage.Append(ownerObj)
+	owner, err := Storage.Append(ownerObj)
 	if err != nil {
 		responses.SendSingleError("User with this email already existed", w)
 		return
@@ -238,4 +238,4 @@ func GetCurrentOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	responses.SendOKAnswer(owner, w)
 }
 
-var Storage = NewOwnersStorage()
+var Storage, _ = NewOwnerStorage("postgres", "", "5431")
