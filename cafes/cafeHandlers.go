@@ -37,7 +37,7 @@ func CreateCafeHandler(w http.ResponseWriter, r *http.Request) {
 		responses.SendSingleError("empty jsonData field", w)
 		return
 	}
-	cafeObj := Cafe{OwnerID: owner.OwnerId}
+	cafeObj := Cafe{OwnerID: owner.OwnerID}
 
 	if err := json.Unmarshal([]byte(jsonData), &cafeObj); err != nil {
 		responses.SendSingleError("json parsing error", w)
@@ -63,7 +63,7 @@ func CreateCafeHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	err, cafe := Storage.Append(cafeObj)
+	cafe, err := Storage.Append(cafeObj)
 	if err != nil {
 		responses.SendSingleError("cafe with this this Name already existed", w)
 		return
@@ -84,7 +84,12 @@ func GetCafesListHandler(w http.ResponseWriter, r *http.Request) {
 		responses.SendForbidden(w)
 		return
 	}
-	ownerCafes := Storage.getOwnerCafes(owner)
+	ownerCafes, err := Storage.getOwnerCafes(owner)
+	if err != nil {
+		responses.SendForbidden(w)
+		return
+	}
+
 	responses.SendOKAnswer(ownerCafes, w)
 }
 

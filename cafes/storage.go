@@ -2,15 +2,15 @@ package cafes
 
 import (
 	"2020_1_drop_table/owners"
-	"errors"
 	"fmt"
-	"sync"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
+	"github.com/rs/zerolog/log"
 	"time"
 )
 
-//ToDo make photos available
 type Cafe struct {
-	ID          int       `json:"id"`
+	CafeID      int       `json:"id"`
 	Name        string    `json:"name" validate:"required,min=2,max=100"`
 	Address     string    `json:"address" validate:"required"`
 	Description string    `json:"description" validate:"required"`
@@ -21,82 +21,113 @@ type Cafe struct {
 }
 
 func (c *Cafe) hasPermission(owner owners.Owner) bool {
-	return c.OwnerID == owner.OwnerId
+	return c.OwnerID == owner.OwnerID
 }
 
 type cafesStorage struct {
-	sync.Mutex
-	cafes []Cafe
+	db *sqlx.DB
 }
 
-func NewCafesStorage() *cafesStorage {
-	return &cafesStorage{}
+func newCafesStorage(user string, password string, port string) (cafesStorage, error) {
+	connStr := fmt.Sprintf("user=%s password=%s dbname=postgres sslmode=disable port=%s", user, password, port)
+	db, err := sqlx.Open("postgres", connStr)
+	cafeStorage := cafesStorage{db}
+
+	return cafeStorage, err
 }
 
-func (cs *cafesStorage) append(value Cafe) Cafe {
-	value.ID = cs.count()
-	cs.cafes = append(cs.cafes, value)
-	return value
+func (cs *cafesStorage) createTable() error {
+	schema := `CREATE TABLE IF NOT EXISTS Cafe
+(
+    CafeID      SERIAL PRIMARY KEY,
+	Name        TEXT,
+	Address     TEXT,
+	Description TEXT,
+	OwnerID     INT,
+	OpenTime    TIME,
+	CloseTime   TIME,
+	Photo       TEXT
+)
+`
+	_, err := cs.db.Exec(schema)
+	return err
 }
 
-func (cs *cafesStorage) set(i int, value Cafe) Cafe {
-	cs.cafes[i] = value
-	return value
-}
-
-func (cs *cafesStorage) get(index int) (Cafe, error) {
-	if cs.count() > index && index >= 0 {
-		item := cs.cafes[index]
-		return item, nil
+func (cs *cafesStorage) Append(value Cafe) (Cafe, error) {
+	CafeDB := Cafe{}
+	err := cs.db.Get(&CafeDB, `insert into Cafe(
+	Name, 
+	Address, 
+	Description, 
+	OwnerID, 
+	OpenTime, 
+	CloseTime, 
+	Photo) 
+	values ($1,$2,$3,$4,$5,$6,$7) 
+	returning *`, value.Name, value.Address,
+		value.Description, value.OwnerID, value.OpenTime,
+		value.CloseTime, value.Photo)
+	if err != nil {
+		log.Error().Msgf("error: %v, while adding cafe,  in -> %v", err, value)
+		return Cafe{}, err
 	}
-	notFoundErrorMessage := fmt.Sprintf("Cafe not fount")
-	return Cafe{}, errors.New(notFoundErrorMessage)
-}
-
-func (cs *cafesStorage) count() int {
-	return len(cs.cafes)
-}
-
-func (cs *cafesStorage) Append(value Cafe) (error, Cafe) {
-	cs.Lock()
-	defer cs.Unlock()
-	value = cs.append(value)
-	return nil, value
-}
-
-func (cs *cafesStorage) Count() int {
-	cs.Lock()
-	defer cs.Unlock()
-	return cs.count()
+	fmt.Println(CafeDB.Name, value.Name)
+	return CafeDB, nil
 }
 
 func (cs *cafesStorage) Get(index int) (Cafe, error) {
-	cs.Lock()
-	defer cs.Unlock()
-	return cs.get(index)
+	queryString := `select * from Cafe where CafeID=$1`
+	CafeDB := Cafe{}
+	err := cs.db.Get(&CafeDB, queryString, index)
+
+	if err != nil {
+		log.Error().Msgf("error: %v, while getting cafe with index %d", err, index)
+		return Cafe{}, err
+	}
+	return CafeDB, err
 }
 
-func (cs *cafesStorage) getOwnerCafes(owner owners.Owner) []Cafe {
-	var ownerCafes []Cafe
-	for i := 0; i < cs.Count(); i++ {
-		cafe, _ := cs.Get(i)
-		if cafe.OwnerID == owner.OwnerId {
-			ownerCafes = append(ownerCafes, cafe)
-		}
+func (cs *cafesStorage) getOwnerCafes(owner owners.Owner) ([]Cafe, error) {
+	queryString := `SELECT * FROM Cafe WHERE OwnerID=$1`
+	var cafes []Cafe
+	err := cs.db.Select(&cafes, queryString, owner.OwnerID)
+
+	if err != nil {
+		log.Error().Msgf("error: %v, while getting owner cafes, owner: %v", err, owner)
+		return []Cafe{}, err
 	}
-	return ownerCafes
+
+	return cafes, nil
 }
 
 func (cs *cafesStorage) Set(i int, value Cafe) (Cafe, error) {
-	if i > cs.Count() {
-		err := errors.New(fmt.Sprintf("no user with id: %d", i))
-		return Cafe{}, err
+	queryString := `UPDATE Cafe SET 
+	Name=$1, 
+	Address=$2, 
+	Description=$3, 
+	OwnerID=$4, 
+	OpenTime=$5, 
+	CloseTime=$6, 
+	Photo=$7 
+	WHERE CafeID=$8
+	RETURNING *`
+	cafeDB := Cafe{}
+	err := cs.db.Get(&cafeDB, queryString, value.Name, value.Address, value.Description,
+		value.OwnerID, value.OpenTime, value.CloseTime, value.Photo, i)
+	if err != nil {
+		log.Error().Msgf("error: %v, while dding cafe,  in -> %v with index %d", err, value, i)
 	}
-	value.ID = i
-	cs.Lock()
-	defer cs.Unlock()
-	value = cs.set(i, value)
-	return value, nil
+	return cafeDB, err
 }
 
-var Storage = NewCafesStorage()
+func (cs *cafesStorage) Drop() error {
+	_, err := cs.db.Exec("DROP TABLE IF EXISTS Cafe CASCADE")
+	return err
+}
+
+func (cs *cafesStorage) Clear() {
+	_ = cs.Drop()
+	_ = cs.createTable()
+}
+
+var Storage, _ = newCafesStorage("postgres", "", "5431")
