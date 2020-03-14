@@ -116,10 +116,9 @@ func (s *OwnerStorage) Existed(email string, password string) (bool, Owner, erro
 }
 
 func NewOwnerStorage(user string, password string, port string) (OwnerStorage, error) {
-	connStr := fmt.Sprintf("user=%s password=%s dbname=postgres sslmode=disable port=%s", user, password, port) //TODO поменять порт
+	connStr := fmt.Sprintf("user=%s password=%s dbname=postgres sslmode=disable port=%s", user, password, port)
 	db, err := sqlx.Open("postgres", connStr)
 	ownStorage := OwnerStorage{db}
-	ownStorage.Clear()
 	return ownStorage, err
 }
 
