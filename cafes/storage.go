@@ -54,8 +54,7 @@ func (cs *cafesStorage) createTable() error {
 }
 
 func (cs *cafesStorage) Append(value Cafe) (Cafe, error) {
-	CafeDB := Cafe{}
-	err := cs.db.Get(&CafeDB, `insert into Cafe(
+	queryString := `insert into Cafe(
 	Name, 
 	Address, 
 	Description, 
@@ -64,14 +63,16 @@ func (cs *cafesStorage) Append(value Cafe) (Cafe, error) {
 	CloseTime, 
 	Photo) 
 	values ($1,$2,$3,$4,$5,$6,$7) 
-	returning *`, value.Name, value.Address,
+	returning *`
+
+	CafeDB := Cafe{}
+	err := cs.db.Get(&CafeDB, queryString, value.Name, value.Address,
 		value.Description, value.OwnerID, value.OpenTime,
 		value.CloseTime, value.Photo)
 	if err != nil {
 		log.Error().Msgf("error: %v, while adding cafe,  in -> %v", err, value)
 		return Cafe{}, err
 	}
-	fmt.Println(CafeDB.Name, value.Name)
 	return CafeDB, nil
 }
 
