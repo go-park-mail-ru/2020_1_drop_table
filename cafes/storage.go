@@ -1,7 +1,6 @@
 package cafes
 
 import (
-	"2020_1_drop_table/owners"
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -20,8 +19,8 @@ type Cafe struct {
 	Photo       string    `json:"photo"`
 }
 
-func (c *Cafe) hasPermission(owner owners.Owner) bool {
-	return c.OwnerID == owner.OwnerID
+func (c *Cafe) hasPermission(OwnerID int) bool {
+	return c.OwnerID == OwnerID
 }
 
 type cafesStorage struct {
@@ -88,13 +87,13 @@ func (cs *cafesStorage) Get(index int) (Cafe, error) {
 	return CafeDB, err
 }
 
-func (cs *cafesStorage) getOwnerCafes(owner owners.Owner) ([]Cafe, error) {
+func (cs *cafesStorage) getOwnerCafes(ownerID int) ([]Cafe, error) {
 	queryString := `SELECT * FROM Cafe WHERE OwnerID=$1`
 	var cafes []Cafe
-	err := cs.db.Select(&cafes, queryString, owner.OwnerID)
+	err := cs.db.Select(&cafes, queryString, ownerID)
 
 	if err != nil {
-		log.Error().Msgf("error: %v, while getting owner cafes, owner: %v", err, owner)
+		log.Error().Msgf("error: %v, while getting owner cafes, ownerID: %v", err, ownerID)
 		return []Cafe{}, err
 	}
 

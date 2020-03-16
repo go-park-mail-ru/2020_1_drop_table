@@ -3,6 +3,7 @@ package cafes
 import (
 	"2020_1_drop_table/owners"
 	"2020_1_drop_table/responses"
+	"2020_1_drop_table/utils/testsUtils"
 	"bytes"
 	"encoding/json"
 	"github.com/gorilla/mux"
@@ -16,7 +17,7 @@ import (
 	"testing"
 )
 
-func CreateUserForTest(email, password string) (error, owners.Owner) {
+func CreateUserForTest(email, password string) (owners.Owner, error) {
 	user := owners.Owner{
 		Name:     "Василий Андреев",
 		Email:    email,
@@ -24,7 +25,7 @@ func CreateUserForTest(email, password string) (error, owners.Owner) {
 	}
 	own, err := owners.Storage.Append(user)
 
-	return err, own
+	return own, err
 }
 
 type HttpTestCase struct {
@@ -59,7 +60,7 @@ func TestCafeCreation(t *testing.T) {
 	email := "TestCafeCreation@example.com"
 	password := "PassWord1"
 
-	err, _ := CreateUserForTest(email, password)
+	owner, err := CreateUserForTest(email, password)
 	if err != nil {
 		t.Errorf("can't create new user, error: %+v", err)
 	}
@@ -98,7 +99,7 @@ func TestCafeCreation(t *testing.T) {
 		},
 	}
 
-	authCookieOwner1, err := owners.GetAuthCookie(email, password)
+	authCookieOwner1, err := testsUtils.GetAuthCookie(owner.OwnerID)
 	if err != nil {
 		t.Errorf("auth error: %s", err)
 	}
@@ -192,22 +193,22 @@ func TestGetCafeList(t *testing.T) {
 	email2 := "TestGetCafeList2@example.com"
 	password := "PassWord1"
 
-	err, owner1 := CreateUserForTest(email1, password)
+	owner1, err := CreateUserForTest(email1, password)
 	if err != nil {
 		t.Errorf("can't create new user, error: %+v", err)
 	}
 
-	authCookieOwner1, err := owners.GetAuthCookie(email1, password)
+	authCookieOwner1, err := testsUtils.GetAuthCookie(owner1.OwnerID)
 	if err != nil {
 		t.Errorf("auth error: %s", err)
 	}
 
-	err, owner2 := CreateUserForTest(email2, password)
+	owner2, err := CreateUserForTest(email2, password)
 	if err != nil {
 		t.Errorf("can't create new user, error: %+v", err)
 	}
 
-	authCookieOwner2, err := owners.GetAuthCookie(email2, password)
+	authCookieOwner2, err := testsUtils.GetAuthCookie(owner2.OwnerID)
 	if err != nil {
 		t.Errorf("auth error: %s", err)
 	}
@@ -345,22 +346,22 @@ func TestGetCafeHandler(t *testing.T) {
 	email2 := "TestGetCafeHandler2@example.com"
 	password := "PassWord1"
 
-	err, owner1 := CreateUserForTest(email1, password)
+	owner1, err := CreateUserForTest(email1, password)
 	if err != nil {
 		t.Errorf("can't create new user, error: %+v", err)
 	}
 
-	authCookieOwner1, err := owners.GetAuthCookie(email1, password)
+	authCookieOwner1, err := testsUtils.GetAuthCookie(owner1.OwnerID)
 	if err != nil {
 		t.Errorf("auth error: %s", err)
 	}
 
-	err, owner2 := CreateUserForTest(email2, password)
+	owner2, err := CreateUserForTest(email2, password)
 	if err != nil {
 		t.Errorf("can't create new user, error: %+v", err)
 	}
 
-	authCookieOwner2, err := owners.GetAuthCookie(email2, password)
+	authCookieOwner2, err := testsUtils.GetAuthCookie(owner2.OwnerID)
 	if err != nil {
 		t.Errorf("auth error: %s", err)
 	}
@@ -499,22 +500,22 @@ func TestEditCafeHandler(t *testing.T) {
 	email2 := "TestEditCafeHandler2@example.com"
 	password := "PassWord1"
 
-	err, owner1 := CreateUserForTest(email1, password)
+	owner1, err := CreateUserForTest(email1, password)
 	if err != nil {
 		t.Errorf("can't create new user, error: %+v", err)
 	}
 
-	authCookieOwner1, err := owners.GetAuthCookie(email1, password)
+	authCookieOwner1, err := testsUtils.GetAuthCookie(owner1.OwnerID)
 	if err != nil {
 		t.Errorf("auth error: %s", err)
 	}
 
-	err, owner2 := CreateUserForTest(email2, password)
+	owner2, err := CreateUserForTest(email2, password)
 	if err != nil {
 		t.Errorf("can't create new user, error: %+v", err)
 	}
 
-	authCookieOwner2, err := owners.GetAuthCookie(email2, password)
+	authCookieOwner2, err := testsUtils.GetAuthCookie(owner2.OwnerID)
 	if err != nil {
 		t.Errorf("auth error: %s", err)
 	}

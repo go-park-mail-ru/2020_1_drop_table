@@ -137,11 +137,3 @@ func (s *OwnerStorage) Clear() {
 	_ = s.Drop()
 	_ = s.CreateTable()
 }
-
-func hasPermission(owner Owner, cookie string) bool {
-	actualOwner, err := StorageSession.GetOwnerByCookie(cookie)
-	if err != nil {
-		return false
-	}
-	return actualOwner.OwnerID == owner.OwnerID
-}

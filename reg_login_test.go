@@ -3,6 +3,7 @@ package main
 import (
 	"2020_1_drop_table/owners"
 	"2020_1_drop_table/responses"
+	"2020_1_drop_table/utils/testsUtils"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -43,6 +44,8 @@ func createMultipartFormData(t *testing.T, data string) (bytes.Buffer, *multipar
 }
 
 func TestRegisterUser(t *testing.T) {
+	owners.Storage.Clear()
+
 	ownerObjOK := owners.Owner{
 		Name:     "Василий Андреев",
 		Email:    "example@example.com",
@@ -165,6 +168,7 @@ func TestRegisterUser(t *testing.T) {
 			}
 
 		} else {
+			fmt.Println(responseObject.Errors)
 			t.Errorf("[%d] wrong response data: got nil, expected %+v",
 				caseNum, item.Response.Data)
 		}
@@ -172,6 +176,7 @@ func TestRegisterUser(t *testing.T) {
 }
 
 func CreateUserForTest(email, password string) (error, owners.Owner) {
+
 	user := owners.Owner{
 		Name:     "Василий Андреев",
 		Email:    email,
@@ -182,153 +187,8 @@ func CreateUserForTest(email, password string) (error, owners.Owner) {
 	return err, own
 }
 
-func TestLoginUser(t *testing.T) {
-	//Preparing for test
-	email := "testLoginUser@example.com"
-	password := "PassWord1"
-	err, _ := CreateUserForTest(email, password)
-
-	if err != nil {
-		t.Errorf("can't create new user, error: %+v", err)
-	}
-	//Test
-	testCases := []HttpTestCase{
-		{
-			Request: fmt.Sprintf(`{"email":  "%s",  "password": "%s"}`,
-				email, password),
-			Response: responses.HttpResponse{
-				Data:   "",
-				Errors: nil,
-			},
-			StatusCode: http.StatusOK,
-		},
-		{
-			Request: fmt.Sprintf(`{"email":  "%s",  "password": "%sWrongPassword"}`,
-				email, password),
-			Response: responses.HttpResponse{
-				Data: "",
-				Errors: []responses.HttpError{
-					{
-						Code:    400,
-						Message: "no user with given login and password",
-					},
-				},
-			},
-			StatusCode: http.StatusOK,
-		},
-		{
-			Request: fmt.Sprintf(`{"email":  "%ssWrongEmail",  "password": "%s"}`, email, password),
-			Response: responses.HttpResponse{
-				Data: "",
-				Errors: []responses.HttpError{
-					{
-						Code:    400,
-						Message: "no user with given login and password",
-					},
-				},
-			},
-			StatusCode: http.StatusOK,
-		},
-		{
-			Request: fmt.Sprintf(`{"email":  "%ssWrongEmail",  "password": "%sWrongPassword"}`, email, password),
-			Response: responses.HttpResponse{
-				Data: "",
-				Errors: []responses.HttpError{
-					{
-						Code:    400,
-						Message: "no user with given login and password",
-					},
-				},
-			},
-			StatusCode: http.StatusOK,
-		},
-		{
-			Request: fmt.Sprintf(`{"email":  "%ssWrongEmail",  "password": "%sWrongPassword"}`, email, password),
-			Response: responses.HttpResponse{
-				Data: "",
-				Errors: []responses.HttpError{
-					{
-						Code:    400,
-						Message: "no user with given login and password",
-					},
-				},
-			},
-			StatusCode: http.StatusOK,
-		},
-		{
-			Request: fmt.Sprintf(`{"email":  "%ssWrongEmail"}`, email),
-			Response: responses.HttpResponse{
-				Data: "",
-				Errors: []responses.HttpError{
-					{
-						Code:    400,
-						Message: "Password is a required field",
-					},
-				},
-			},
-			StatusCode: http.StatusOK,
-		},
-	}
-	url := "/api/v1/owner/login"
-	for caseNum, item := range testCases {
-		reader := strings.NewReader(item.Request.(string))
-		req := httptest.NewRequest("POST", url, reader)
-
-		respWriter := httptest.NewRecorder()
-		owners.LoginHandler(respWriter, req)
-		resp := respWriter.Result()
-
-		if resp.StatusCode != item.StatusCode {
-			t.Errorf("[%d] wrong status code: got %+v, expected %+v",
-				caseNum, resp.StatusCode, item.StatusCode)
-		}
-
-		body, _ := ioutil.ReadAll(resp.Body)
-
-		var trueResponse responses.HttpResponse
-		err := json.Unmarshal(body, &trueResponse)
-		if err != nil {
-			t.Errorf("[%d] unmarshaling error: %s", caseNum, err)
-		}
-
-		if len(trueResponse.Errors) != len(item.Response.Errors) {
-			t.Errorf("[%d] wrong errors count in response: got %d, expected %d",
-				caseNum, len(trueResponse.Errors), len(item.Response.Errors))
-		}
-
-		for errorNum, err := range trueResponse.Errors {
-			if err != item.Response.Errors[errorNum] {
-				t.Errorf("[%d] wrong error in response: got %+v, expected %+v",
-					caseNum, err, item.Response.Errors[errorNum])
-			}
-		}
-
-		if len(trueResponse.Errors) == 0 {
-			cookies := resp.Cookies()
-			for _, cookie := range cookies {
-
-				//Add new statement if new COOKIE will be added
-				switch cookie.Name {
-				case "authCookie":
-					ownerFromCookie, err := owners.StorageSession.GetOwnerByCookie(cookie.Value)
-
-					if err != nil {
-						t.Errorf("[%d] error while getting error by Cookie: %+v:", caseNum, err)
-					}
-
-					if ownerFromCookie.Email != email {
-						t.Errorf("[%d] wrong owner's email from COOKIE: got %+v, expected %+v",
-							caseNum, ownerFromCookie.Email, email)
-					}
-				default:
-					t.Errorf("[%d] unexpected Cookie with name: %+v:", caseNum, cookie.Name)
-				}
-			}
-		}
-	}
-}
-
 func TestGetOwner(t *testing.T) {
+	owners.Storage.Clear()
 	//Preparing for test
 	email1 := "testGetOwner1@example.com"
 	email2 := "testGetOwner2@example.com"
@@ -386,11 +246,11 @@ func TestGetOwner(t *testing.T) {
 			StatusCode: http.StatusOK,
 		},
 	}
-
-	authCookieOwner1, err := owners.GetAuthCookie(email2, password)
+	authCookieOwner1, err := testsUtils.GetAuthCookie(owner2.OwnerID)
 	if err != nil {
-		t.Errorf("auth error: %s", err)
+		t.Errorf("error while getting cookie, Error: %s", err)
 	}
+
 	url := "/api/v1/owner"
 
 	for caseNum, item := range testCases {
@@ -418,6 +278,7 @@ func TestGetOwner(t *testing.T) {
 			t.Errorf("[%d] unmarshaling error: %s", caseNum, err)
 		}
 
+		fmt.Println(responseObject.Errors)
 		if len(item.Response.Errors) != len(responseObject.Errors) {
 			t.Errorf("[%d] wrong errors count in response: got %d, expected %d",
 				caseNum, len(responseObject.Errors), len(item.Response.Errors))
@@ -475,8 +336,7 @@ func TestGetCurrentOwner(t *testing.T) {
 			StatusCode: http.StatusOK,
 		},
 	}
-
-	authCookieOwner1, err := owners.GetAuthCookie(email1, password)
+	authCookieOwner1, err := testsUtils.GetAuthCookie(owner1.OwnerID)
 	if err != nil {
 		t.Errorf("auth error: %s", err)
 	}
@@ -551,8 +411,7 @@ func TestEditOwnerHandler(t *testing.T) {
 		t.Errorf("can't create new user, error: %+v", err)
 	}
 	owner2.Email = "EDITED@EMAIL.com"
-
-	authCookieOwner2, err := owners.GetAuthCookie(email2, password)
+	authCookieOwner2, err := testsUtils.GetAuthCookie(owner2.OwnerID)
 	//Test
 	testCases := []HttpTestCase{
 		{
