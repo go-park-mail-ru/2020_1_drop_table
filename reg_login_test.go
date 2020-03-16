@@ -6,7 +6,6 @@ import (
 	"2020_1_drop_table/utils/testsUtils"
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
 	"io"
 	"io/ioutil"
@@ -46,13 +45,13 @@ func createMultipartFormData(t *testing.T, data string) (bytes.Buffer, *multipar
 func TestRegisterUser(t *testing.T) {
 	owners.Storage.Clear()
 
-	ownerObjOK := owners.Owner{
+	ownerObjOK := owners.Staff{
 		Name:     "Василий Андреев",
 		Email:    "example@example.com",
 		Password: "PassWord1",
 	}
 
-	ownerObjNotOK := owners.Owner{
+	ownerObjNotOK := owners.Staff{
 		Name:  "Василий Андреев",
 		Email: "example@example.com",
 	}
@@ -141,7 +140,7 @@ func TestRegisterUser(t *testing.T) {
 		if responseObject.Data != nil {
 			//Data equals
 			responseData := responseObject.Data.(map[string]interface{})
-			expectedData := item.Response.Data.(owners.Owner)
+			expectedData := item.Response.Data.(owners.Staff)
 
 			if responseData["name"] != expectedData.Name {
 				t.Errorf("[%d] wrong Name field in response data: got %+v, expected %+v",
@@ -168,23 +167,22 @@ func TestRegisterUser(t *testing.T) {
 			}
 
 		} else {
-			fmt.Println(responseObject.Errors)
 			t.Errorf("[%d] wrong response data: got nil, expected %+v",
 				caseNum, item.Response.Data)
 		}
 	}
 }
 
-func CreateUserForTest(email, password string) (error, owners.Owner) {
+func CreateUserForTest(email, password string) (error, owners.Staff) {
 
-	user := owners.Owner{
+	user := owners.Staff{
 		Name:     "Василий Андреев",
 		Email:    email,
 		Password: password,
 	}
-	own, err := owners.Storage.Append(user)
+	stf, err := owners.Storage.Append(user)
 
-	return err, own
+	return err, stf
 }
 
 func TestGetOwner(t *testing.T) {
@@ -206,11 +204,11 @@ func TestGetOwner(t *testing.T) {
 	//Test
 	testCases := []HttpTestCase{
 		{
-			Context: map[string]string{"id": strconv.Itoa(owner2.OwnerID)},
+			Context: map[string]string{"id": strconv.Itoa(owner2.StaffID)},
 			Request: nil,
 			Response: responses.HttpResponse{
-				Data: owners.Owner{
-					OwnerID: owner2.OwnerID,
+				Data: owners.Staff{
+					StaffID: owner2.StaffID,
 					Email:   owner2.Email,
 				},
 				Errors: nil,
@@ -218,7 +216,7 @@ func TestGetOwner(t *testing.T) {
 			StatusCode: http.StatusOK,
 		},
 		{
-			Context: map[string]string{"id": strconv.Itoa(owner1.OwnerID)},
+			Context: map[string]string{"id": strconv.Itoa(owner1.StaffID)},
 			Request: nil,
 			Response: responses.HttpResponse{
 				Data: nil,
@@ -246,7 +244,7 @@ func TestGetOwner(t *testing.T) {
 			StatusCode: http.StatusOK,
 		},
 	}
-	authCookieOwner1, err := testsUtils.GetAuthCookie(owner2.OwnerID)
+	authCookieOwner1, err := testsUtils.GetAuthCookie(owner2.StaffID)
 	if err != nil {
 		t.Errorf("error while getting cookie, Error: %s", err)
 	}
@@ -278,7 +276,6 @@ func TestGetOwner(t *testing.T) {
 			t.Errorf("[%d] unmarshaling error: %s", caseNum, err)
 		}
 
-		fmt.Println(responseObject.Errors)
 		if len(item.Response.Errors) != len(responseObject.Errors) {
 			t.Errorf("[%d] wrong errors count in response: got %d, expected %d",
 				caseNum, len(responseObject.Errors), len(item.Response.Errors))
@@ -287,11 +284,11 @@ func TestGetOwner(t *testing.T) {
 		switch responseObject.Errors {
 		case nil:
 			responseData := responseObject.Data.(map[string]interface{})
-			expectedData := item.Response.Data.(owners.Owner)
+			expectedData := item.Response.Data.(owners.Staff)
 
-			if responseData["id"].(float64) != float64(expectedData.OwnerID) {
+			if responseData["id"].(float64) != float64(expectedData.StaffID) {
 				t.Errorf("[%d] wrong Name field in response data: got %+v, expected %+v",
-					caseNum, responseData["id"], expectedData.OwnerID)
+					caseNum, responseData["id"], expectedData.StaffID)
 			}
 
 			if responseData["email"] != expectedData.Email {
@@ -336,7 +333,7 @@ func TestGetCurrentOwner(t *testing.T) {
 			StatusCode: http.StatusOK,
 		},
 	}
-	authCookieOwner1, err := testsUtils.GetAuthCookie(owner1.OwnerID)
+	authCookieOwner1, err := testsUtils.GetAuthCookie(owner1.StaffID)
 	if err != nil {
 		t.Errorf("auth error: %s", err)
 	}
@@ -373,10 +370,10 @@ func TestGetCurrentOwner(t *testing.T) {
 		switch responseObject.Errors {
 		case nil:
 			responseData := responseObject.Data.(map[string]interface{})
-			expectedData := item.Response.Data.(owners.Owner)
-			if responseData["id"].(float64) != float64(expectedData.OwnerID) {
+			expectedData := item.Response.Data.(owners.Staff)
+			if responseData["id"].(float64) != float64(expectedData.StaffID) {
 				t.Errorf("[%d] wrong id field in response data: got %+v, expected %+v",
-					caseNum, responseData["id"], expectedData.OwnerID)
+					caseNum, responseData["id"], expectedData.StaffID)
 			}
 
 			if responseData["email"] != expectedData.Email {
@@ -411,16 +408,16 @@ func TestEditOwnerHandler(t *testing.T) {
 		t.Errorf("can't create new user, error: %+v", err)
 	}
 	owner2.Email = "EDITED@EMAIL.com"
-	authCookieOwner2, err := testsUtils.GetAuthCookie(owner2.OwnerID)
+	authCookieOwner2, err := testsUtils.GetAuthCookie(owner2.StaffID)
 	//Test
 	testCases := []HttpTestCase{
 		{
 			Cookie:  authCookieOwner2,
-			Context: map[string]string{"id": strconv.Itoa(owner2.OwnerID)},
+			Context: map[string]string{"id": strconv.Itoa(owner2.StaffID)},
 			Request: owner2,
 			Response: responses.HttpResponse{
-				Data: owners.Owner{
-					OwnerID: owner2.OwnerID,
+				Data: owners.Staff{
+					StaffID: owner2.StaffID,
 					Email:   owner2.Email,
 				},
 				Errors: nil,
@@ -429,7 +426,7 @@ func TestEditOwnerHandler(t *testing.T) {
 		},
 		{
 			Cookie:  authCookieOwner2,
-			Context: map[string]string{"id": strconv.Itoa(owner1.OwnerID)},
+			Context: map[string]string{"id": strconv.Itoa(owner1.StaffID)},
 			Request: nil,
 			Response: responses.HttpResponse{
 				Errors: []responses.HttpError{
@@ -500,11 +497,11 @@ func TestEditOwnerHandler(t *testing.T) {
 		case nil:
 			//Data equals
 			responseData := TrueResponse.Data.(map[string]interface{})
-			expectedData := item.Response.Data.(owners.Owner)
+			expectedData := item.Response.Data.(owners.Staff)
 
-			if responseData["id"].(float64) != float64(expectedData.OwnerID) {
+			if responseData["id"].(float64) != float64(expectedData.StaffID) {
 				t.Errorf("[%d] wrong CafeID field in response data: got %+v, expected %+v",
-					caseNum, responseData["id"], expectedData.OwnerID)
+					caseNum, responseData["id"], expectedData.StaffID)
 			}
 
 			if responseData["email"] != expectedData.Email {

@@ -13,14 +13,14 @@ type Cafe struct {
 	Name        string    `json:"name" validate:"required,min=2,max=100"`
 	Address     string    `json:"address" validate:"required"`
 	Description string    `json:"description" validate:"required"`
-	OwnerID     int       `json:"ownerID"`
+	StaffID     int       `json:"staffID"`
 	OpenTime    time.Time `json:"openTime"`
 	CloseTime   time.Time `json:"closeTime"`
 	Photo       string    `json:"photo"`
 }
 
-func (c *Cafe) hasPermission(OwnerID int) bool {
-	return c.OwnerID == OwnerID
+func (c *Cafe) hasPermission(StaffID int) bool {
+	return c.StaffID == StaffID
 }
 
 type cafesStorage struct {
@@ -42,7 +42,7 @@ func (cs *cafesStorage) createTable() error {
 	Name        TEXT,
 	Address     TEXT,
 	Description TEXT,
-	OwnerID     INT,
+	StaffID     INT,
 	OpenTime    TIME,
 	CloseTime   TIME,
 	Photo       TEXT
@@ -57,7 +57,7 @@ func (cs *cafesStorage) Append(value Cafe) (Cafe, error) {
 	Name, 
 	Address, 
 	Description, 
-	OwnerID, 
+	StaffID, 
 	OpenTime, 
 	CloseTime, 
 	Photo) 
@@ -66,7 +66,7 @@ func (cs *cafesStorage) Append(value Cafe) (Cafe, error) {
 
 	CafeDB := Cafe{}
 	err := cs.db.Get(&CafeDB, queryString, value.Name, value.Address,
-		value.Description, value.OwnerID, value.OpenTime,
+		value.Description, value.StaffID, value.OpenTime,
 		value.CloseTime, value.Photo)
 	if err != nil {
 		log.Error().Msgf("error: %v, while adding cafe,  in -> %v", err, value)
@@ -87,13 +87,13 @@ func (cs *cafesStorage) Get(index int) (Cafe, error) {
 	return CafeDB, err
 }
 
-func (cs *cafesStorage) getOwnerCafes(ownerID int) ([]Cafe, error) {
-	queryString := `SELECT * FROM Cafe WHERE OwnerID=$1`
+func (cs *cafesStorage) getOwnerCafes(staffID int) ([]Cafe, error) {
+	queryString := `SELECT * FROM Cafe WHERE StaffID=$1`
 	var cafes []Cafe
-	err := cs.db.Select(&cafes, queryString, ownerID)
+	err := cs.db.Select(&cafes, queryString, staffID)
 
 	if err != nil {
-		log.Error().Msgf("error: %v, while getting owner cafes, ownerID: %v", err, ownerID)
+		log.Error().Msgf("error: %v, while getting owner cafes, staffID: %v", err, staffID)
 		return []Cafe{}, err
 	}
 
@@ -105,7 +105,7 @@ func (cs *cafesStorage) Set(i int, value Cafe) (Cafe, error) {
 	Name=$1, 
 	Address=$2, 
 	Description=$3, 
-	OwnerID=$4, 
+	StaffID=$4, 
 	OpenTime=$5, 
 	CloseTime=$6, 
 	Photo=$7 
@@ -113,7 +113,7 @@ func (cs *cafesStorage) Set(i int, value Cafe) (Cafe, error) {
 	RETURNING *`
 	cafeDB := Cafe{}
 	err := cs.db.Get(&cafeDB, queryString, value.Name, value.Address, value.Description,
-		value.OwnerID, value.OpenTime, value.CloseTime, value.Photo, i)
+		value.StaffID, value.OpenTime, value.CloseTime, value.Photo, i)
 	if err != nil {
 		log.Error().Msgf("error: %v, while dding cafe,  in -> %v with index %d", err, value, i)
 	}

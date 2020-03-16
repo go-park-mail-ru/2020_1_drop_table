@@ -41,7 +41,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ownerObj := Owner{}
+	ownerObj := Staff{}
 
 	if err := json.Unmarshal([]byte(jsonData), &ownerObj); err != nil {
 		responses.SendSingleError("json parsing error", w)
@@ -81,7 +81,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session.Values["userID"] = owner.OwnerID
+	session.Values["userID"] = owner.StaffID
 	err = session.Save(r, w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -128,7 +128,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	existed, ownerObj, err := Storage.Existed(form.Email, form.Password)
+	ownerObj, existed, err := Storage.GetByEmailAndPassword(form.Email, form.Password)
 
 	if !existed {
 		responses.SendSingleError("no user with given login and password", w)
@@ -141,7 +141,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session.Values["userID"] = ownerObj.OwnerID
+	session.Values["userID"] = ownerObj.StaffID
 	err = session.Save(r, w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -176,7 +176,7 @@ func EditOwnerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	actualOwnerID, found := session.Values["userID"]
-	if !found || actualOwnerID.(int) != owner.OwnerID {
+	if !found || actualOwnerID.(int) != owner.StaffID {
 		responses.SendForbidden(w)
 		return
 	}
@@ -186,7 +186,7 @@ func EditOwnerHandler(w http.ResponseWriter, r *http.Request) {
 		responses.SendSingleError("empty jsonData field", w)
 		return
 	}
-	ownerObj := Owner{}
+	ownerObj := Staff{}
 	if err := json.Unmarshal([]byte(jsonData), &ownerObj); err != nil {
 		responses.SendSingleError("json parsing error", w)
 		return
@@ -277,4 +277,4 @@ func GetCurrentOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	responses.SendOKAnswer(owner, w)
 }
 
-var Storage, _ = NewOwnerStorage("postgres", "", "5431")
+var Storage, _ = NewStaffStorage("postgres", "", "5431")

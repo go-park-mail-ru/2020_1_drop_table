@@ -26,13 +26,13 @@ func getOwnerIDByCookie(r *http.Request) (ownerID int, err error, isServerError 
 
 	ownerID, isInt := actualOwnerID.(int)
 	if !isInt {
-		return -1, fmt.Errorf("not int OwnerID"), true
+		return -1, fmt.Errorf("not int StaffID"), true
 	}
 	return ownerID, nil, false
 }
 
 func CreateCafeHandler(w http.ResponseWriter, r *http.Request) {
-	requestOwnerID, err, isServerError := getOwnerIDByCookie(r)
+	requestStaffID, err, isServerError := getOwnerIDByCookie(r)
 
 	if isServerError {
 		responses.SendServerError(err.Error(), w)
@@ -54,7 +54,7 @@ func CreateCafeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cafeObj := Cafe{OwnerID: requestOwnerID}
+	cafeObj := Cafe{StaffID: requestStaffID}
 
 	if err := json.Unmarshal([]byte(jsonData), &cafeObj); err != nil {
 		responses.SendSingleError("json parsing error", w)

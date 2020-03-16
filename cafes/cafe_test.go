@@ -17,15 +17,15 @@ import (
 	"testing"
 )
 
-func CreateUserForTest(email, password string) (owners.Owner, error) {
-	user := owners.Owner{
+func CreateUserForTest(email, password string) (owners.Staff, error) {
+	user := owners.Staff{
 		Name:     "Василий Андреев",
 		Email:    email,
 		Password: password,
 	}
-	own, err := owners.Storage.Append(user)
+	stf, err := owners.Storage.Append(user)
 
-	return own, err
+	return stf, err
 }
 
 type HttpTestCase struct {
@@ -60,7 +60,7 @@ func TestCafeCreation(t *testing.T) {
 	email := "TestCafeCreation@example.com"
 	password := "PassWord1"
 
-	owner, err := CreateUserForTest(email, password)
+	staff, err := CreateUserForTest(email, password)
 	if err != nil {
 		t.Errorf("can't create new user, error: %+v", err)
 	}
@@ -99,7 +99,7 @@ func TestCafeCreation(t *testing.T) {
 		},
 	}
 
-	authCookieOwner1, err := testsUtils.GetAuthCookie(owner.OwnerID)
+	authCookieStaff1, err := testsUtils.GetAuthCookie(staff.StaffID)
 	if err != nil {
 		t.Errorf("auth error: %s", err)
 	}
@@ -118,7 +118,7 @@ func TestCafeCreation(t *testing.T) {
 
 		respWriter := httptest.NewRecorder()
 
-		req.AddCookie(&authCookieOwner1)
+		req.AddCookie(&authCookieStaff1)
 
 		CreateCafeHandler(respWriter, req)
 
@@ -175,12 +175,12 @@ func TestCafeCreation(t *testing.T) {
 	}
 }
 
-func createCafeForTest(cafeName string, ownerID int) (Cafe, error) {
+func createCafeForTest(cafeName string, staffID int) (Cafe, error) {
 	cafe := Cafe{
 		Name:        cafeName,
 		Address:     "Тверской б-р, 26А, Москва, 125009",
 		Description: "Описание",
-		OwnerID:     ownerID,
+		StaffID:     staffID,
 	}
 	return Storage.Append(cafe)
 }
@@ -193,40 +193,40 @@ func TestGetCafeList(t *testing.T) {
 	email2 := "TestGetCafeList2@example.com"
 	password := "PassWord1"
 
-	owner1, err := CreateUserForTest(email1, password)
+	staff1, err := CreateUserForTest(email1, password)
 	if err != nil {
 		t.Errorf("can't create new user, error: %+v", err)
 	}
 
-	authCookieOwner1, err := testsUtils.GetAuthCookie(owner1.OwnerID)
+	authCookieStaff1, err := testsUtils.GetAuthCookie(staff1.StaffID)
 	if err != nil {
 		t.Errorf("auth error: %s", err)
 	}
 
-	owner2, err := CreateUserForTest(email2, password)
+	staff2, err := CreateUserForTest(email2, password)
 	if err != nil {
 		t.Errorf("can't create new user, error: %+v", err)
 	}
 
-	authCookieOwner2, err := testsUtils.GetAuthCookie(owner2.OwnerID)
+	authCookieStaff2, err := testsUtils.GetAuthCookie(staff2.StaffID)
 	if err != nil {
 		t.Errorf("auth error: %s", err)
 	}
 
 	cafeName1 := "TestGetCafeList1"
-	cafe1, err := createCafeForTest(cafeName1, owner1.OwnerID)
+	cafe1, err := createCafeForTest(cafeName1, staff1.StaffID)
 	if err != nil {
 		t.Errorf("got error while creationg cafe: %+v", err)
 	}
 
 	cafeName2 := "TestGetCafeList2"
-	cafe2, err := createCafeForTest(cafeName2, owner1.OwnerID)
+	cafe2, err := createCafeForTest(cafeName2, staff1.StaffID)
 	if err != nil {
 		t.Errorf("got error while creationg cafe: %+v", err)
 	}
 
 	cafeName3 := "TestGetCafeList3"
-	cafe3, err := createCafeForTest(cafeName3, owner2.OwnerID)
+	cafe3, err := createCafeForTest(cafeName3, staff2.StaffID)
 	if err != nil {
 		t.Errorf("got error while creationg cafe: %+v", err)
 	}
@@ -234,7 +234,7 @@ func TestGetCafeList(t *testing.T) {
 	testCases := []HttpTestCase{
 		{
 			Request: nil,
-			Cookie:  authCookieOwner1,
+			Cookie:  authCookieStaff1,
 			Response: responses.HttpResponse{
 				Data: []Cafe{
 					cafe1,
@@ -246,7 +246,7 @@ func TestGetCafeList(t *testing.T) {
 		},
 		{
 			Request: nil,
-			Cookie:  authCookieOwner2,
+			Cookie:  authCookieStaff2,
 			Response: responses.HttpResponse{
 				Data: []Cafe{
 					cafe3,
@@ -314,9 +314,9 @@ func TestGetCafeList(t *testing.T) {
 						caseNum, tmpResponse["name"], expectedData[i].Name)
 				}
 
-				if tmpResponse["ownerID"].(float64) != float64(expectedData[i].OwnerID) {
-					t.Errorf("[%d] wrong OwnerID field in response data: got %+v, expected %+v",
-						caseNum, tmpResponse["ownerID"], expectedData[i].OwnerID)
+				if tmpResponse["staffID"].(float64) != float64(expectedData[i].StaffID) {
+					t.Errorf("[%d] wrong StaffID field in response data: got %+v, expected %+v",
+						caseNum, tmpResponse["staffID"], expectedData[i].StaffID)
 				}
 			}
 
@@ -346,34 +346,34 @@ func TestGetCafeHandler(t *testing.T) {
 	email2 := "TestGetCafeHandler2@example.com"
 	password := "PassWord1"
 
-	owner1, err := CreateUserForTest(email1, password)
+	staff1, err := CreateUserForTest(email1, password)
 	if err != nil {
 		t.Errorf("can't create new user, error: %+v", err)
 	}
 
-	authCookieOwner1, err := testsUtils.GetAuthCookie(owner1.OwnerID)
+	authCookieStaff1, err := testsUtils.GetAuthCookie(staff1.StaffID)
 	if err != nil {
 		t.Errorf("auth error: %s", err)
 	}
 
-	owner2, err := CreateUserForTest(email2, password)
+	staff2, err := CreateUserForTest(email2, password)
 	if err != nil {
 		t.Errorf("can't create new user, error: %+v", err)
 	}
 
-	authCookieOwner2, err := testsUtils.GetAuthCookie(owner2.OwnerID)
+	authCookieStaff2, err := testsUtils.GetAuthCookie(staff2.StaffID)
 	if err != nil {
 		t.Errorf("auth error: %s", err)
 	}
 
 	cafeName1 := "TestGetCafeList1"
-	cafe1, err := createCafeForTest(cafeName1, owner1.OwnerID)
+	cafe1, err := createCafeForTest(cafeName1, staff1.StaffID)
 	if err != nil {
 		t.Errorf("got error while creationg cafe: %+v", err)
 	}
 
 	cafeName2 := "TestGetCafeList2"
-	cafe2, err := createCafeForTest(cafeName2, owner2.OwnerID)
+	cafe2, err := createCafeForTest(cafeName2, staff2.StaffID)
 	if err != nil {
 		t.Errorf("got error while creationg cafe: %+v", err)
 	}
@@ -382,7 +382,7 @@ func TestGetCafeHandler(t *testing.T) {
 		{
 			Context: map[string]string{"id": strconv.Itoa(cafe1.CafeID)},
 			Request: nil,
-			Cookie:  authCookieOwner1,
+			Cookie:  authCookieStaff1,
 			Response: responses.HttpResponse{
 				Data:   cafe1,
 				Errors: nil,
@@ -392,7 +392,7 @@ func TestGetCafeHandler(t *testing.T) {
 		{
 			Context: map[string]string{"id": strconv.Itoa(cafe2.CafeID)},
 			Request: nil,
-			Cookie:  authCookieOwner2,
+			Cookie:  authCookieStaff2,
 			Response: responses.HttpResponse{
 				Data:   cafe2,
 				Errors: nil,
@@ -402,7 +402,7 @@ func TestGetCafeHandler(t *testing.T) {
 		{
 			Context: map[string]string{"id": strconv.Itoa(cafe1.CafeID)},
 			Request: nil,
-			Cookie:  authCookieOwner2,
+			Cookie:  authCookieStaff2,
 			Response: responses.HttpResponse{
 				Data: nil,
 				Errors: []responses.HttpError{
@@ -417,7 +417,7 @@ func TestGetCafeHandler(t *testing.T) {
 		{
 			Context: map[string]string{"id": strconv.Itoa(cafe2.CafeID)},
 			Request: nil,
-			Cookie:  authCookieOwner1,
+			Cookie:  authCookieStaff1,
 			Response: responses.HttpResponse{
 				Data: nil,
 				Errors: []responses.HttpError{
@@ -470,9 +470,9 @@ func TestGetCafeHandler(t *testing.T) {
 					caseNum, trueResponse["name"], expectedData.Name)
 			}
 
-			if trueResponse["ownerID"].(float64) != float64(expectedData.OwnerID) {
-				t.Errorf("[%d] wrong OwnerID field in response data: got %+v, expected %+v",
-					caseNum, trueResponse["ownerID"], expectedData.OwnerID)
+			if trueResponse["staffID"].(float64) != float64(expectedData.StaffID) {
+				t.Errorf("[%d] wrong StaffID field in response data: got %+v, expected %+v",
+					caseNum, trueResponse["staffID"], expectedData.StaffID)
 			}
 
 		default:
@@ -500,40 +500,40 @@ func TestEditCafeHandler(t *testing.T) {
 	email2 := "TestEditCafeHandler2@example.com"
 	password := "PassWord1"
 
-	owner1, err := CreateUserForTest(email1, password)
+	staff1, err := CreateUserForTest(email1, password)
 	if err != nil {
 		t.Errorf("can't create new user, error: %+v", err)
 	}
 
-	authCookieOwner1, err := testsUtils.GetAuthCookie(owner1.OwnerID)
+	authCookieStaff1, err := testsUtils.GetAuthCookie(staff1.StaffID)
 	if err != nil {
 		t.Errorf("auth error: %s", err)
 	}
 
-	owner2, err := CreateUserForTest(email2, password)
+	staff2, err := CreateUserForTest(email2, password)
 	if err != nil {
 		t.Errorf("can't create new user, error: %+v", err)
 	}
 
-	authCookieOwner2, err := testsUtils.GetAuthCookie(owner2.OwnerID)
+	authCookieStaff2, err := testsUtils.GetAuthCookie(staff2.StaffID)
 	if err != nil {
 		t.Errorf("auth error: %s", err)
 	}
 
-	_, err = createCafeForTest("TestGetCafeList1", owner1.OwnerID)
+	_, err = createCafeForTest("TestGetCafeList1", staff1.StaffID)
 	if err != nil {
 		t.Errorf("got error while creationg cafe: %+v", err)
 	}
 
 	cafeName1 := "TestGetCafeList2"
-	cafe1, err := createCafeForTest(cafeName1, owner1.OwnerID)
+	cafe1, err := createCafeForTest(cafeName1, staff1.StaffID)
 	if err != nil {
 		t.Errorf("got error while creationg cafe: %+v", err)
 	}
 	cafe1.Name = "TestGetCafeList1EDITED"
 
 	cafeName2 := "TestGetCafeList2"
-	cafe2, err := createCafeForTest(cafeName2, owner2.OwnerID)
+	cafe2, err := createCafeForTest(cafeName2, staff2.StaffID)
 	if err != nil {
 		t.Errorf("got error while creationg cafe: %+v", err)
 	}
@@ -543,7 +543,7 @@ func TestEditCafeHandler(t *testing.T) {
 		{
 			Context: map[string]string{"id": strconv.Itoa(cafe1.CafeID)},
 			Request: cafe1,
-			Cookie:  authCookieOwner1,
+			Cookie:  authCookieStaff1,
 			Response: responses.HttpResponse{
 				Data:   cafe1,
 				Errors: nil,
@@ -553,7 +553,7 @@ func TestEditCafeHandler(t *testing.T) {
 		{
 			Context: map[string]string{"id": strconv.Itoa(cafe2.CafeID)},
 			Request: cafe2,
-			Cookie:  authCookieOwner2,
+			Cookie:  authCookieStaff2,
 			Response: responses.HttpResponse{
 				Data:   cafe2,
 				Errors: nil,
@@ -563,7 +563,7 @@ func TestEditCafeHandler(t *testing.T) {
 		{
 			Context: map[string]string{"id": strconv.Itoa(cafe1.CafeID)},
 			Request: cafe1,
-			Cookie:  authCookieOwner2,
+			Cookie:  authCookieStaff2,
 			Response: responses.HttpResponse{
 				Data: nil,
 				Errors: []responses.HttpError{
@@ -593,7 +593,7 @@ func TestEditCafeHandler(t *testing.T) {
 		{
 			Context: map[string]string{"id": "This is not CafeID"},
 			Request: cafe1,
-			Cookie:  authCookieOwner1,
+			Cookie:  authCookieStaff1,
 			Response: responses.HttpResponse{
 				Data: nil,
 				Errors: []responses.HttpError{
@@ -608,7 +608,7 @@ func TestEditCafeHandler(t *testing.T) {
 		{
 			Context: map[string]string{"id": "1234567890"},
 			Request: cafe1,
-			Cookie:  authCookieOwner1,
+			Cookie:  authCookieStaff1,
 			Response: responses.HttpResponse{
 				Data: nil,
 				Errors: []responses.HttpError{
@@ -627,7 +627,7 @@ func TestEditCafeHandler(t *testing.T) {
 				Name:    "Name",
 				Address: "Address",
 			},
-			Cookie: authCookieOwner1,
+			Cookie: authCookieStaff1,
 			Response: responses.HttpResponse{
 				Data: cafe1,
 				Errors: []responses.HttpError{
