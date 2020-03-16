@@ -37,7 +37,7 @@ func CreateCafeHandler(w http.ResponseWriter, r *http.Request) {
 		responses.SendSingleError("empty jsonData field", w)
 		return
 	}
-	cafeObj := Cafe{StuffID: owner.StuffID}
+	cafeObj := Cafe{OwnerID: owner.OwnerID}
 
 	if err := json.Unmarshal([]byte(jsonData), &cafeObj); err != nil {
 		responses.SendSingleError("json parsing error", w)

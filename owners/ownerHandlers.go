@@ -36,7 +36,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ownerObj := Stuff{}
+	ownerObj := Owner{}
 
 	if err := json.Unmarshal([]byte(jsonData), &ownerObj); err != nil {
 		responses.SendSingleError("json parsing error", w)
@@ -163,7 +163,7 @@ func EditOwnerHandler(w http.ResponseWriter, r *http.Request) {
 		responses.SendSingleError("empty jsonData field", w)
 		return
 	}
-	ownerObj := Stuff{}
+	ownerObj := Owner{}
 	if err := json.Unmarshal([]byte(jsonData), &ownerObj); err != nil {
 		responses.SendSingleError("json parsing error", w)
 		return
@@ -238,4 +238,4 @@ func GetCurrentOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	responses.SendOKAnswer(owner, w)
 }
 
-var Storage, _ = NewStuffStorage("postgres", "", "5431")
+var Storage, _ = NewOwnerStorage("postgres", "", "5431")
