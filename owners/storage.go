@@ -6,8 +6,21 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog/log"
+	redisStore "gopkg.in/boj/redistore.v1"
+	"os"
 	"time"
 )
+
+var CookieStore, err = redisStore.NewRediStore(10, "tcp", ":6379",
+	"", []byte(os.Getenv("SESSION_KEY")))
+
+func init() {
+	if err != nil {
+		panic("Can't connect to redis")
+	}
+}
+
+const CookieName = "authCookie"
 
 type Staff struct {
 	StaffID  int       `json:"id"`
