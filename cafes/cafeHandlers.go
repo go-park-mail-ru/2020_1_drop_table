@@ -13,22 +13,38 @@ import (
 	"strconv"
 )
 
+func getOwnerIDByCookie(r *http.Request) (ownerID int, err error, isServerError bool) {
+	session, err := owners.CookieStore.Get(r, owners.CookieName)
+	if err != nil {
+		return -1, fmt.Errorf("bad cookies"), false
+	}
+
+	actualOwnerID, found := session.Values["userID"]
+	if !found {
+		return -1, fmt.Errorf("no cookies"), false
+	}
+
+	ownerID, isInt := actualOwnerID.(int)
+	if !isInt {
+		return -1, fmt.Errorf("not int StaffID"), true
+	}
+	return ownerID, nil, false
+}
+
 func CreateCafeHandler(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseMultipartForm(32 << 20)
+	requestStaffID, err, isServerError := getOwnerIDByCookie(r)
+
+	if isServerError {
+		responses.SendServerError(err.Error(), w)
+		return
+	} else if err != nil {
+		responses.SendForbidden(w)
+		return
+	}
+
+	err = r.ParseMultipartForm(32 << 20)
 	if err != nil {
 		responses.SendSingleError("bad request", w)
-		return
-	}
-
-	authCookie, err := r.Cookie("authCookie")
-	if err != nil {
-		responses.SendForbidden(w)
-		return
-	}
-
-	owner, err := owners.StorageSession.GetOwnerByCookie(authCookie.Value)
-	if err != nil {
-		responses.SendForbidden(w)
 		return
 	}
 
@@ -37,7 +53,8 @@ func CreateCafeHandler(w http.ResponseWriter, r *http.Request) {
 		responses.SendSingleError("empty jsonData field", w)
 		return
 	}
-	cafeObj := Cafe{OwnerID: owner.OwnerID}
+
+	cafeObj := Cafe{StaffID: requestStaffID}
 
 	if err := json.Unmarshal([]byte(jsonData), &cafeObj); err != nil {
 		responses.SendSingleError("json parsing error", w)
@@ -74,17 +91,17 @@ func CreateCafeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetCafesListHandler(w http.ResponseWriter, r *http.Request) {
-	authCookie, err := r.Cookie("authCookie")
-	if err != nil {
+	requestOwnerID, err, isServerError := getOwnerIDByCookie(r)
+
+	if isServerError {
+		responses.SendServerError(err.Error(), w)
+		return
+	} else if err != nil {
 		responses.SendForbidden(w)
 		return
 	}
-	owner, err := owners.StorageSession.GetOwnerByCookie(authCookie.Value)
-	if err != nil {
-		responses.SendForbidden(w)
-		return
-	}
-	ownerCafes, err := Storage.getOwnerCafes(owner)
+
+	ownerCafes, err := Storage.getOwnerCafes(requestOwnerID)
 	if err != nil {
 		responses.SendForbidden(w)
 		return
@@ -94,14 +111,12 @@ func GetCafesListHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetCafeHandler(w http.ResponseWriter, r *http.Request) {
-	authCookie, err := r.Cookie("authCookie")
-	if err != nil {
-		responses.SendForbidden(w)
-		return
-	}
+	requestOwnerID, err, isServerError := getOwnerIDByCookie(r)
 
-	owner, err := owners.StorageSession.GetOwnerByCookie(authCookie.Value)
-	if err != nil {
+	if isServerError {
+		responses.SendServerError(err.Error(), w)
+		return
+	} else if err != nil {
 		responses.SendForbidden(w)
 		return
 	}
@@ -119,7 +134,7 @@ func GetCafeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !cafe.hasPermission(owner) {
+	if !cafe.hasPermission(requestOwnerID) {
 		responses.SendForbidden(w)
 		return
 	}
@@ -127,21 +142,19 @@ func GetCafeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func EditCafeHandler(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseMultipartForm(32 << 20)
+	requestOwnerID, err, isServerError := getOwnerIDByCookie(r)
+
+	if isServerError {
+		responses.SendServerError(err.Error(), w)
+		return
+	} else if err != nil {
+		responses.SendForbidden(w)
+		return
+	}
+
+	err = r.ParseMultipartForm(32 << 20)
 	if err != nil {
 		responses.SendSingleError("bad request", w)
-		return
-	}
-
-	authCookie, err := r.Cookie("authCookie")
-	if err != nil {
-		responses.SendForbidden(w)
-		return
-	}
-
-	owner, err := owners.StorageSession.GetOwnerByCookie(authCookie.Value)
-	if err != nil {
-		responses.SendForbidden(w)
 		return
 	}
 
@@ -158,7 +171,7 @@ func EditCafeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !cafeObj.hasPermission(owner) {
+	if !cafeObj.hasPermission(requestOwnerID) {
 		responses.SendForbidden(w)
 		return
 	}

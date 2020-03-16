@@ -3,9 +3,9 @@ package main
 import (
 	"2020_1_drop_table/owners"
 	"2020_1_drop_table/responses"
+	"2020_1_drop_table/utils/testsUtils"
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
 	"io"
 	"io/ioutil"
@@ -43,13 +43,15 @@ func createMultipartFormData(t *testing.T, data string) (bytes.Buffer, *multipar
 }
 
 func TestRegisterUser(t *testing.T) {
-	ownerObjOK := owners.Owner{
+	owners.Storage.Clear()
+
+	ownerObjOK := owners.Staff{
 		Name:     "Василий Андреев",
 		Email:    "example@example.com",
 		Password: "PassWord1",
 	}
 
-	ownerObjNotOK := owners.Owner{
+	ownerObjNotOK := owners.Staff{
 		Name:  "Василий Андреев",
 		Email: "example@example.com",
 	}
@@ -138,7 +140,7 @@ func TestRegisterUser(t *testing.T) {
 		if responseObject.Data != nil {
 			//Data equals
 			responseData := responseObject.Data.(map[string]interface{})
-			expectedData := item.Response.Data.(owners.Owner)
+			expectedData := item.Response.Data.(owners.Staff)
 
 			if responseData["name"] != expectedData.Name {
 				t.Errorf("[%d] wrong Name field in response data: got %+v, expected %+v",
@@ -171,164 +173,20 @@ func TestRegisterUser(t *testing.T) {
 	}
 }
 
-func CreateUserForTest(email, password string) (error, owners.Owner) {
-	user := owners.Owner{
+func CreateUserForTest(email, password string) (error, owners.Staff) {
+
+	user := owners.Staff{
 		Name:     "Василий Андреев",
 		Email:    email,
 		Password: password,
 	}
-	own, err := owners.Storage.Append(user)
+	stf, err := owners.Storage.Append(user)
 
-	return err, own
-}
-
-func TestLoginUser(t *testing.T) {
-	//Preparing for test
-	email := "testLoginUser@example.com"
-	password := "PassWord1"
-	err, _ := CreateUserForTest(email, password)
-
-	if err != nil {
-		t.Errorf("can't create new user, error: %+v", err)
-	}
-	//Test
-	testCases := []HttpTestCase{
-		{
-			Request: fmt.Sprintf(`{"email":  "%s",  "password": "%s"}`,
-				email, password),
-			Response: responses.HttpResponse{
-				Data:   "",
-				Errors: nil,
-			},
-			StatusCode: http.StatusOK,
-		},
-		{
-			Request: fmt.Sprintf(`{"email":  "%s",  "password": "%sWrongPassword"}`,
-				email, password),
-			Response: responses.HttpResponse{
-				Data: "",
-				Errors: []responses.HttpError{
-					{
-						Code:    400,
-						Message: "no user with given login and password",
-					},
-				},
-			},
-			StatusCode: http.StatusOK,
-		},
-		{
-			Request: fmt.Sprintf(`{"email":  "%ssWrongEmail",  "password": "%s"}`, email, password),
-			Response: responses.HttpResponse{
-				Data: "",
-				Errors: []responses.HttpError{
-					{
-						Code:    400,
-						Message: "no user with given login and password",
-					},
-				},
-			},
-			StatusCode: http.StatusOK,
-		},
-		{
-			Request: fmt.Sprintf(`{"email":  "%ssWrongEmail",  "password": "%sWrongPassword"}`, email, password),
-			Response: responses.HttpResponse{
-				Data: "",
-				Errors: []responses.HttpError{
-					{
-						Code:    400,
-						Message: "no user with given login and password",
-					},
-				},
-			},
-			StatusCode: http.StatusOK,
-		},
-		{
-			Request: fmt.Sprintf(`{"email":  "%ssWrongEmail",  "password": "%sWrongPassword"}`, email, password),
-			Response: responses.HttpResponse{
-				Data: "",
-				Errors: []responses.HttpError{
-					{
-						Code:    400,
-						Message: "no user with given login and password",
-					},
-				},
-			},
-			StatusCode: http.StatusOK,
-		},
-		{
-			Request: fmt.Sprintf(`{"email":  "%ssWrongEmail"}`, email),
-			Response: responses.HttpResponse{
-				Data: "",
-				Errors: []responses.HttpError{
-					{
-						Code:    400,
-						Message: "Password is a required field",
-					},
-				},
-			},
-			StatusCode: http.StatusOK,
-		},
-	}
-	url := "/api/v1/owner/login"
-	for caseNum, item := range testCases {
-		reader := strings.NewReader(item.Request.(string))
-		req := httptest.NewRequest("POST", url, reader)
-
-		respWriter := httptest.NewRecorder()
-		owners.LoginHandler(respWriter, req)
-		resp := respWriter.Result()
-
-		if resp.StatusCode != item.StatusCode {
-			t.Errorf("[%d] wrong status code: got %+v, expected %+v",
-				caseNum, resp.StatusCode, item.StatusCode)
-		}
-
-		body, _ := ioutil.ReadAll(resp.Body)
-
-		var trueResponse responses.HttpResponse
-		err := json.Unmarshal(body, &trueResponse)
-		if err != nil {
-			t.Errorf("[%d] unmarshaling error: %s", caseNum, err)
-		}
-
-		if len(trueResponse.Errors) != len(item.Response.Errors) {
-			t.Errorf("[%d] wrong errors count in response: got %d, expected %d",
-				caseNum, len(trueResponse.Errors), len(item.Response.Errors))
-		}
-
-		for errorNum, err := range trueResponse.Errors {
-			if err != item.Response.Errors[errorNum] {
-				t.Errorf("[%d] wrong error in response: got %+v, expected %+v",
-					caseNum, err, item.Response.Errors[errorNum])
-			}
-		}
-
-		if len(trueResponse.Errors) == 0 {
-			cookies := resp.Cookies()
-			for _, cookie := range cookies {
-
-				//Add new statement if new COOKIE will be added
-				switch cookie.Name {
-				case "authCookie":
-					ownerFromCookie, err := owners.StorageSession.GetOwnerByCookie(cookie.Value)
-
-					if err != nil {
-						t.Errorf("[%d] error while getting error by Cookie: %+v:", caseNum, err)
-					}
-
-					if ownerFromCookie.Email != email {
-						t.Errorf("[%d] wrong owner's email from COOKIE: got %+v, expected %+v",
-							caseNum, ownerFromCookie.Email, email)
-					}
-				default:
-					t.Errorf("[%d] unexpected Cookie with name: %+v:", caseNum, cookie.Name)
-				}
-			}
-		}
-	}
+	return err, stf
 }
 
 func TestGetOwner(t *testing.T) {
+	owners.Storage.Clear()
 	//Preparing for test
 	email1 := "testGetOwner1@example.com"
 	email2 := "testGetOwner2@example.com"
@@ -346,11 +204,11 @@ func TestGetOwner(t *testing.T) {
 	//Test
 	testCases := []HttpTestCase{
 		{
-			Context: map[string]string{"id": strconv.Itoa(owner2.OwnerID)},
+			Context: map[string]string{"id": strconv.Itoa(owner2.StaffID)},
 			Request: nil,
 			Response: responses.HttpResponse{
-				Data: owners.Owner{
-					OwnerID: owner2.OwnerID,
+				Data: owners.Staff{
+					StaffID: owner2.StaffID,
 					Email:   owner2.Email,
 				},
 				Errors: nil,
@@ -358,7 +216,7 @@ func TestGetOwner(t *testing.T) {
 			StatusCode: http.StatusOK,
 		},
 		{
-			Context: map[string]string{"id": strconv.Itoa(owner1.OwnerID)},
+			Context: map[string]string{"id": strconv.Itoa(owner1.StaffID)},
 			Request: nil,
 			Response: responses.HttpResponse{
 				Data: nil,
@@ -386,11 +244,11 @@ func TestGetOwner(t *testing.T) {
 			StatusCode: http.StatusOK,
 		},
 	}
-
-	authCookieOwner1, err := owners.GetAuthCookie(email2, password)
+	authCookieOwner1, err := testsUtils.GetAuthCookie(owner2.StaffID)
 	if err != nil {
-		t.Errorf("auth error: %s", err)
+		t.Errorf("error while getting cookie, Error: %s", err)
 	}
+
 	url := "/api/v1/owner"
 
 	for caseNum, item := range testCases {
@@ -426,11 +284,11 @@ func TestGetOwner(t *testing.T) {
 		switch responseObject.Errors {
 		case nil:
 			responseData := responseObject.Data.(map[string]interface{})
-			expectedData := item.Response.Data.(owners.Owner)
+			expectedData := item.Response.Data.(owners.Staff)
 
-			if responseData["id"].(float64) != float64(expectedData.OwnerID) {
+			if responseData["id"].(float64) != float64(expectedData.StaffID) {
 				t.Errorf("[%d] wrong Name field in response data: got %+v, expected %+v",
-					caseNum, responseData["id"], expectedData.OwnerID)
+					caseNum, responseData["id"], expectedData.StaffID)
 			}
 
 			if responseData["email"] != expectedData.Email {
@@ -475,8 +333,7 @@ func TestGetCurrentOwner(t *testing.T) {
 			StatusCode: http.StatusOK,
 		},
 	}
-
-	authCookieOwner1, err := owners.GetAuthCookie(email1, password)
+	authCookieOwner1, err := testsUtils.GetAuthCookie(owner1.StaffID)
 	if err != nil {
 		t.Errorf("auth error: %s", err)
 	}
@@ -513,10 +370,10 @@ func TestGetCurrentOwner(t *testing.T) {
 		switch responseObject.Errors {
 		case nil:
 			responseData := responseObject.Data.(map[string]interface{})
-			expectedData := item.Response.Data.(owners.Owner)
-			if responseData["id"].(float64) != float64(expectedData.OwnerID) {
+			expectedData := item.Response.Data.(owners.Staff)
+			if responseData["id"].(float64) != float64(expectedData.StaffID) {
 				t.Errorf("[%d] wrong id field in response data: got %+v, expected %+v",
-					caseNum, responseData["id"], expectedData.OwnerID)
+					caseNum, responseData["id"], expectedData.StaffID)
 			}
 
 			if responseData["email"] != expectedData.Email {
@@ -551,17 +408,16 @@ func TestEditOwnerHandler(t *testing.T) {
 		t.Errorf("can't create new user, error: %+v", err)
 	}
 	owner2.Email = "EDITED@EMAIL.com"
-
-	authCookieOwner2, err := owners.GetAuthCookie(email2, password)
+	authCookieOwner2, err := testsUtils.GetAuthCookie(owner2.StaffID)
 	//Test
 	testCases := []HttpTestCase{
 		{
 			Cookie:  authCookieOwner2,
-			Context: map[string]string{"id": strconv.Itoa(owner2.OwnerID)},
+			Context: map[string]string{"id": strconv.Itoa(owner2.StaffID)},
 			Request: owner2,
 			Response: responses.HttpResponse{
-				Data: owners.Owner{
-					OwnerID: owner2.OwnerID,
+				Data: owners.Staff{
+					StaffID: owner2.StaffID,
 					Email:   owner2.Email,
 				},
 				Errors: nil,
@@ -570,7 +426,7 @@ func TestEditOwnerHandler(t *testing.T) {
 		},
 		{
 			Cookie:  authCookieOwner2,
-			Context: map[string]string{"id": strconv.Itoa(owner1.OwnerID)},
+			Context: map[string]string{"id": strconv.Itoa(owner1.StaffID)},
 			Request: nil,
 			Response: responses.HttpResponse{
 				Errors: []responses.HttpError{
@@ -641,11 +497,11 @@ func TestEditOwnerHandler(t *testing.T) {
 		case nil:
 			//Data equals
 			responseData := TrueResponse.Data.(map[string]interface{})
-			expectedData := item.Response.Data.(owners.Owner)
+			expectedData := item.Response.Data.(owners.Staff)
 
-			if responseData["id"].(float64) != float64(expectedData.OwnerID) {
+			if responseData["id"].(float64) != float64(expectedData.StaffID) {
 				t.Errorf("[%d] wrong CafeID field in response data: got %+v, expected %+v",
-					caseNum, responseData["id"], expectedData.OwnerID)
+					caseNum, responseData["id"], expectedData.StaffID)
 			}
 
 			if responseData["email"] != expectedData.Email {

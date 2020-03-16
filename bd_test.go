@@ -9,19 +9,19 @@ import (
 )
 
 func TestAppend(t *testing.T) {
-	Storage, _ := owners.NewOwnerStorage("postgres", "", "5431")
+	Storage, _ := owners.NewStaffStorage("postgres", "", "5431")
 	Storage.Clear()
-	own := owners.Owner{
+	stf := owners.Staff{
 		Name:     "asd",
 		Email:    "asd",
 		Password: "asd",
 		EditedAt: time.Now(),
 		Photo:    "asd",
 	}
-	_, err := Storage.Append(own)
+	_, err := Storage.Append(stf)
 	fmt.Println(err)
 	assert.Nil(t, err, "No errors")
-	own2 := owners.Owner{
+	own2 := owners.Staff{
 		Name:     "asd",
 		Email:    "assd",
 		Password: "asd",
@@ -34,46 +34,46 @@ func TestAppend(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
-	Storage, _ := owners.NewOwnerStorage("postgres", "", "5431")
+	Storage, _ := owners.NewStaffStorage("postgres", "", "5431")
 	Storage.Clear()
-	own := owners.Owner{
-		OwnerID:  1,
+	stf := owners.Staff{
+		StaffID:  1,
 		Name:     "asd",
 		Email:    "asd",
 		Password: "asd",
 		EditedAt: time.Now().UTC(),
 		Photo:    "asd",
 	}
-	_, _ = Storage.Append(own)
-	dbOwner, err := Storage.Get(1)
+	_, _ = Storage.Append(stf)
+	dbStaff, err := Storage.Get(1)
 	assert.Nil(t, err)
-	own.Password = owners.GetMD5Hash(own.Password)
-	assert.Equal(t, own, dbOwner)
+	stf.Password = owners.GetMD5Hash(stf.Password)
+	assert.Equal(t, stf, dbStaff)
 }
 
-func TestOwnerStorage_GetByEmailAndPassword(t *testing.T) {
-	Storage, _ := owners.NewOwnerStorage("postgres", "", "5431")
+func TestStaffStorage_GetByEmailAndPassword(t *testing.T) {
+	Storage, _ := owners.NewStaffStorage("postgres", "", "5431")
 	Storage.Clear()
-	own := owners.Owner{
-		OwnerID:  1,
+	stf := owners.Staff{
+		StaffID:  1,
 		Name:     "asd",
 		Email:    "email",
 		Password: "password",
 		EditedAt: time.Now().UTC(),
 		Photo:    "asd",
 	}
-	_, _ = Storage.Append(own)
-	own.Password = owners.GetMD5Hash(own.Password)
-	dbOwner, err := Storage.GetByEmailAndPassword("email", "password")
+	_, _ = Storage.Append(stf)
+	stf.Password = owners.GetMD5Hash(stf.Password)
+	dbStaff, _, err := Storage.GetByEmailAndPassword("email", "password")
 	assert.Nil(t, err)
-	assert.Equal(t, own, dbOwner)
+	assert.Equal(t, stf, dbStaff)
 }
 
-func TestOwnerStorage_Set(t *testing.T) {
-	Storage, _ := owners.NewOwnerStorage("postgres", "", "5431")
+func TestStaffStorage_Set(t *testing.T) {
+	Storage, _ := owners.NewStaffStorage("postgres", "", "5431")
 	Storage.Clear()
-	own := owners.Owner{
-		OwnerID:  1,
+	stf := owners.Staff{
+		StaffID:  1,
 		Name:     "asd",
 		Email:    "email",
 		Password: "password",
@@ -81,38 +81,38 @@ func TestOwnerStorage_Set(t *testing.T) {
 		Photo:    "asd",
 	}
 
-	newOwn := owners.Owner{
-		OwnerID:  1,
+	newOwn := owners.Staff{
+		StaffID:  1,
 		Name:     "newasd",
 		Email:    "newemail",
 		Password: "password",
 		EditedAt: time.Now().UTC(),
 		Photo:    "asd",
 	}
-	_, _ = Storage.Append(own)
+	_, _ = Storage.Append(stf)
 	_, _ = Storage.Set(1, newOwn)
-	dBOwner, err := Storage.Get(1)
+	dbStaff, err := Storage.Get(1)
 	assert.Nil(t, err)
 	newOwn.Password = owners.GetMD5Hash(newOwn.Password)
-	assert.Equal(t, newOwn, dBOwner)
+	assert.Equal(t, newOwn, dbStaff)
 }
 
-func TestOwnerStorage_Count(t *testing.T) {
-	Storage, _ := owners.NewOwnerStorage("postgres", "", "5431")
+func TestStaffStorage_Count(t *testing.T) {
+	Storage, _ := owners.NewStaffStorage("postgres", "", "5431")
 	Storage.Clear()
 	count, err := Storage.Count()
 	assert.Nil(t, err)
 	assert.Equal(t, 0, count)
 
-	own := owners.Owner{
-		OwnerID:  229,
+	stf := owners.Staff{
+		StaffID:  229,
 		Name:     "asd",
 		Email:    "email",
 		Password: "password",
 		EditedAt: time.Now().UTC(),
 		Photo:    "asd",
 	}
-	_, _ = Storage.Append(own)
+	_, _ = Storage.Append(stf)
 
 	count, err = Storage.Count()
 	assert.Nil(t, err)
@@ -120,24 +120,24 @@ func TestOwnerStorage_Count(t *testing.T) {
 
 }
 
-func TestOwnerStorage_Existed(t *testing.T) {
-	Storage, _ := owners.NewOwnerStorage("postgres", "", "5431")
+func TestStaffStorage_Existed(t *testing.T) {
+	Storage, _ := owners.NewStaffStorage("postgres", "", "5431")
 	Storage.Clear()
-	isExist, _, err := Storage.Existed("email", "password")
+	_, isExist, err := Storage.GetByEmailAndPassword("email", "password")
 	assert.Nil(t, err)
 	assert.Equal(t, false, isExist)
 
-	own := owners.Owner{
-		OwnerID:  229,
+	stf := owners.Staff{
+		StaffID:  229,
 		Name:     "asd",
 		Email:    "email",
 		Password: "password",
 		EditedAt: time.Now().UTC(),
 		Photo:    "asd",
 	}
-	_, _ = Storage.Append(own)
+	_, _ = Storage.Append(stf)
 
-	isExist, _, err = Storage.Existed("email", "password")
+	_, isExist, err = Storage.GetByEmailAndPassword("email", "password")
 	assert.Nil(t, err)
 	assert.Equal(t, true, isExist)
 }

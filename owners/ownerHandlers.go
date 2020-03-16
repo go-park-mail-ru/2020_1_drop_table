@@ -10,12 +10,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/rs/zerolog/log"
+	"github.com/gorilla/sessions"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 )
+
+var CookieStore = sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
+
+const CookieName = "authCookie"
 
 func GetMD5Hash(text string) string {
 	hasher := md5.New()
@@ -36,7 +41,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ownerObj := Owner{}
+	ownerObj := Staff{}
 
 	if err := json.Unmarshal([]byte(jsonData), &ownerObj); err != nil {
 		responses.SendSingleError("json parsing error", w)
@@ -70,16 +75,19 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie, err := GetAuthCookie(ownerObj.Email, ownerObj.Password)
+	session, err := CookieStore.Get(r, CookieName)
 	if err != nil {
-		message := fmt.Sprintf("troubles with cookies %s", err)
-		log.Error().Msgf(message)
+		responses.SendSingleError("bad cookies", w)
 		return
 	}
-	http.SetCookie(w, &cookie)
 
+	session.Values["userID"] = owner.StaffID
+	err = session.Save(r, w)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	responses.SendOKAnswer(owner, w)
-	return
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -120,12 +128,25 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie, err := GetAuthCookie(form.Email, form.Password)
-	if err != nil {
+	ownerObj, existed, err := Storage.GetByEmailAndPassword(form.Email, form.Password)
+
+	if !existed {
 		responses.SendSingleError("no user with given login and password", w)
 		return
 	}
-	http.SetCookie(w, &cookie)
+
+	session, err := CookieStore.Get(r, CookieName)
+	if err != nil {
+		responses.SendSingleError("Bad cookies", w)
+		return
+	}
+
+	session.Values["userID"] = ownerObj.StaffID
+	err = session.Save(r, w)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	responses.SendOKAnswer("", w)
 }
 
@@ -148,12 +169,14 @@ func EditOwnerHandler(w http.ResponseWriter, r *http.Request) {
 		responses.SendForbidden(w)
 		return
 	}
-	authCookie, err := r.Cookie("authCookie")
+
+	session, err := CookieStore.Get(r, CookieName)
 	if err != nil {
-		responses.SendForbidden(w)
+		responses.SendSingleError("bad cookies", w)
 		return
 	}
-	if !hasPermission(owner, authCookie.Value) {
+	actualOwnerID, found := session.Values["userID"]
+	if !found || actualOwnerID.(int) != owner.StaffID {
 		responses.SendForbidden(w)
 		return
 	}
@@ -163,7 +186,7 @@ func EditOwnerHandler(w http.ResponseWriter, r *http.Request) {
 		responses.SendSingleError("empty jsonData field", w)
 		return
 	}
-	ownerObj := Owner{}
+	ownerObj := Staff{}
 	if err := json.Unmarshal([]byte(jsonData), &ownerObj); err != nil {
 		responses.SendSingleError("json parsing error", w)
 		return
@@ -199,15 +222,22 @@ func EditOwnerHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetOwnerHandler(w http.ResponseWriter, r *http.Request) {
-	authCookie, err := r.Cookie("authCookie")
+	session, err := CookieStore.Get(r, CookieName)
 	if err != nil {
-		responses.SendForbidden(w)
+		responses.SendSingleError(err.Error(), w)
 		return
 	}
+
 	id, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
 		message := fmt.Sprintf("bad id: %s", mux.Vars(r)["id"])
 		responses.SendSingleError(message, w)
+		return
+	}
+
+	actualOwnerID, found := session.Values["userID"]
+	if !found || actualOwnerID.(int) != id {
+		responses.SendForbidden(w)
 		return
 	}
 
@@ -217,20 +247,29 @@ func GetOwnerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !hasPermission(owner, authCookie.Value) {
-		responses.SendForbidden(w)
-		return
-	}
 	responses.SendOKAnswer(owner, w)
 }
 
 func GetCurrentOwnerHandler(w http.ResponseWriter, r *http.Request) {
-	authCookie, err := r.Cookie("authCookie")
+	session, err := CookieStore.Get(r, CookieName)
 	if err != nil {
+		responses.SendSingleError("bad cookies", w)
+		return
+	}
+
+	actualOwnerID, found := session.Values["userID"]
+	if !found {
 		responses.SendForbidden(w)
 		return
 	}
-	owner, err := StorageSession.GetOwnerByCookie(authCookie.Value)
+
+	ownerID, isInt := actualOwnerID.(int)
+	if !isInt {
+		responses.SendSingleError("ownerID from cookies is not int", w)
+		return
+	}
+
+	owner, err := Storage.Get(ownerID)
 	if err != nil {
 		responses.SendForbidden(w)
 		return
@@ -238,4 +277,4 @@ func GetCurrentOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	responses.SendOKAnswer(owner, w)
 }
 
-var Storage, _ = NewOwnerStorage("postgres", "", "5431")
+var Storage, _ = NewStaffStorage("postgres", "", "5431")
