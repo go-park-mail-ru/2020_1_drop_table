@@ -10,17 +10,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/gorilla/sessions"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 )
-
-var CookieStore = sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
-
-const CookieName = "authCookie"
 
 func GetMD5Hash(text string) string {
 	hasher := md5.New()
