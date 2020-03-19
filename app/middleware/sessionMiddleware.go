@@ -1,16 +1,22 @@
 package middleware
 
 import (
-	"2020_1_drop_table/owners"
 	"2020_1_drop_table/responses"
 	"context"
 	"fmt"
+	"gopkg.in/boj/redistore.v1"
 	"net/http"
 )
 
-func SessionMiddleware(next http.Handler) http.Handler {
+const sessionCookieName = "authCookie"
+
+type sessionMiddleware struct {
+	sessionRepo *redistore.RediStore
+}
+
+func (s *sessionMiddleware) SessionMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session, err := owners.CookieStore.Get(r, owners.CookieName)
+		session, err := s.sessionRepo.Get(r, sessionCookieName)
 
 		if err != nil {
 			errMessage := fmt.Sprintf("err: %s, while getting cookie", err.Error())

@@ -10,8 +10,11 @@ import (
 	_staffUsecase "2020_1_drop_table/app/staff/usecase"
 	"2020_1_drop_table/projectConfig"
 	"github.com/gorilla/mux"
+	_ "github.com/lib/pq"
 	"github.com/rs/zerolog/log"
+	redisStore "gopkg.in/boj/redistore.v1"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -19,9 +22,10 @@ func main() {
 	r := mux.NewRouter()
 
 	//Middleware
-	r.Use(middleware.MyCORSMethodMiddleware(r))
-	r.Use(middleware.LoggingMiddleware)
-	r.Use(middleware.SessionMiddleware)
+	var CookieStore, err = redisStore.NewRediStore(10, "tcp", ":6379",
+		"", []byte(os.Getenv("SESSION_KEY")))
+
+	middleware.NewMiddleware(r, CookieStore)
 
 	timeoutContext := time.Second * 2
 	//ToDo make file with project preferences
