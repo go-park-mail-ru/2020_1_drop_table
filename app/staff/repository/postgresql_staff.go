@@ -35,14 +35,6 @@ func (p *postgresStaffRepository) GetByEmailAndPassword(ctx context.Context,
 	err := p.Conn.GetContext(ctx, &dbStaff, query, password, email)
 
 	return dbStaff, err
-	//switch err {
-	//case nil:
-	//	return dbStaff, true, err
-	//case sql.ErrNoRows:
-	//	return models.Staff{}, false, err
-	//default:
-	//	return models.Staff{}, false, err
-	//}
 }
 
 func (p *postgresStaffRepository) GetById(ctx context.Context, id int) (models.Staff, error) {
