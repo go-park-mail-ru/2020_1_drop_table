@@ -37,7 +37,7 @@ func (p *postgresStaffRepository) GetByEmailAndPassword(ctx context.Context,
 	return dbStaff, err
 }
 
-func (p *postgresStaffRepository) GetById(ctx context.Context, id int) (models.Staff, error) {
+func (p *postgresStaffRepository) GetByID(ctx context.Context, id int) (models.Staff, error) {
 	query := `SELECT * FROM Staff WHERE StaffID=$1`
 
 	var dbStaff models.Staff

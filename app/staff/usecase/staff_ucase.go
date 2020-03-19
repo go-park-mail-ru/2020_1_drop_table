@@ -77,7 +77,7 @@ func (s *staffUsecase) GetByID(c context.Context, id int) (models.SafeStaff, err
 		return models.SafeStaff{}, globalModels.ErrForbidden
 	}
 
-	res, err := s.staffRepo.GetById(ctx, id)
+	res, err := s.staffRepo.GetByID(ctx, id)
 
 	if err != nil {
 		return models.SafeStaff{}, err
