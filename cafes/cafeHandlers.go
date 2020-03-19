@@ -68,13 +68,13 @@ func CreateCafeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := validation.Struct(cafeObj); err != nil {
-		errs := validators.GetValidationErrors(err, trans)
+		errs := validators.GetValidationHttpErrors(err, trans)
 		responses.SendSeveralErrors(errs, w)
 		return
 	}
 
 	if file, handler, err := r.FormFile("photo"); err == nil {
-		filename, err := mediaFiles.ReceiveFile(file, handler, "cafes")
+		filename, err := mediaFiles.ReceiveFile(file, handler, "cafe")
 		if err == nil {
 			cafeObj.Photo = fmt.Sprintf("%s/%s", projectConfig.ServerUrl, filename)
 		}
@@ -195,13 +195,13 @@ func EditCafeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := validation.Struct(cafeObj); err != nil {
-		errs := validators.GetValidationErrors(err, trans)
+		errs := validators.GetValidationHttpErrors(err, trans)
 		responses.SendSeveralErrors(errs, w)
 		return
 	}
 
 	if file, handler, err := r.FormFile("photo"); err == nil {
-		filename, err := mediaFiles.ReceiveFile(file, handler, "cafes")
+		filename, err := mediaFiles.ReceiveFile(file, handler, "cafe")
 		if err == nil {
 			cafeObj.Photo = fmt.Sprintf("%s/%s", projectConfig.ServerUrl, filename)
 		}

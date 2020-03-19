@@ -1,19 +1,9 @@
-package middlewares
+package middleware
 
 import (
-	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/rs/zerolog/log"
 	"net/http"
 )
-
-func LoggingMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		msg := fmt.Sprintf("URL: %s, METHOD: %s", r.RequestURI, r.Method)
-		log.Info().Msgf(msg)
-		next.ServeHTTP(w, r)
-	})
-}
 
 func MyCORSMethodMiddleware(_ *mux.Router) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {

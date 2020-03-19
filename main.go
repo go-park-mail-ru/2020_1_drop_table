@@ -1,9 +1,11 @@
 package main
 
 import (
+	"2020_1_drop_table/app/middleware"
+	_staffHttpDeliver "2020_1_drop_table/app/staff/delivery/http"
+	_staffRepo "2020_1_drop_table/app/staff/repository"
+	_staffUsecase "2020_1_drop_table/app/staff/usecase"
 	"2020_1_drop_table/cafes"
-	"2020_1_drop_table/middlewares"
-	"2020_1_drop_table/owners"
 	"2020_1_drop_table/projectConfig"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
@@ -15,15 +17,19 @@ func main() {
 	r := mux.NewRouter()
 
 	//Middleware
-	r.Use(middlewares.MyCORSMethodMiddleware(r))
-	r.Use(middlewares.LoggingMiddleware)
+	r.Use(middleware.MyCORSMethodMiddleware(r))
+	r.Use(middleware.LoggingMiddleware)
+	r.Use(middleware.SessionMiddleware)
 
-	//owner handlers
-	r.HandleFunc("/api/v1/owner", owners.RegisterHandler).Methods("POST")
-	r.HandleFunc("/api/v1/owner/login", owners.LoginHandler).Methods("POST")
-	r.HandleFunc("/api/v1/owner/{id:[0-9]+}", owners.GetOwnerHandler).Methods("GET")
-	r.HandleFunc("/api/v1/getCurrentOwner/", owners.GetCurrentOwnerHandler).Methods("GET")
-	r.HandleFunc("/api/v1/owner/{id:[0-9]+}", owners.EditOwnerHandler).Methods("PUT")
+	timeoutContext := time.Second * 2
+
+	staffRepo, err := _staffRepo.NewPostgresStaffRepository("postgres", "", "5431")
+
+	if err != nil {
+		log.Error().Msgf(err.Error())
+	}
+	staffUsecase := _staffUsecase.NewStaffUsecase(&staffRepo, timeoutContext)
+	_staffHttpDeliver.NewStaffHandler(r, staffUsecase)
 
 	//cafe handlers
 	r.HandleFunc("/api/v1/cafe", cafes.CreateCafeHandler).Methods("POST")

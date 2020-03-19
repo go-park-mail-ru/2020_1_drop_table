@@ -93,7 +93,7 @@ func (cs *cafesStorage) getOwnerCafes(staffID int) ([]Cafe, error) {
 	err := cs.db.Select(&cafes, queryString, staffID)
 
 	if err != nil {
-		log.Error().Msgf("error: %v, while getting owner cafes, staffID: %v", err, staffID)
+		log.Error().Msgf("error: %v, while getting owner cafe, staffID: %v", err, staffID)
 		return []Cafe{}, err
 	}
 

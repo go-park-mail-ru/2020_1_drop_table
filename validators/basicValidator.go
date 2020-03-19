@@ -45,7 +45,7 @@ func GetValidator() (*validator.Validate, ut.Translator, error) {
 	return v, trans, nil
 }
 
-func GetValidationErrors(err error, trans ut.Translator) []responses.HttpError {
+func GetValidationHttpErrors(err error, trans ut.Translator) []responses.HttpError {
 	errorsCount := len(err.(validator.ValidationErrors))
 	errs := make([]responses.HttpError, errorsCount, errorsCount)
 
