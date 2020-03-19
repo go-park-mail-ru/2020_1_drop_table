@@ -1,6 +1,7 @@
 package responses
 
 import (
+	globalModels "2020_1_drop_table/app/models"
 	"encoding/json"
 	"fmt"
 	"github.com/rs/zerolog/log"
@@ -51,5 +52,5 @@ func SendSeveralErrors(errors []HttpError, w http.ResponseWriter) {
 }
 
 func SendForbidden(w http.ResponseWriter) {
-	SendSingleError("no permissions", w)
+	SendSingleError(globalModels.ErrForbidden.Error(), w)
 }

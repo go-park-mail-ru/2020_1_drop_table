@@ -17,12 +17,12 @@ import (
 	"strconv"
 )
 
-type StaffHandler struct {
+type staffHandler struct {
 	SUsecase staff.Usecase
 }
 
 func NewStaffHandler(r *mux.Router, us staff.Usecase) {
-	handler := StaffHandler{
+	handler := staffHandler{
 		SUsecase: us,
 	}
 
@@ -33,7 +33,7 @@ func NewStaffHandler(r *mux.Router, us staff.Usecase) {
 	r.HandleFunc("/api/v1/staff/{id:[0-9]+}", permissions.CheckAuthenticated(handler.EditStaffHandler)).Methods("PUT")
 
 }
-func (s *StaffHandler) fetchStaff(r *http.Request) (models.Staff, error) {
+func (s *staffHandler) fetchStaff(r *http.Request) (models.Staff, error) {
 	err := r.ParseMultipartForm(32 << 20)
 	if err != nil {
 		return models.Staff{}, globalModels.ErrBadRequest
@@ -49,9 +49,8 @@ func (s *StaffHandler) fetchStaff(r *http.Request) (models.Staff, error) {
 	if err := json.Unmarshal([]byte(jsonData), &staffObj); err != nil {
 		return models.Staff{}, globalModels.ErrBadJSON
 	}
-
 	if file, handler, err := r.FormFile("photo"); err == nil {
-		filename, err := s.SUsecase.SaveFile(file, handler, "staffs")
+		filename, err := app.SaveFile(file, handler, "staffs")
 		if err == nil {
 			staffObj.Photo = fmt.Sprintf("%s/%s", projectConfig.ServerUrl, filename)
 		}
@@ -60,7 +59,7 @@ func (s *StaffHandler) fetchStaff(r *http.Request) (models.Staff, error) {
 	return staffObj, nil
 }
 
-func (s *StaffHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
+func (s *staffHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	staffObj, err := s.fetchStaff(r)
 
 	if err != nil {
@@ -86,7 +85,7 @@ func (s *StaffHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	responses.SendOKAnswer(safeStaff, w)
 }
 
-func (s *StaffHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
+func (s *staffHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 
@@ -128,7 +127,7 @@ func (s *StaffHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (s *StaffHandler) GetStaffByIdHandler(w http.ResponseWriter, r *http.Request) {
+func (s *staffHandler) GetStaffByIdHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
 		message := fmt.Sprintf("bad id: %s", mux.Vars(r)["id"])
@@ -147,7 +146,7 @@ func (s *StaffHandler) GetStaffByIdHandler(w http.ResponseWriter, r *http.Reques
 	return
 }
 
-func (s *StaffHandler) GetCurrentStaffHandler(w http.ResponseWriter, r *http.Request) {
+func (s *staffHandler) GetCurrentStaffHandler(w http.ResponseWriter, r *http.Request) {
 	staffObj, err := s.SUsecase.GetFromSession(r.Context())
 
 	if err != nil {
@@ -159,7 +158,7 @@ func (s *StaffHandler) GetCurrentStaffHandler(w http.ResponseWriter, r *http.Req
 	return
 }
 
-func (s *StaffHandler) EditStaffHandler(w http.ResponseWriter, r *http.Request) {
+func (s *staffHandler) EditStaffHandler(w http.ResponseWriter, r *http.Request) {
 	staffUnsafe, err := s.fetchStaff(r)
 	if err != nil {
 		responses.SendSingleError(err.Error(), w)
@@ -176,7 +175,7 @@ func (s *StaffHandler) EditStaffHandler(w http.ResponseWriter, r *http.Request) 
 	staffObj := app.GetSafeStaff(staffUnsafe)
 	staffObj.StaffID = id
 
-	err = s.SUsecase.Update(r.Context(), staffObj)
+	staffObj, err = s.SUsecase.Update(r.Context(), staffObj)
 
 	if err != nil {
 		responses.SendSingleError(err.Error(), w)

@@ -49,7 +49,7 @@ func CreateCafeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonData := r.FormValue("jsonData")
-	if jsonData == "" {
+	if jsonData == "" || jsonData == "null" {
 		responses.SendSingleError("empty jsonData field", w)
 		return
 	}

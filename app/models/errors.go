@@ -8,6 +8,8 @@ var (
 
 	ErrForbidden = errors.New("no permission")
 
+	ErrInvalidAction = errors.New("you're trying to edit not your cafe")
+
 	ErrBadRequest = errors.New("bad request")
 
 	ErrEmptyJSON = errors.New("empty jsonData field")
