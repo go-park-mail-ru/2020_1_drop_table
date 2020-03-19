@@ -1,11 +1,13 @@
 package main
 
 import (
+	_cafeHttpDeliver "2020_1_drop_table/app/cafe/delivery/http"
+	_cafeRepo "2020_1_drop_table/app/cafe/repository"
+	_cafeUsecase "2020_1_drop_table/app/cafe/usecase"
 	"2020_1_drop_table/app/middleware"
 	_staffHttpDeliver "2020_1_drop_table/app/staff/delivery/http"
 	_staffRepo "2020_1_drop_table/app/staff/repository"
 	_staffUsecase "2020_1_drop_table/app/staff/usecase"
-	"2020_1_drop_table/cafes"
 	"2020_1_drop_table/projectConfig"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
@@ -22,7 +24,7 @@ func main() {
 	r.Use(middleware.SessionMiddleware)
 
 	timeoutContext := time.Second * 2
-
+	//ToDo make file with project preferences
 	staffRepo, err := _staffRepo.NewPostgresStaffRepository("postgres", "", "5431")
 
 	if err != nil {
@@ -31,11 +33,12 @@ func main() {
 	staffUsecase := _staffUsecase.NewStaffUsecase(&staffRepo, timeoutContext)
 	_staffHttpDeliver.NewStaffHandler(r, staffUsecase)
 
-	//cafe handlers
-	r.HandleFunc("/api/v1/cafe", cafes.CreateCafeHandler).Methods("POST")
-	r.HandleFunc("/api/v1/cafe", cafes.GetCafesListHandler).Methods("GET")
-	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}", cafes.GetCafeHandler).Methods("GET")
-	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}", cafes.EditCafeHandler).Methods("PUT")
+	cafeRepo, err := _cafeRepo.NewPostgresStaffRepository("postgres", "", "5431")
+	if err != nil {
+		log.Error().Msgf(err.Error())
+	}
+	cafeUsecase := _cafeUsecase.NewCafeUsecase(&cafeRepo, timeoutContext)
+	_cafeHttpDeliver.NewCafeHandler(r, cafeUsecase)
 
 	//OPTIONS
 	r.Methods("OPTIONS").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
