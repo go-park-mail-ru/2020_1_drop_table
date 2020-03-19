@@ -3,7 +3,6 @@ package repository
 import (
 	"2020_1_drop_table/app/staff/models"
 	"context"
-	"database/sql"
 	"fmt"
 	"github.com/jmoiron/sqlx"
 )
@@ -28,21 +27,22 @@ func (p *postgresStaffRepository) Add(ctx context.Context, st models.Staff) (mod
 }
 
 func (p *postgresStaffRepository) GetByEmailAndPassword(ctx context.Context,
-	email string, password string) (models.Staff, bool, error) {
+	email string, password string) (models.Staff, error) {
 
 	query := `SELECT * FROM Staff WHERE password=$1 AND email=$2`
 
 	var dbStaff models.Staff
 	err := p.Conn.GetContext(ctx, &dbStaff, query, password, email)
 
-	switch err {
-	case nil:
-		return dbStaff, true, err
-	case sql.ErrNoRows:
-		return models.Staff{}, false, err
-	default:
-		return models.Staff{}, false, err
-	}
+	return dbStaff, err
+	//switch err {
+	//case nil:
+	//	return dbStaff, true, err
+	//case sql.ErrNoRows:
+	//	return models.Staff{}, false, err
+	//default:
+	//	return models.Staff{}, false, err
+	//}
 }
 
 func (p *postgresStaffRepository) GetById(ctx context.Context, id int) (models.Staff, error) {
