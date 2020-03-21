@@ -12,8 +12,8 @@ func CheckAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 
 			session := r.Context().Value("session").(*sessions.Session)
 
-			ownerID, found := session.Values["userID"]
-			if !found || ownerID == -1 {
+			staffID, found := session.Values["userID"]
+			if !found || staffID == -1 {
 				responses.SendForbidden(w)
 				return
 			}
