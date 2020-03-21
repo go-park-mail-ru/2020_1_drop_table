@@ -3,7 +3,6 @@ package repository
 import (
 	"2020_1_drop_table/internal/app/cafe/models"
 	"context"
-	"fmt"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -11,11 +10,9 @@ type postgresCafeRepository struct {
 	Conn *sqlx.DB
 }
 
-func NewPostgresStaffRepository(user string, password string, port string) (postgresCafeRepository, error) {
-	connStr := fmt.Sprintf("user=%s password=%s dbname=postgres sslmode=disable port=%s", user, password, port)
-	conn, err := sqlx.Open("postgres", connStr)
+func NewPostgresCafeRepository(conn *sqlx.DB) postgresCafeRepository {
 	cafeStorage := postgresCafeRepository{conn}
-	return cafeStorage, err
+	return cafeStorage
 }
 
 func (p *postgresCafeRepository) Add(ctx context.Context, ca models.Cafe) (models.Cafe, error) {
