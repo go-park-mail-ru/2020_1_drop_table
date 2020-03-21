@@ -48,7 +48,7 @@ func (p *postgresCafeRepository) GetByID(ctx context.Context, id int) (models.Ca
 }
 
 func (p *postgresCafeRepository) GetByOwnerID(ctx context.Context, staffID int) ([]models.Cafe, error) {
-	query := `SELECT * FROM Cafe WHERE StaffID=$1`
+	query := `SELECT * FROM Cafe WHERE StaffID=$1 ORDER BY CafeID`
 
 	var cafes []models.Cafe
 	err := p.Conn.SelectContext(ctx, &cafes, query, staffID)
