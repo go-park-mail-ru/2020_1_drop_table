@@ -60,3 +60,11 @@ func (p *postgresStaffRepository) AddUuid(ctx context.Context, uuid string, id i
 	_, err := p.Conn.ExecContext(ctx, query, uuid, id)
 	return err
 }
+
+func (p *postgresStaffRepository) CheckIsOwner(ctx context.Context, staffId int) (bool, error) {
+	staff, err := p.GetByID(ctx, staffId)
+	if err != nil {
+		return false, err
+	}
+	return staff.IsOwner == true, nil
+}

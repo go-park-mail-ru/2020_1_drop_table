@@ -11,4 +11,5 @@ type Repository interface {
 	GetByID(ctx context.Context, id int) (models.Staff, error)
 	Update(ctx context.Context, newStaff models.SafeStaff) error
 	AddUuid(ctx context.Context, uuid string, id int) error
+	CheckIsOwner(ctx context.Context, staffId int) (bool, error)
 }

@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"2020_1_drop_table/configs"
 	"2020_1_drop_table/internal/app"
 	globalModels "2020_1_drop_table/internal/app/models"
 	"2020_1_drop_table/internal/app/staff"
@@ -154,10 +155,14 @@ func (s *staffUsecase) GetQrForStaff(ctx context.Context, idCafe int) (string, e
 }
 
 func GenerateQrCode(uString string) (string, error) {
-	link := fmt.Sprintf("/api/v1/staff/addStaff?uuid=%s", uString)
+	link := fmt.Sprintf("%s/api/v1/staff/generateQr?uuid=%s", configs.DomainUrl, uString)
 	pathToQr, err := qr.GenerateToFile(link, uString)
 	if err != nil {
 		return "", err
 	}
 	return pathToQr, err
+}
+
+func (s *staffUsecase) IsOwner(staffId int) (bool, error) {
+	return s.staffRepo.CheckIsOwner(context.TODO(), staffId)
 }

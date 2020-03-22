@@ -31,6 +31,7 @@ func NewStaffHandler(r *mux.Router, us staff.Usecase) {
 	r.HandleFunc("/api/v1/staff/login", handler.LoginHandler).Methods("POST")
 	r.HandleFunc("/api/v1/staff/{id:[0-9]+}", permissions.CheckAuthenticated(handler.GetStaffByIdHandler)).Methods("GET")
 	r.HandleFunc("/api/v1/staff/{id:[0-9]+}", permissions.CheckAuthenticated(handler.EditStaffHandler)).Methods("PUT")
+	r.HandleFunc("/api/v1/staff/generateQr/{id:[0-9]+}", handler.GenerateQrHandler).Methods("GET")
 
 }
 func (s *staffHandler) fetchStaff(r *http.Request) (models.Staff, error) {
@@ -184,4 +185,31 @@ func (s *staffHandler) EditStaffHandler(w http.ResponseWriter, r *http.Request) 
 
 	responses.SendOKAnswer(staffObj, w)
 	return
+}
+
+func (s *staffHandler) GenerateQrHandler(w http.ResponseWriter, r *http.Request) {
+	session := r.Context().Value("session").(*sessions.Session)
+	staffID, _ := session.Values["userID"]
+	isOwner, err := s.SUsecase.IsOwner(staffID.(int))
+	if err != nil {
+		message := fmt.Sprintf("Cant find Staff in SessionStorage because of -> %s", err)
+		responses.SendSingleError(message, w)
+		return
+	}
+	if isOwner {
+		id, err := strconv.Atoi(mux.Vars(r)["id"])
+		if err != nil {
+			message := fmt.Sprintf("bad id: %s", mux.Vars(r)["id"])
+			responses.SendSingleError(message, w)
+			return
+		}
+		pathToQr, err := s.SUsecase.GetQrForStaff(r.Context(), id)
+		if err != nil {
+			responses.SendSingleError(err.Error(), w)
+			return
+		}
+		responses.SendOKAnswer(pathToQr, w)
+	}
+	message := fmt.Sprintf("User is not owner")
+	responses.SendSingleError(message, w)
 }
