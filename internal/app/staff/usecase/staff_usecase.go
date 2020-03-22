@@ -5,11 +5,13 @@ import (
 	globalModels "2020_1_drop_table/internal/app/models"
 	"2020_1_drop_table/internal/app/staff"
 	"2020_1_drop_table/internal/app/staff/models"
+	"2020_1_drop_table/internal/pkg/qr"
 	"2020_1_drop_table/internal/pkg/validators"
 	"context"
 	"database/sql"
 	"fmt"
 	"github.com/gorilla/sessions"
+	uuid "github.com/nu7hatch/gouuid"
 	"time"
 )
 
@@ -131,4 +133,31 @@ func (s *staffUsecase) GetFromSession(c context.Context) (models.SafeStaff, erro
 	}
 
 	return s.GetByID(ctx, staffID.(int))
+}
+
+func (s *staffUsecase) GetQrForStaff(ctx context.Context, idCafe int) (string, error) {
+	ctx, cancel := context.WithTimeout(ctx, s.contextTimeout)
+	defer cancel()
+	u, err := uuid.NewV4()
+	if err != nil {
+		return "", err
+	}
+	uString := u.String()
+
+	err = s.staffRepo.AddUuid(ctx, uString, idCafe)
+	path, err := GenerateQrCode(uString)
+	if err != nil {
+		return "", err
+	}
+	return path, nil
+
+}
+
+func GenerateQrCode(uString string) (string, error) {
+	link := fmt.Sprintf("/api/v1/staff/addStaff?uuid=%s", uString)
+	pathToQr, err := qr.GenerateToFile(link, uString)
+	if err != nil {
+		return "", err
+	}
+	return pathToQr, err
 }

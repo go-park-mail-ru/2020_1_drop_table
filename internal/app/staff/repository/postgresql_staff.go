@@ -4,6 +4,7 @@ import (
 	"2020_1_drop_table/internal/app/staff/models"
 	"context"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 )
 
 type postgresStaffRepository struct {
@@ -51,5 +52,11 @@ func (p *postgresStaffRepository) Update(ctx context.Context, newStaff models.Sa
 	_, err := p.Conn.ExecContext(ctx, query, newStaff.Name, newStaff.Email, newStaff.EditedAt,
 		newStaff.Photo, newStaff.StaffID)
 
+	return err
+}
+
+func (p *postgresStaffRepository) AddUuid(ctx context.Context, uuid string, id int) error {
+	query := `INSERT into UuidCafeRepository(uuid, cafeId) VALUES ($1,$2)`
+	_, err := p.Conn.ExecContext(ctx, query, uuid, id)
 	return err
 }

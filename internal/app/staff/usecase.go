@@ -11,4 +11,5 @@ type Usecase interface {
 	Update(c context.Context, newStaff models.SafeStaff) (models.SafeStaff, error)
 	GetByEmailAndPassword(c context.Context, form models.LoginForm) (models.SafeStaff, error)
 	GetFromSession(c context.Context) (models.SafeStaff, error)
+	GetQrForStaff(ctx context.Context, idCafe int) (string, error)
 }
