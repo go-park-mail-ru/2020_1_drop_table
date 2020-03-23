@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"github.com/gorilla/sessions"
 	uuid "github.com/nu7hatch/gouuid"
+	"os"
 	"time"
 )
 
@@ -154,8 +155,16 @@ func (s *staffUsecase) GetQrForStaff(ctx context.Context, idCafe int) (string, e
 
 }
 
+func (s *staffUsecase) DeleteQrCodes(uString string) error {
+	pathToQr := configs.MediaFolder + "/qr/" + uString + ".png"
+	os.Remove(pathToQr)
+	err := s.staffRepo.DeleteUuid(context.TODO(), uString)
+	return err
+
+}
+
 func GenerateQrCode(uString string) (string, error) {
-	link := fmt.Sprintf("%s/api/v1/staff/generateQr?uuid=%s", configs.DomainUrl, uString)
+	link := fmt.Sprintf("%s/addStaff?uuid=%s", configs.DomainUrl, uString)
 	pathToQr, err := qr.GenerateToFile(link, uString)
 	if err != nil {
 		return "", err

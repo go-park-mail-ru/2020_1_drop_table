@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
+	"github.com/rs/zerolog/log"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -32,7 +33,7 @@ func NewStaffHandler(r *mux.Router, us staff.Usecase) {
 	r.HandleFunc("/api/v1/staff/{id:[0-9]+}", permissions.CheckAuthenticated(handler.GetStaffByIdHandler)).Methods("GET")
 	r.HandleFunc("/api/v1/staff/{id:[0-9]+}", permissions.CheckAuthenticated(handler.EditStaffHandler)).Methods("PUT")
 	r.HandleFunc("/api/v1/staff/generateQr/{id:[0-9]+}", handler.GenerateQrHandler).Methods("GET")
-
+	r.HandleFunc("/api/v1/add_staff", handler.AddStaffHandler).Methods("POST")
 }
 func (s *staffHandler) fetchStaff(r *http.Request) (models.Staff, error) {
 	err := r.ParseMultipartForm(32 << 20)
@@ -64,6 +65,40 @@ func (s *staffHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	staffObj, err := s.fetchStaff(r)
 
 	if err != nil {
+		responses.SendSingleError(err.Error(), w)
+		return
+	}
+	safeStaff, err := s.SUsecase.Add(r.Context(), staffObj)
+
+	if err != nil {
+		responses.SendSingleError(err.Error(), w)
+		return
+	}
+
+	session := r.Context().Value("session").(*sessions.Session)
+
+	session.Values["userID"] = safeStaff.StaffID
+	err = session.Save(r, w)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	responses.SendOKAnswer(safeStaff, w)
+}
+
+func (s *staffHandler) AddStaffHandler(w http.ResponseWriter, r *http.Request) {
+	staffObj, err := s.fetchStaff(r)
+	uuid := r.FormValue("uuid")
+
+	if err != nil && uuid != "" {
+		responses.SendSingleError(err.Error(), w)
+		return
+	}
+	staffObj.IsOwner = false
+	err = s.SUsecase.DeleteQrCodes(uuid)
+	if err != nil {
+		log.Error().Msgf("error when trying to delete QRCodes")
 		responses.SendSingleError(err.Error(), w)
 		return
 	}

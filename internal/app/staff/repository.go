@@ -12,4 +12,5 @@ type Repository interface {
 	Update(ctx context.Context, newStaff models.SafeStaff) error
 	AddUuid(ctx context.Context, uuid string, id int) error
 	CheckIsOwner(ctx context.Context, staffId int) (bool, error)
+	DeleteUuid(ctx context.Context, uuid string) error
 }

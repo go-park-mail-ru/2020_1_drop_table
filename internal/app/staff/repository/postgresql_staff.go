@@ -68,3 +68,10 @@ func (p *postgresStaffRepository) CheckIsOwner(ctx context.Context, staffId int)
 	}
 	return staff.IsOwner == true, nil
 }
+
+func (p *postgresStaffRepository) DeleteUuid(ctx context.Context, uuid string) error {
+	query := `DELETE FROM UuidCafeRepository WHERE uuid=$1`
+	_, err := p.Conn.ExecContext(ctx, query, uuid)
+	return err
+
+}

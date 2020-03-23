@@ -13,4 +13,5 @@ type Usecase interface {
 	GetFromSession(c context.Context) (models.SafeStaff, error)
 	GetQrForStaff(ctx context.Context, idCafe int) (string, error)
 	IsOwner(staffId int) (bool, error)
+	DeleteQrCodes(uString string) error
 }
