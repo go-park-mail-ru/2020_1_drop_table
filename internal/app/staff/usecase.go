@@ -14,4 +14,5 @@ type Usecase interface {
 	GetQrForStaff(ctx context.Context, idCafe int) (string, error)
 	IsOwner(staffId int) (bool, error)
 	DeleteQrCodes(uString string) error
+	GetCafeId(uuid string) (int, error)
 }

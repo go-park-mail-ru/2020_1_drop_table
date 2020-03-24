@@ -10,6 +10,7 @@ type Staff struct {
 	EditedAt time.Time `json:"editedAt" validate:"required"`
 	Photo    string    `json:"photo"`
 	IsOwner  bool      `json:"isOwner"`
+	CafeId   int       `json:"CafeId"`
 }
 
 type SafeStaff struct {
@@ -19,4 +20,5 @@ type SafeStaff struct {
 	EditedAt time.Time `json:"editedAt" validate:"required"`
 	Photo    string    `json:"photo"`
 	IsOwner  bool      `json:"isOwner"`
+	CafeId   int       `json:"CafeId"`
 }

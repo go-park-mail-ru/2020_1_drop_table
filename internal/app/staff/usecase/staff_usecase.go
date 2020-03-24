@@ -175,3 +175,7 @@ func GenerateQrCode(uString string) (string, error) {
 func (s *staffUsecase) IsOwner(staffId int) (bool, error) {
 	return s.staffRepo.CheckIsOwner(context.TODO(), staffId)
 }
+
+func (s *staffUsecase) GetCafeId(uuid string) (int, error) {
+	return s.staffRepo.GetCafeId(context.TODO(), uuid)
+}

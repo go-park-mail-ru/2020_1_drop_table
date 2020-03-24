@@ -90,12 +90,17 @@ func (s *staffHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 func (s *staffHandler) AddStaffHandler(w http.ResponseWriter, r *http.Request) {
 	staffObj, err := s.fetchStaff(r)
 	uuid := r.FormValue("uuid")
-
 	if err != nil && uuid != "" {
 		responses.SendSingleError(err.Error(), w)
 		return
 	}
+	CafeId, err := s.SUsecase.GetCafeId(uuid)
+	if err != nil {
+		responses.SendSingleError(err.Error(), w)
+		return
+	}
 	staffObj.IsOwner = false
+	staffObj.CafeId = CafeId
 	err = s.SUsecase.DeleteQrCodes(uuid)
 	if err != nil {
 		log.Error().Msgf("error when trying to delete QRCodes")

@@ -17,9 +17,9 @@ func NewPostgresStaffRepository(conn *sqlx.DB) postgresStaffRepository {
 }
 
 func (p *postgresStaffRepository) Add(ctx context.Context, st models.Staff) (models.Staff, error) {
-	query := `INSERT into staff(name, email, password, editedat, photo, isowner) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`
+	query := `INSERT into staff(name, email, password, editedat, photo, isowner,cafeid) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`
 	var dbStaff models.Staff
-	err := p.Conn.GetContext(ctx, &dbStaff, query, st.Name, st.Email, st.Password, st.EditedAt, st.Photo, st.IsOwner)
+	err := p.Conn.GetContext(ctx, &dbStaff, query, st.Name, st.Email, st.Password, st.EditedAt, st.Photo, st.IsOwner, st.CafeId)
 	return dbStaff, err
 }
 
@@ -73,5 +73,12 @@ func (p *postgresStaffRepository) DeleteUuid(ctx context.Context, uuid string) e
 	query := `DELETE FROM UuidCafeRepository WHERE uuid=$1`
 	_, err := p.Conn.ExecContext(ctx, query, uuid)
 	return err
+}
+
+func (p *postgresStaffRepository) GetCafeId(ctx context.Context, uuid string) (int, error) {
+	var id int
+	query := `SELECT cafeid FROM uuidcaferepository WHERE uuid=$1`
+	err := p.Conn.GetContext(ctx, &id, query, uuid)
+	return id, err
 
 }
