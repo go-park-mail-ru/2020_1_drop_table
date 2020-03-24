@@ -13,7 +13,7 @@ func MyCORSMethodMiddleware(_ *mux.Router) mux.MiddlewareFunc {
 				"POST, GET, OPTIONS, PUT, DELETE")
 			w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length,"+
 				" Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
-			w.Header().Set("Access-Control-Allow-Origin", configs.FrontEndServerToAllowOrigin)
+			w.Header().Set("Access-Control-Allow-Origin", configs.FrontEndUrl)
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			w.Header().Set("Vary", "Accept, Cookie")
 			if req.Method == "OPTIONS" {

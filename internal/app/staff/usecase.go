@@ -12,7 +12,8 @@ type Usecase interface {
 	GetByEmailAndPassword(c context.Context, form models.LoginForm) (models.SafeStaff, error)
 	GetFromSession(c context.Context) (models.SafeStaff, error)
 	GetQrForStaff(ctx context.Context, idCafe int) (string, error)
-	IsOwner(staffId int) (bool, error)
+	IsOwner(c context.Context, staffId int) (bool, error)
 	DeleteQrCodes(uString string) error
-	GetCafeId(uuid string) (int, error)
+	GetCafeId(c context.Context, uuid string) (int, error)
+	GetStaffId(c context.Context) int
 }

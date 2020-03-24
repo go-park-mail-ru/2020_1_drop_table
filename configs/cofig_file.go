@@ -4,8 +4,7 @@ import "os"
 
 const MediaFolder = "media"
 const ServerUrl = "http://localhost:8080"
-const FrontEndServerToAllowOrigin = "http://localhost:3000"
-const DomainUrl = FrontEndServerToAllowOrigin
+const FrontEndUrl = "http://localhost:3000"
 
 var PostgresPreferences postgresPreferencesStruct
 

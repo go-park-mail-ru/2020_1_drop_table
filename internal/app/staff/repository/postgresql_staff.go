@@ -17,7 +17,7 @@ func NewPostgresStaffRepository(conn *sqlx.DB) postgresStaffRepository {
 }
 
 func (p *postgresStaffRepository) Add(ctx context.Context, st models.Staff) (models.Staff, error) {
-	query := `INSERT into staff(name, email, password, editedat, photo, isowner,cafeid) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`
+	query := `INSERT into staff(name, email, password, editedat, photo, isowner, cafeid) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`
 	var dbStaff models.Staff
 	err := p.Conn.GetContext(ctx, &dbStaff, query, st.Name, st.Email, st.Password, st.EditedAt, st.Photo, st.IsOwner, st.CafeId)
 	return dbStaff, err
@@ -66,7 +66,7 @@ func (p *postgresStaffRepository) CheckIsOwner(ctx context.Context, staffId int)
 	if err != nil {
 		return false, err
 	}
-	return staff.IsOwner == true, nil
+	return staff.IsOwner, nil
 }
 
 func (p *postgresStaffRepository) DeleteUuid(ctx context.Context, uuid string) error {

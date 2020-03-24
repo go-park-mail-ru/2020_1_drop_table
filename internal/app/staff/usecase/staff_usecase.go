@@ -147,7 +147,7 @@ func (s *staffUsecase) GetQrForStaff(ctx context.Context, idCafe int) (string, e
 	uString := u.String()
 
 	err = s.staffRepo.AddUuid(ctx, uString, idCafe)
-	path, err := GenerateQrCode(uString)
+	path, err := generateQRCode(uString)
 	if err != nil {
 		return "", err
 	}
@@ -163,8 +163,8 @@ func (s *staffUsecase) DeleteQrCodes(uString string) error {
 
 }
 
-func GenerateQrCode(uString string) (string, error) {
-	link := fmt.Sprintf("%s/addStaff?uuid=%s", configs.DomainUrl, uString)
+func generateQRCode(uString string) (string, error) {
+	link := fmt.Sprintf("%s/addStaff?uuid=%s", configs.FrontEndUrl, uString)
 	pathToQr, err := qr.GenerateToFile(link, uString)
 	if err != nil {
 		return "", err
@@ -172,10 +172,17 @@ func GenerateQrCode(uString string) (string, error) {
 	return pathToQr, err
 }
 
-func (s *staffUsecase) IsOwner(staffId int) (bool, error) {
-	return s.staffRepo.CheckIsOwner(context.TODO(), staffId)
+func (s *staffUsecase) IsOwner(c context.Context, staffId int) (bool, error) {
+	return s.staffRepo.CheckIsOwner(c, staffId)
 }
 
-func (s *staffUsecase) GetCafeId(uuid string) (int, error) {
-	return s.staffRepo.GetCafeId(context.TODO(), uuid)
+func (s *staffUsecase) GetCafeId(c context.Context, uuid string) (int, error) {
+	return s.staffRepo.GetCafeId(c, uuid)
+}
+
+func (s *staffUsecase) GetStaffId(c context.Context) int {
+	session := c.Value("session").(*sessions.Session)
+	staffID, _ := session.Values["userID"]
+	return staffID.(int)
+
 }
