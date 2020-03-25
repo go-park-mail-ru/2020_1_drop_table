@@ -7,6 +7,7 @@ import (
 	globalModels "2020_1_drop_table/internal/app/models"
 	"2020_1_drop_table/internal/app/staff"
 	"2020_1_drop_table/internal/app/staff/models"
+	"2020_1_drop_table/internal/pkg/hasher"
 	"2020_1_drop_table/internal/pkg/qr"
 	"2020_1_drop_table/internal/pkg/validators"
 	"context"
@@ -49,7 +50,7 @@ func (s *staffUsecase) Add(c context.Context, newStaff models.Staff) (models.Saf
 		return models.SafeStaff{}, err
 	}
 
-	newStaff.Password = getMD5Hash(newStaff.Password)
+	newStaff.Password = hasher.GetMD5Hash(newStaff.Password)
 
 	_, err = s.staffRepo.GetByEmailAndPassword(ctx, newStaff.Email, newStaff.Password)
 	if err != sql.ErrNoRows {
@@ -115,7 +116,7 @@ func (s *staffUsecase) GetByEmailAndPassword(c context.Context, form models.Logi
 		return models.SafeStaff{}, err
 	}
 
-	form.Password = getMD5Hash(form.Password)
+	form.Password = hasher.GetMD5Hash(form.Password)
 
 	staffObj, err := s.staffRepo.GetByEmailAndPassword(ctx, form.Email, form.Password)
 	if err == sql.ErrNoRows {
