@@ -4,7 +4,6 @@ import (
 	"2020_1_drop_table/configs"
 	"2020_1_drop_table/internal/app"
 	"2020_1_drop_table/internal/app/cafe"
-	cafeModels "2020_1_drop_table/internal/app/cafe/models"
 	globalModels "2020_1_drop_table/internal/app/models"
 	"2020_1_drop_table/internal/app/staff"
 	"2020_1_drop_table/internal/app/staff/models"
@@ -146,7 +145,12 @@ func (s *staffUsecase) GetFromSession(c context.Context) (models.SafeStaff, erro
 func (s *staffUsecase) GetQrForStaff(ctx context.Context, idCafe int) (string, error) {
 	ctx, cancel := context.WithTimeout(ctx, s.contextTimeout)
 	defer cancel()
-	staffId := s.GetStaffId(ctx)
+	staffId, err := s.GetStaffId(ctx)
+	if err != nil {
+		message := fmt.Sprintf("Cant find stuff in GET Params of -> %s", err)
+		log.Error().Msgf(message)
+		return "", errors.New(message)
+	}
 	owner, err := s.GetByID(ctx, staffId)
 	if err != nil {
 		message := fmt.Sprintf("Cant find Staff in SessionStorage because of -> %s", err)
@@ -154,18 +158,16 @@ func (s *staffUsecase) GetQrForStaff(ctx context.Context, idCafe int) (string, e
 		return "", errors.New(message)
 	}
 
-	ownerCafe, err := s.cafeRepo.GetByOwnerID(ctx, owner.StaffID)
+	ownerCafe, err := s.cafeRepo.GetByID(ctx, idCafe)
 	if err != nil {
 		message := fmt.Sprintf("Cant find cafe with this owner because of -> %s", err)
 		if err == sql.ErrNoRows {
-			message = fmt.Sprintf("Cant find cafe with this owner")
+			message = fmt.Sprintf("User is not owner of cafe")
 		}
 		log.Error().Msgf(message)
 		return "", errors.New(message)
 	}
-
-	isIn := isCafeInCafeList(idCafe, ownerCafe)
-	if owner.IsOwner && isIn {
+	if owner.IsOwner && ownerCafe.StaffID == owner.StaffID {
 
 		u, err := uuid.NewV4()
 		if err != nil {
@@ -185,20 +187,15 @@ func (s *staffUsecase) GetQrForStaff(ctx context.Context, idCafe int) (string, e
 	return "", errors.New(message)
 }
 
-func isCafeInCafeList(idCafe int, ownersCafe []cafeModels.Cafe) bool {
-	for _, cafe := range ownersCafe {
-		if cafe.StaffID == idCafe {
-			fmt.Println(cafe)
-			return true
-		}
-	}
-	return false
-}
-
 func (s *staffUsecase) DeleteQrCodes(uString string) error {
 	pathToQr := configs.MediaFolder + "/qr/" + uString + ".png"
-	os.Remove(pathToQr)
-	err := s.staffRepo.DeleteUuid(context.TODO(), uString)
+	err := os.Remove(pathToQr)
+	if err != nil {
+		return err
+	}
+	ctx, cancel := context.WithTimeout(context.TODO(), s.contextTimeout)
+	defer cancel()
+	err = s.staffRepo.DeleteUuid(ctx, uString)
 	return err
 
 }
@@ -220,9 +217,18 @@ func (s *staffUsecase) GetCafeId(c context.Context, uuid string) (int, error) {
 	return s.staffRepo.GetCafeId(c, uuid)
 }
 
-func (s *staffUsecase) GetStaffId(c context.Context) int { //TODO взять Димин код
+func (s *staffUsecase) GetStaffId(c context.Context) (int, error) {
 	session := c.Value("session").(*sessions.Session)
-	staffID, _ := session.Values["userID"]
-	return staffID.(int)
+
+	staffID, ok := session.Values["userID"]
+	if !ok {
+		return -1, errors.New("no userID in session")
+	}
+
+	id, ok := staffID.(int)
+	if !ok {
+		return -1, errors.New("userID is not int")
+	}
+	return id, nil
 
 }

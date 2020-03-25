@@ -15,5 +15,5 @@ type Usecase interface {
 	IsOwner(c context.Context, staffId int) (bool, error)
 	DeleteQrCodes(uString string) error
 	GetCafeId(c context.Context, uuid string) (int, error)
-	GetStaffId(c context.Context) int
+	GetStaffId(c context.Context) (int, error)
 }
