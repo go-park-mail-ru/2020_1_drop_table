@@ -48,10 +48,10 @@ func main() {
 	if err != nil {
 		log.Error().Msgf(err.Error())
 	}
-	staffUsecase := _staffUsecase.NewStaffUsecase(&staffRepo, timeoutContext)
+	cafeRepo := _cafeRepo.NewPostgresCafeRepository(conn)
+	staffUsecase := _staffUsecase.NewStaffUsecase(&staffRepo, &cafeRepo, timeoutContext)
 	_staffHttpDeliver.NewStaffHandler(r, staffUsecase)
 
-	cafeRepo := _cafeRepo.NewPostgresCafeRepository(conn)
 	if err != nil {
 		log.Error().Msgf(err.Error())
 	}

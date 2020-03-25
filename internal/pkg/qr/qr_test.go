@@ -42,3 +42,8 @@ func TestGenerateOk(t *testing.T) {
 	_, err = Generate("https://popex.", 256)
 	assert.Nil(t, err, "No errors")
 }
+
+func TestGenerateToFile(t *testing.T) {
+	_, err := GenerateToFile("http://ya.ru", "aksjdghasjkghdkjas")
+	assert.Nil(t, err)
+}
