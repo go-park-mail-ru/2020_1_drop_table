@@ -228,28 +228,17 @@ func (s *staffHandler) EditStaffHandler(w http.ResponseWriter, r *http.Request) 
 }
 
 func (s *staffHandler) GenerateQrHandler(w http.ResponseWriter, r *http.Request) {
-	staffId := s.SUsecase.GetStaffId(r.Context())
-	isOwner, err := s.SUsecase.IsOwner(r.Context(), staffId)
+	CafeId, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
-		message := fmt.Sprintf("Cant find Staff in SessionStorage because of -> %s", err)
+		message := fmt.Sprintf("bad id: %s", mux.Vars(r)["id"])
 		responses.SendSingleError(message, w)
 		return
 	}
-	if isOwner {
-		id, err := strconv.Atoi(mux.Vars(r)["id"])
-		if err != nil {
-			message := fmt.Sprintf("bad id: %s", mux.Vars(r)["id"])
-			responses.SendSingleError(message, w)
-			return
-		}
-		pathToQr, err := s.SUsecase.GetQrForStaff(r.Context(), id)
-		if err != nil {
-			responses.SendSingleError(err.Error(), w)
-			return
-		}
-		responses.SendOKAnswer(pathToQr, w)
-	} else {
-		message := fmt.Sprintf("User is not owner")
-		responses.SendSingleError(message, w)
+	pathToQr, err := s.SUsecase.GetQrForStaff(r.Context(), CafeId)
+	if err != nil {
+		responses.SendSingleError(err.Error(), w)
+		return
 	}
+	responses.SendOKAnswer(pathToQr, w)
+
 }

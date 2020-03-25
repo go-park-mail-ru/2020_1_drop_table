@@ -3,6 +3,8 @@ package usecase
 import (
 	"2020_1_drop_table/configs"
 	"2020_1_drop_table/internal/app"
+	"2020_1_drop_table/internal/app/cafe"
+	cafeModels "2020_1_drop_table/internal/app/cafe/models"
 	globalModels "2020_1_drop_table/internal/app/models"
 	"2020_1_drop_table/internal/app/staff"
 	"2020_1_drop_table/internal/app/staff/models"
@@ -10,22 +12,26 @@ import (
 	"2020_1_drop_table/internal/pkg/validators"
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/gorilla/sessions"
 	uuid "github.com/nu7hatch/gouuid"
+	"github.com/rs/zerolog/log"
 	"os"
 	"time"
 )
 
 type staffUsecase struct {
 	staffRepo      staff.Repository
+	cafeRepo       cafe.Repository
 	contextTimeout time.Duration
 }
 
-func NewStaffUsecase(s staff.Repository, timeout time.Duration) staff.Usecase {
+func NewStaffUsecase(s staff.Repository, cafeRepo cafe.Repository, timeout time.Duration) staff.Usecase {
 	return &staffUsecase{
 		staffRepo:      s,
 		contextTimeout: timeout,
+		cafeRepo:       cafeRepo,
 	}
 }
 
@@ -140,19 +146,53 @@ func (s *staffUsecase) GetFromSession(c context.Context) (models.SafeStaff, erro
 func (s *staffUsecase) GetQrForStaff(ctx context.Context, idCafe int) (string, error) {
 	ctx, cancel := context.WithTimeout(ctx, s.contextTimeout)
 	defer cancel()
-	u, err := uuid.NewV4()
+	staffId := s.GetStaffId(ctx)
+	owner, err := s.GetByID(ctx, staffId)
 	if err != nil {
-		return "", err
+		message := fmt.Sprintf("Cant find Staff in SessionStorage because of -> %s", err)
+		log.Error().Msgf(message)
+		return "", errors.New(message)
 	}
-	uString := u.String()
 
-	err = s.staffRepo.AddUuid(ctx, uString, idCafe)
-	path, err := generateQRCode(uString)
+	ownerCafe, err := s.cafeRepo.GetByOwnerID(ctx, owner.StaffID)
 	if err != nil {
-		return "", err
+		message := fmt.Sprintf("Cant find cafe with this owner because of -> %s", err)
+		if err == sql.ErrNoRows {
+			message = fmt.Sprintf("Cant find cafe with this owner")
+		}
+		log.Error().Msgf(message)
+		return "", errors.New(message)
 	}
-	return path, nil
 
+	isIn := isCafeInCafeList(idCafe, ownerCafe)
+	if owner.IsOwner && isIn {
+
+		u, err := uuid.NewV4()
+		if err != nil {
+			return "", err
+		}
+		uString := u.String()
+
+		err = s.staffRepo.AddUuid(ctx, uString, idCafe)
+		path, err := generateQRCode(uString)
+		if err != nil {
+			return "", err
+		}
+		return path, nil
+	}
+	message := fmt.Sprintf("User is not owner of this cafe")
+	log.Error().Msgf(message)
+	return "", errors.New(message)
+}
+
+func isCafeInCafeList(idCafe int, ownersCafe []cafeModels.Cafe) bool {
+	for _, cafe := range ownersCafe {
+		if cafe.StaffID == idCafe {
+			fmt.Println(cafe)
+			return true
+		}
+	}
+	return false
 }
 
 func (s *staffUsecase) DeleteQrCodes(uString string) error {
@@ -180,7 +220,7 @@ func (s *staffUsecase) GetCafeId(c context.Context, uuid string) (int, error) {
 	return s.staffRepo.GetCafeId(c, uuid)
 }
 
-func (s *staffUsecase) GetStaffId(c context.Context) int {
+func (s *staffUsecase) GetStaffId(c context.Context) int { //TODO взять Димин код
 	session := c.Value("session").(*sessions.Session)
 	staffID, _ := session.Values["userID"]
 	return staffID.(int)
