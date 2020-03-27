@@ -10,6 +10,12 @@ var PostgresPreferences postgresPreferencesStruct
 
 var RedisPreferences redisPreferencesStruct
 
+const AppleWWDR = "configs/apple_config_files/WWDR.pem"
+const AppleCertificate = "configs/apple_config_files/passcertificate.pem"
+const AppleKey = "configs/apple_config_files/passkey.pem"
+
+var ApplePassword = os.Getenv("ApplePassword")
+
 func init() {
 	PostgresPreferences = postgresPreferencesStruct{
 		User:     "postgres",

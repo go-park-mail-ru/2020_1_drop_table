@@ -25,7 +25,7 @@ func NewGenerator(wwdr, certificate, key, password string) generator {
 	}
 }
 
-func (g *generator) createManifest(pass applePass) ([]byte, error) {
+func (g *generator) createManifest(pass ApplePass) ([]byte, error) {
 	files := map[string]string{}
 	files["pass.json"] = hasher.GetSha1([]byte(pass.design))
 	for key, data := range pass.files {
@@ -82,7 +82,7 @@ func (g *generator) createZip(files map[string][]byte) (*bytes.Buffer, error) {
 	return buf, nil
 }
 
-func (g *generator) CreateNewPass(pass applePass) (*bytes.Buffer, error) {
+func (g *generator) CreateNewPass(pass ApplePass) (*bytes.Buffer, error) {
 	manifest, err := g.createManifest(pass)
 	if err != nil {
 		return nil, err
