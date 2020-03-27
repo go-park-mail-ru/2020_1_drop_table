@@ -12,6 +12,16 @@ var (
 
 	ErrBadRequest = errors.New("bad request")
 
+	ErrBadURLParams = errors.New("bad params in URL")
+
+	//Request files errors
+	ErrUnexpectedFile         = errors.New("too many files(>1) in one field")
+	ErrUnexpectedFilenameText = "unexpected filename: %s"
+
+	//JSON errors
 	ErrEmptyJSON = errors.New("empty jsonData field")
 	ErrBadJSON   = errors.New("json parsing error")
+
+	//Apple pass errors
+	ErrNoPublishedCard = errors.New("no published card for this cafe")
 )

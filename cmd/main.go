@@ -2,13 +2,18 @@ package main
 
 import (
 	"2020_1_drop_table/configs"
+	_appleHttpDeliver "2020_1_drop_table/internal/app/apple_passkit/delivery/http"
+	_appleRepo "2020_1_drop_table/internal/app/apple_passkit/repository"
+	_appleUsecase "2020_1_drop_table/internal/app/apple_passkit/usecase"
 	_cafeHttpDeliver "2020_1_drop_table/internal/app/cafe/delivery/http"
 	_cafeRepo "2020_1_drop_table/internal/app/cafe/repository"
 	_cafeUsecase "2020_1_drop_table/internal/app/cafe/usecase"
+	_customerRepo "2020_1_drop_table/internal/app/customer/repository"
 	"2020_1_drop_table/internal/app/middleware"
 	_staffHttpDeliver "2020_1_drop_table/internal/app/staff/delivery/http"
 	_staffRepo "2020_1_drop_table/internal/app/staff/repository"
 	_staffUsecase "2020_1_drop_table/internal/app/staff/usecase"
+	"2020_1_drop_table/internal/pkg/apple_pass_generator"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
@@ -49,14 +54,25 @@ func main() {
 		log.Error().Msgf(err.Error())
 	}
 	cafeRepo := _cafeRepo.NewPostgresCafeRepository(conn)
-	staffUsecase := _staffUsecase.NewStaffUsecase(&staffRepo, &cafeRepo, timeoutContext)
+	staffUsecase := _staffUsecase.NewStaffUsecase(&staffRepo, cafeRepo, timeoutContext)
 	_staffHttpDeliver.NewStaffHandler(r, staffUsecase)
 
 	if err != nil {
 		log.Error().Msgf(err.Error())
 	}
-	cafeUsecase := _cafeUsecase.NewCafeUsecase(&cafeRepo, staffUsecase, timeoutContext)
+	cafeUsecase := _cafeUsecase.NewCafeUsecase(cafeRepo, staffUsecase, timeoutContext)
 	_cafeHttpDeliver.NewCafeHandler(r, cafeUsecase)
+
+	applePassGenerator := apple_pass_generator.NewGenerator(
+		configs.AppleWWDR, configs.AppleCertificate, configs.AppleKey, configs.ApplePassword)
+
+	customerRepo := _customerRepo.NewPostgresCustomerRepository(conn)
+
+	applePassKitRepo := _appleRepo.NewPostgresApplePassRepository(conn)
+
+	applePassKitUcase := _appleUsecase.NewApplePassKitUsecase(applePassKitRepo, cafeRepo, customerRepo,
+		&applePassGenerator, timeoutContext)
+	_appleHttpDeliver.NewPassKitHandler(r, applePassKitUcase)
 
 	//OPTIONS
 	r.Methods("OPTIONS").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

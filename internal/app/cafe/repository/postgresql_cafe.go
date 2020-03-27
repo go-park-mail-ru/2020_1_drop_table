@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"2020_1_drop_table/internal/app/cafe"
 	"2020_1_drop_table/internal/app/cafe/models"
 	"context"
 	"github.com/jmoiron/sqlx"
@@ -10,9 +11,10 @@ type postgresCafeRepository struct {
 	Conn *sqlx.DB
 }
 
-func NewPostgresCafeRepository(conn *sqlx.DB) postgresCafeRepository {
-	cafeStorage := postgresCafeRepository{conn}
-	return cafeStorage
+func NewPostgresCafeRepository(conn *sqlx.DB) cafe.Repository {
+	return &postgresCafeRepository{
+		Conn: conn,
+	}
 }
 
 func (p *postgresCafeRepository) Add(ctx context.Context, ca models.Cafe) (models.Cafe, error) {
@@ -73,6 +75,26 @@ func (p *postgresCafeRepository) Update(ctx context.Context, newCafe models.Cafe
 
 	_, err := p.Conn.ExecContext(ctx, query, newCafe.Name, newCafe.Address, newCafe.Description,
 		newCafe.StaffID, newCafe.OpenTime, newCafe.CloseTime, newCafe.Photo, newCafe.CafeID)
+
+	return err
+}
+
+func (p *postgresCafeRepository) UpdateSavedPass(ctx context.Context, newCafe models.Cafe) error {
+	query := `UPDATE Cafe SET 
+	SavedApplePassID=$1
+	WHERE CafeID=$2`
+
+	_, err := p.Conn.ExecContext(ctx, query, newCafe.SavedApplePassID, newCafe.CafeID)
+
+	return err
+}
+
+func (p *postgresCafeRepository) UpdatePublishedPass(ctx context.Context, newCafe models.Cafe) error {
+	query := `UPDATE Cafe SET 
+	PublishedApplePassID=$1
+	WHERE CafeID=$2`
+
+	_, err := p.Conn.ExecContext(ctx, query, newCafe.PublishedApplePassID, newCafe.CafeID)
 
 	return err
 }
