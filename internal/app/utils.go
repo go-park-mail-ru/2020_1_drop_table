@@ -21,6 +21,7 @@ func GetSafeStaff(unsafeStaff staffModels.Staff) staffModels.SafeStaff {
 		Photo:    unsafeStaff.Photo,
 		IsOwner:  unsafeStaff.IsOwner,
 		CafeId:   unsafeStaff.CafeId,
+		Position: unsafeStaff.Position,
 	}
 }
 

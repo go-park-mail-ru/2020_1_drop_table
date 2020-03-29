@@ -11,6 +11,7 @@ type Staff struct {
 	Photo    string    `json:"photo"`
 	IsOwner  bool      `json:"isOwner"`
 	CafeId   int       `json:"CafeId"`
+	Position string    `json:"Position"`
 }
 
 type SafeStaff struct {
@@ -21,4 +22,5 @@ type SafeStaff struct {
 	Photo    string    `json:"photo"`
 	IsOwner  bool      `json:"isOwner"`
 	CafeId   int       `json:"CafeId"`
+	Position string    `json:"Position"`
 }
