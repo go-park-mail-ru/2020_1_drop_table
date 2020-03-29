@@ -169,7 +169,9 @@ func (ap *applePassKitUsecase) getPass(ctx context.Context, passID int, designOn
 	}
 }
 
-func (ap *applePassKitUsecase) GetPass(c context.Context, cafeID int, published bool) (models.ApplePassDB, error) {
+func (ap *applePassKitUsecase) GetPass(c context.Context, cafeID int, published,
+	designOnly bool) (models.ApplePassDB, error) {
+
 	ctx, cancel := context.WithTimeout(c, ap.contextTimeout)
 	defer cancel()
 
@@ -190,7 +192,34 @@ func (ap *applePassKitUsecase) GetPass(c context.Context, cafeID int, published 
 		return models.ApplePassDB{}, globalModels.ErrNoRequestedCard
 	}
 
-	return ap.getPass(ctx, int(passID.Int64), published)
+	return ap.getPass(ctx, int(passID.Int64), designOnly)
+}
+
+func (ap *applePassKitUsecase) GetImage(c context.Context, imageName string, cafeID int,
+	published bool) ([]byte, error) {
+	passObj, err := ap.GetPass(c, cafeID, published, false)
+	if err != nil {
+		return nil, err
+	}
+	var image []byte
+	switch imageName {
+	case "icon":
+		image = passObj.Icon
+	case "icon2x":
+		image = passObj.Icon2x
+	case "logo":
+		image = passObj.Logo
+	case "logo2x":
+		image = passObj.Logo2x
+	case "strip":
+		image = passObj.Strip
+	case "strip2x":
+		image = passObj.Strip2x
+	}
+	if len(image) == 0 {
+		return nil, globalModels.ErrNotFound
+	}
+	return image, nil
 }
 
 func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int) (*bytes.Buffer, error) {
