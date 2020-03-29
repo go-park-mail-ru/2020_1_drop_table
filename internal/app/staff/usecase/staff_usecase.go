@@ -234,3 +234,16 @@ func (s *staffUsecase) GetStaffId(c context.Context) (int, error) {
 	return id, nil
 
 }
+
+func (s *staffUsecase) GetStaffListByOwnerId(ctx context.Context, ownerId int) (map[string][]models.StaffByOwnerResponse, error) {
+	requestUser, err := s.GetFromSession(ctx)
+	if err != nil {
+		emptMap := make(map[string][]models.StaffByOwnerResponse)
+		return emptMap, err
+	}
+	if requestUser.IsOwner && requestUser.StaffID == ownerId {
+		return s.staffRepo.GetStaffListByOwnerId(ctx, ownerId)
+	}
+	emptMap := make(map[string][]models.StaffByOwnerResponse)
+	return emptMap, errors.New("You are not owner")
+}
