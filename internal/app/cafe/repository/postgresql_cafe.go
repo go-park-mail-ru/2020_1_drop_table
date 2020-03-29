@@ -19,7 +19,7 @@ func NewPostgresCafeRepository(conn *sqlx.DB) cafe.Repository {
 
 func (p *postgresCafeRepository) Add(ctx context.Context, ca models.Cafe) (models.Cafe, error) {
 	query := `INSERT INTO Cafe(
-	Name, 
+	CafeName, 
 	Address, 
 	Description, 
 	StaffID, 
@@ -30,7 +30,7 @@ func (p *postgresCafeRepository) Add(ctx context.Context, ca models.Cafe) (model
 	RETURNING *`
 
 	var dbCafe models.Cafe
-	err := p.Conn.GetContext(ctx, &dbCafe, query, ca.Name, ca.Address,
+	err := p.Conn.GetContext(ctx, &dbCafe, query, ca.CafeName, ca.Address,
 		ca.Description, ca.StaffID, ca.OpenTime, ca.CloseTime, ca.Photo)
 
 	return dbCafe, err
@@ -64,7 +64,7 @@ func (p *postgresCafeRepository) GetByOwnerID(ctx context.Context, staffID int) 
 
 func (p *postgresCafeRepository) Update(ctx context.Context, newCafe models.Cafe) error {
 	query := `UPDATE Cafe SET 
-	Name=$1, 
+	CafeName=$1, 
 	Address=$2, 
 	Description=$3, 
 	StaffID=$4, 
@@ -73,7 +73,7 @@ func (p *postgresCafeRepository) Update(ctx context.Context, newCafe models.Cafe
 	Photo=$7 
 	WHERE CafeID=$8`
 
-	_, err := p.Conn.ExecContext(ctx, query, newCafe.Name, newCafe.Address, newCafe.Description,
+	_, err := p.Conn.ExecContext(ctx, query, newCafe.CafeName, newCafe.Address, newCafe.Description,
 		newCafe.StaffID, newCafe.OpenTime, newCafe.CloseTime, newCafe.Photo, newCafe.CafeID)
 
 	return err

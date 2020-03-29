@@ -7,7 +7,7 @@ import (
 
 type Cafe struct {
 	CafeID               int           `json:"id"`
-	Name                 string        `json:"name" validate:"required,min=2,max=100"`
+	CafeName             string        `json:"CafeName" validate:"required,min=2,max=100"`
 	Address              string        `json:"address" validate:"required"`
 	Description          string        `json:"description" validate:"required"`
 	StaffID              int           `json:"staffID"`

@@ -14,4 +14,5 @@ type Repository interface {
 	CheckIsOwner(ctx context.Context, staffId int) (bool, error)
 	DeleteUuid(ctx context.Context, uuid string) error
 	GetCafeId(ctx context.Context, uuid string) (int, error)
+	GetStaffListByOwnerId(ctx context.Context, ownerId int) (map[string][]models.StaffByOwnerResponse, error)
 }

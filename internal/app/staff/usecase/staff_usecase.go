@@ -204,6 +204,7 @@ func (s *staffUsecase) DeleteQrCodes(uString string) error {
 func generateQRCode(uString string) (string, error) {
 	link := fmt.Sprintf("%s/addStaff?uuid=%s", configs.FrontEndUrl, uString)
 	pathToQr, err := qr.GenerateToFile(link, uString)
+	pathToQr = configs.ServerUrl + "/" + pathToQr
 	if err != nil {
 		return "", err
 	}
@@ -232,4 +233,18 @@ func (s *staffUsecase) GetStaffId(c context.Context) (int, error) {
 	}
 	return id, nil
 
+}
+
+func (s *staffUsecase) GetStaffListByOwnerId(ctx context.Context, ownerId int) (map[string][]models.StaffByOwnerResponse, error) {
+	requestUser, err := s.GetFromSession(ctx)
+	if err != nil {
+		emptMap := make(map[string][]models.StaffByOwnerResponse)
+		return emptMap, err
+	}
+	if requestUser.IsOwner && requestUser.StaffID == ownerId {
+		return s.staffRepo.GetStaffListByOwnerId(ctx, ownerId)
+	}
+	emptMap := make(map[string][]models.StaffByOwnerResponse)
+
+	return emptMap, globalModels.ErrForbidden
 }

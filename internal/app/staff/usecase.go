@@ -16,4 +16,5 @@ type Usecase interface {
 	DeleteQrCodes(uString string) error
 	GetCafeId(c context.Context, uuid string) (int, error)
 	GetStaffId(c context.Context) (int, error)
+	GetStaffListByOwnerId(ctx context.Context, ownerId int) (map[string][]models.StaffByOwnerResponse, error)
 }

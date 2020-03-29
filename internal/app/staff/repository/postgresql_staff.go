@@ -17,9 +17,9 @@ func NewPostgresStaffRepository(conn *sqlx.DB) postgresStaffRepository {
 }
 
 func (p *postgresStaffRepository) Add(ctx context.Context, st models.Staff) (models.Staff, error) {
-	query := `INSERT into staff(name, email, password, editedat, photo, isowner, cafeid) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`
+	query := `INSERT into staff(name, email, password, editedat, photo, isowner, cafeid, position) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`
 	var dbStaff models.Staff
-	err := p.Conn.GetContext(ctx, &dbStaff, query, st.Name, st.Email, st.Password, st.EditedAt, st.Photo, st.IsOwner, st.CafeId)
+	err := p.Conn.GetContext(ctx, &dbStaff, query, st.Name, st.Email, st.Password, st.EditedAt, st.Photo, st.IsOwner, st.CafeId, st.Position)
 	return dbStaff, err
 }
 
@@ -81,4 +81,25 @@ func (p *postgresStaffRepository) GetCafeId(ctx context.Context, uuid string) (i
 	err := p.Conn.GetContext(ctx, &id, query, uuid)
 	return id, err
 
+}
+
+func (p *postgresStaffRepository) GetStaffListByOwnerId(ctx context.Context, ownerId int) (map[string][]models.StaffByOwnerResponse, error) {
+	data := []models.StaffByOwnerResponse{}
+	query := `SELECT cafe.cafename,s.staffid,s.photo,s.name,s.position from cafe join staff s on cafe.cafeid = s.cafeid where cafe.staffid=$1 ORDER BY cafe.cafeid
+`
+	err := p.Conn.SelectContext(ctx, &data, query, ownerId)
+	if err != nil {
+		emptMap := make(map[string][]models.StaffByOwnerResponse)
+		return emptMap, err
+	}
+	return addCafeToList(data), err
+
+}
+
+func addCafeToList(staffList []models.StaffByOwnerResponse) map[string][]models.StaffByOwnerResponse {
+	result := make(map[string][]models.StaffByOwnerResponse)
+	for _, staff := range staffList {
+		result[staff.CafeName] = append(result[staff.CafeName], staff)
+	}
+	return result
 }
