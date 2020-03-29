@@ -117,7 +117,7 @@ func (ap *applePassKitHandler) UpdatePassHandler(w http.ResponseWriter, r *http.
 		}
 	}
 
-	err = ap.passesUsecace.UpdatePass(r.Context(), applePassObj, id, publish)
+	err = ap.passesUsecace.UpdatePass(r.Context(), applePassObj, id, publish, false)
 	if err != nil {
 		responses.SendSingleError(err.Error(), w)
 		return
@@ -140,11 +140,11 @@ func (ap *applePassKitHandler) GenerateNewPass(w http.ResponseWriter, r *http.Re
 		responses.SendSingleError(err.Error(), w)
 		return
 	}
+
 	filename := "loyaltyCard.pkpass"
 
 	w.Header().Set("Content-Disposition", "attachment; filename="+filename)
 	w.Header().Set("Content-Type", "application/vnd.apple.pkpass")
 	http.ServeContent(w, r, filename, time.Time{}, bytes.NewReader(pass.Bytes()))
-	//w.Header().Set("Content-Length", FileSize)
 
 }
