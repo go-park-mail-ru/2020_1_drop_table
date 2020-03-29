@@ -28,7 +28,14 @@ func NewPassKitHandler(r *mux.Router, us apple_passkit.Usecase) {
 	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}/apple_pass",
 		permissions.CheckAuthenticated(handler.UpdatePassHandler)).Methods("PUT")
 
-	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}/apple_pass/new_customer", handler.GenerateNewPass).Methods("GET")
+	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}/apple_pass",
+		permissions.CheckAuthenticated(handler.GetPassHandler)).Methods("GET")
+
+	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}/apple_pass/{image_name}",
+		permissions.CheckAuthenticated(handler.GetImageHandler)).Methods("GET")
+
+	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}/apple_pass/new_customer",
+		handler.GenerateNewPass).Methods("GET")
 }
 
 func getContent(header *multipart.FileHeader) ([]byte, error) {
@@ -87,6 +94,25 @@ func (ap *applePassKitHandler) fetchPass(r *http.Request) (models.ApplePassDB, e
 	return PassObjDB, nil
 }
 
+func extractBoolValue(r *http.Request, valueName string) (bool, error) {
+	ValueStr, ok := r.URL.Query()[valueName]
+	var value bool
+	var err error
+
+	if !ok {
+		value = false
+	} else {
+		value, err = strconv.ParseBool(ValueStr[0])
+		if err != nil {
+			return false, err
+		} else if len(ValueStr) > 1 {
+			return false, err
+		}
+	}
+
+	return value, nil
+}
+
 func (ap *applePassKitHandler) UpdatePassHandler(w http.ResponseWriter, r *http.Request) {
 	applePassObj, err := ap.fetchPass(r)
 	if err != nil {
@@ -101,29 +127,86 @@ func (ap *applePassKitHandler) UpdatePassHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	publishRaw, ok := r.URL.Query()["publish"]
-	var publish bool
-	if !ok {
-		publish = false
-	} else {
-		publish, err = strconv.ParseBool(publishRaw[0])
-		if err != nil {
-			responses.SendSingleError(err.Error(), w)
-			return
-		} else if len(publishRaw) > 1 {
-			fmt.Println(len(publishRaw))
-			responses.SendSingleError(globalModels.ErrBadURLParams.Error(), w)
-			return
-		}
+	publish, err := extractBoolValue(r, "publish")
+	if err != nil {
+		responses.SendSingleError(err.Error(), w)
+		return
 	}
 
-	err = ap.passesUsecace.UpdatePass(r.Context(), applePassObj, id, publish, false)
+	designOnly, err := extractBoolValue(r, "design_only")
+	if err != nil {
+		responses.SendSingleError(err.Error(), w)
+		return
+	}
+
+	err = ap.passesUsecace.UpdatePass(r.Context(), applePassObj, id, publish, designOnly)
 	if err != nil {
 		responses.SendSingleError(err.Error(), w)
 		return
 	}
 
 	responses.SendOKAnswer("", w)
+	return
+}
+
+func (ap *applePassKitHandler) GetPassHandler(w http.ResponseWriter, r *http.Request) {
+	CafeID, err := strconv.Atoi(mux.Vars(r)["id"])
+	if err != nil {
+		message := fmt.Sprintf("bad id: %s", mux.Vars(r)["id"])
+		responses.SendSingleError(message, w)
+		return
+	}
+
+	published, err := extractBoolValue(r, "published")
+	if err != nil {
+		responses.SendSingleError(err.Error(), w)
+		return
+	}
+
+	designOnly, err := extractBoolValue(r, "design_only")
+	if err != nil {
+		responses.SendSingleError(err.Error(), w)
+		return
+	}
+
+	applePassObj, err := ap.passesUsecace.GetPass(r.Context(), CafeID, published, designOnly)
+
+	responses.SendOKAnswer(applePassObj, w)
+	return
+}
+
+func (ap *applePassKitHandler) GetImageHandler(w http.ResponseWriter, r *http.Request) {
+	imageName, found := mux.Vars(r)["image_name"]
+	if !found {
+		responses.SendSingleError(globalModels.ErrBadURLParams.Error(), w)
+		return
+	}
+
+	cafeID, err := strconv.Atoi(mux.Vars(r)["id"])
+	if err != nil {
+		message := fmt.Sprintf("bad id: %s", mux.Vars(r)["id"])
+		responses.SendSingleError(message, w)
+		return
+	}
+
+	published, err := extractBoolValue(r, "published")
+	if err != nil {
+		responses.SendSingleError(err.Error(), w)
+		return
+	}
+
+	image, err := ap.passesUsecace.GetImage(r.Context(), imageName, cafeID, published)
+	if err != nil {
+		responses.SendSingleError(err.Error(), w)
+		return
+	}
+
+	filename := fmt.Sprintf("%s.png", imageName)
+
+	w.Header().Set("Content-Disposition", "attachment; filename="+filename)
+	w.Header().Set("Content-Type", "image/png")
+	http.ServeContent(w, r, filename, time.Time{}, bytes.NewReader(image))
+
 	return
 }
 
@@ -147,4 +230,5 @@ func (ap *applePassKitHandler) GenerateNewPass(w http.ResponseWriter, r *http.Re
 	w.Header().Set("Content-Type", "application/vnd.apple.pkpass")
 	http.ServeContent(w, r, filename, time.Time{}, bytes.NewReader(pass.Bytes()))
 
+	return
 }
