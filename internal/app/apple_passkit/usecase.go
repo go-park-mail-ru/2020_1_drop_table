@@ -7,6 +7,6 @@ import (
 )
 
 type Usecase interface {
-	UpdatePass(c context.Context, pass models.ApplePassDB, cafeID int, publish bool) error
+	UpdatePass(c context.Context, pass models.ApplePassDB, cafeID int, publish bool, designOnly bool) error
 	GeneratePassObject(c context.Context, cafeID int) (*bytes.Buffer, error)
 }
