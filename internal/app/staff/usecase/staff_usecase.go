@@ -204,6 +204,7 @@ func (s *staffUsecase) DeleteQrCodes(uString string) error {
 func generateQRCode(uString string) (string, error) {
 	link := fmt.Sprintf("%s/addStaff?uuid=%s", configs.FrontEndUrl, uString)
 	pathToQr, err := qr.GenerateToFile(link, uString)
+	pathToQr = configs.ServerUrl + "/" + pathToQr
 	if err != nil {
 		return "", err
 	}
