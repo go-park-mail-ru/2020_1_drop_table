@@ -37,20 +37,6 @@ func NewStaffHandler(r *mux.Router, us staff.Usecase) {
 	r.HandleFunc("/api/v1/staff/get_staff_list/{id:[0-9]+}", handler.GetStaffListHandler).Methods("GET")
 }
 
-func (s *staffHandler) GetStaffListHandler(w http.ResponseWriter, r *http.Request) {
-	ownerId, err := strconv.Atoi(mux.Vars(r)["id"])
-	if err != nil {
-		responses.SendSingleError(err.Error(), w)
-		return
-	}
-	res, err := s.SUsecase.GetStaffListByOwnerId(r.Context(), ownerId)
-	if err != nil {
-		responses.SendSingleError(err.Error(), w)
-		return
-	}
-	responses.SendOKAnswer(res, w)
-}
-
 func (s *staffHandler) fetchStaff(r *http.Request) (models.Staff, error) {
 	err := r.ParseMultipartForm(32 << 20)
 	if err != nil {
@@ -256,5 +242,18 @@ func (s *staffHandler) GenerateQrHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	responses.SendOKAnswer(pathToQr, w)
+}
 
+func (s *staffHandler) GetStaffListHandler(w http.ResponseWriter, r *http.Request) {
+	ownerId, err := strconv.Atoi(mux.Vars(r)["id"])
+	if err != nil {
+		responses.SendSingleError(err.Error(), w)
+		return
+	}
+	res, err := s.SUsecase.GetStaffListByOwnerId(r.Context(), ownerId)
+	if err != nil {
+		responses.SendSingleError(err.Error(), w)
+		return
+	}
+	responses.SendOKAnswer(res, w)
 }

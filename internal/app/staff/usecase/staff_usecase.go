@@ -245,5 +245,6 @@ func (s *staffUsecase) GetStaffListByOwnerId(ctx context.Context, ownerId int) (
 		return s.staffRepo.GetStaffListByOwnerId(ctx, ownerId)
 	}
 	emptMap := make(map[string][]models.StaffByOwnerResponse)
-	return emptMap, errors.New("You are not owner")
+
+	return emptMap, globalModels.ErrForbidden
 }
