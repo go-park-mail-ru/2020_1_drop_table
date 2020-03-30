@@ -53,21 +53,8 @@ func (p *postgresApplePassRepository) GetPassByID(ctx context.Context, id int) (
 	return dbApplePass, err
 }
 
-func (p *postgresApplePassRepository) GetDesignByID(ctx context.Context, id int) (models.ApplePassDB, error) {
-	query := `SELECT Design FROM ApplePass WHERE ApplePassID=$1`
-
-	var dbApplePass models.ApplePassDB
-	err := p.Conn.GetContext(ctx, &dbApplePass, query, id)
-
-	if err != nil {
-		return models.ApplePassDB{}, err
-	}
-
-	return dbApplePass, err
-}
-
 func (p *postgresApplePassRepository) Update(ctx context.Context, newApplePass models.ApplePassDB) error {
-	query := `UPDATE ApplePass SET 
+	query := `UPDATE ApplePass SET  
 	Design=$1, 
 	Icon=$2, 
 	Icon2x=$3, 

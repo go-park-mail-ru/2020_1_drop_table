@@ -161,16 +161,7 @@ func (ap *applePassKitUsecase) UpdatePass(c context.Context, pass models.ApplePa
 	return nil
 }
 
-func (ap *applePassKitUsecase) getPass(ctx context.Context, passID int, designOnly bool) (models.ApplePassDB, error) {
-	if designOnly {
-		return ap.passKitRepo.GetDesignByID(ctx, passID)
-	} else {
-		return ap.passKitRepo.GetPassByID(ctx, passID)
-	}
-}
-
-func (ap *applePassKitUsecase) GetPass(c context.Context, cafeID int, published,
-	designOnly bool) (models.ApplePassDB, error) {
+func (ap *applePassKitUsecase) GetPass(c context.Context, cafeID int, published bool) (models.ApplePassDB, error) {
 
 	ctx, cancel := context.WithTimeout(c, ap.contextTimeout)
 	defer cancel()
@@ -192,12 +183,12 @@ func (ap *applePassKitUsecase) GetPass(c context.Context, cafeID int, published,
 		return models.ApplePassDB{}, globalModels.ErrNoRequestedCard
 	}
 
-	return ap.getPass(ctx, int(passID.Int64), designOnly)
+	return ap.passKitRepo.GetPassByID(ctx, int(passID.Int64))
 }
 
 func (ap *applePassKitUsecase) GetImage(c context.Context, imageName string, cafeID int,
 	published bool) ([]byte, error) {
-	passObj, err := ap.GetPass(c, cafeID, published, false)
+	passObj, err := ap.GetPass(c, cafeID, published)
 	if err != nil {
 		return nil, err
 	}
@@ -222,7 +213,7 @@ func (ap *applePassKitUsecase) GetImage(c context.Context, imageName string, caf
 	return image, nil
 }
 
-func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int) (*bytes.Buffer, error) {
+func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int, published bool) (*bytes.Buffer, error) {
 	//ToDo make not only for published cards
 	ctx, cancel := context.WithTimeout(c, ap.contextTimeout)
 	defer cancel()
@@ -240,12 +231,28 @@ func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int)
 	if err != nil {
 		return nil, err
 	}
-	if !cafeObj.PublishedApplePassID.Valid {
-		return nil, globalModels.ErrNoPublishedCard
+
+	cardID := -1
+	if published {
+		if !cafeObj.PublishedApplePassID.Valid {
+			return nil, globalModels.ErrNoPublishedCard
+		}
+		cardID = int(cafeObj.PublishedApplePassID.Int64)
+	} else {
+		if !cafeObj.SavedApplePassID.Valid {
+			return nil, globalModels.ErrNoPublishedCard
+		}
+		cardID = int(cafeObj.SavedApplePassID.Int64)
+
+		session := ctx.Value("session").(*sessions.Session)
+		staffInterface, found := session.Values["userID"]
+		staffID, ok := staffInterface.(int)
+		if !found || !ok || staffID != cafeObj.StaffID {
+			return nil, globalModels.ErrForbidden
+		}
 	}
 
-	publishedCardID := int(cafeObj.PublishedApplePassID.Int64)
-	publishedCardDB, err := ap.passKitRepo.GetPassByID(ctx, publishedCardID)
+	publishedCardDB, err := ap.passKitRepo.GetPassByID(ctx, cardID)
 	if err != nil {
 		return nil, err
 	}
