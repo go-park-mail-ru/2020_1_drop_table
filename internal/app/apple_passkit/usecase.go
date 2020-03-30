@@ -9,6 +9,6 @@ import (
 type Usecase interface {
 	UpdatePass(c context.Context, pass models.ApplePassDB, cafeID int, publish bool, designOnly bool) error
 	GeneratePassObject(c context.Context, cafeID int) (*bytes.Buffer, error)
-	GetPass(c context.Context, cafeID int, published, designOnly bool) (models.ApplePassDB, error)
+	GetPass(c context.Context, cafeID int, published bool) (models.ApplePassDB, error)
 	GetImage(c context.Context, imageName string, cafeID int, published bool) ([]byte, error)
 }

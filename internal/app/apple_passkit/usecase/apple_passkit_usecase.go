@@ -161,16 +161,7 @@ func (ap *applePassKitUsecase) UpdatePass(c context.Context, pass models.ApplePa
 	return nil
 }
 
-func (ap *applePassKitUsecase) getPass(ctx context.Context, passID int, designOnly bool) (models.ApplePassDB, error) {
-	if designOnly {
-		return ap.passKitRepo.GetDesignByID(ctx, passID)
-	} else {
-		return ap.passKitRepo.GetPassByID(ctx, passID)
-	}
-}
-
-func (ap *applePassKitUsecase) GetPass(c context.Context, cafeID int, published,
-	designOnly bool) (models.ApplePassDB, error) {
+func (ap *applePassKitUsecase) GetPass(c context.Context, cafeID int, published bool) (models.ApplePassDB, error) {
 
 	ctx, cancel := context.WithTimeout(c, ap.contextTimeout)
 	defer cancel()
@@ -192,12 +183,12 @@ func (ap *applePassKitUsecase) GetPass(c context.Context, cafeID int, published,
 		return models.ApplePassDB{}, globalModels.ErrNoRequestedCard
 	}
 
-	return ap.getPass(ctx, int(passID.Int64), designOnly)
+	return ap.passKitRepo.GetPassByID(ctx, int(passID.Int64))
 }
 
 func (ap *applePassKitUsecase) GetImage(c context.Context, imageName string, cafeID int,
 	published bool) ([]byte, error) {
-	passObj, err := ap.GetPass(c, cafeID, published, false)
+	passObj, err := ap.GetPass(c, cafeID, published)
 	if err != nil {
 		return nil, err
 	}
