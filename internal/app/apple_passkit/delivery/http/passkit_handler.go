@@ -212,7 +212,13 @@ func (ap *applePassKitHandler) GenerateNewPass(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	pass, err := ap.passesUsecace.GeneratePassObject(r.Context(), id)
+	published, err := extractBoolValue(r, "published")
+	if err != nil {
+		responses.SendSingleError(err.Error(), w)
+		return
+	}
+
+	pass, err := ap.passesUsecace.GeneratePassObject(r.Context(), id, published)
 	if err != nil {
 		responses.SendSingleError(err.Error(), w)
 		return
