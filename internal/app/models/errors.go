@@ -25,4 +25,7 @@ var (
 	//Apple pass errors
 	ErrNoPublishedCard = errors.New("no published card for this cafe")
 	ErrNoRequestedCard = errors.New("no card with requested params for this cafe")
+
+	//Customer errors
+	BadUuid = errors.New("Bad Uuuid")
 )

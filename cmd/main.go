@@ -8,7 +8,9 @@ import (
 	_cafeHttpDeliver "2020_1_drop_table/internal/app/cafe/delivery/http"
 	_cafeRepo "2020_1_drop_table/internal/app/cafe/repository"
 	_cafeUsecase "2020_1_drop_table/internal/app/cafe/usecase"
+	_customerHttpDeliver "2020_1_drop_table/internal/app/customer/delivery/http"
 	_customerRepo "2020_1_drop_table/internal/app/customer/repository"
+	_customerUseCase "2020_1_drop_table/internal/app/customer/usecase"
 	"2020_1_drop_table/internal/app/middleware"
 	_staffHttpDeliver "2020_1_drop_table/internal/app/staff/delivery/http"
 	_staffRepo "2020_1_drop_table/internal/app/staff/repository"
@@ -73,6 +75,9 @@ func main() {
 	applePassKitUcase := _appleUsecase.NewApplePassKitUsecase(applePassKitRepo, cafeRepo, customerRepo,
 		&applePassGenerator, timeoutContext)
 	_appleHttpDeliver.NewPassKitHandler(r, applePassKitUcase)
+
+	customerUseCase := _customerUseCase.NewCustomerUsecase(customerRepo, staffUsecase, timeoutContext)
+	_customerHttpDeliver.NewCustomerHandler(r, customerUseCase)
 
 	//OPTIONS
 	r.Methods("OPTIONS").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
