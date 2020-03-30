@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"2020_1_drop_table/configs"
 	"2020_1_drop_table/internal/app/apple_passkit"
 	"2020_1_drop_table/internal/app/apple_passkit/models"
 	"2020_1_drop_table/internal/app/cafe"
@@ -12,6 +13,7 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/gorilla/sessions"
 	"time"
 )
@@ -161,8 +163,21 @@ func (ap *applePassKitUsecase) UpdatePass(c context.Context, pass models.ApplePa
 	return nil
 }
 
-func (ap *applePassKitUsecase) GetPass(c context.Context, cafeID int, published bool) (models.ApplePassDB, error) {
+func (ap *applePassKitUsecase) getImageUrls(passObj models.ApplePassDB, cafeID int) map[string]string {
+	serverStartUrl := fmt.Sprintf("%s/%s/cafe/%d/apple_pass", configs.ServerUrl, configs.ApiVersion, cafeID)
+	return map[string]string{
+		"design":  passObj.Design,
+		"icon":    fmt.Sprintf("%s/icon", serverStartUrl),
+		"icon2x":  fmt.Sprintf("%s/icon2x", serverStartUrl),
+		"logo":    fmt.Sprintf("%s/logo", serverStartUrl),
+		"logo2x":  fmt.Sprintf("%s/logo2x", serverStartUrl),
+		"strip":   fmt.Sprintf("%s/strip", serverStartUrl),
+		"strip2x": fmt.Sprintf("%s/strip2x", serverStartUrl),
+	}
+}
 
+func (ap *applePassKitUsecase) getRawPass(c context.Context, cafeID int,
+	published bool) (models.ApplePassDB, error) {
 	ctx, cancel := context.WithTimeout(c, ap.contextTimeout)
 	defer cancel()
 
@@ -186,9 +201,19 @@ func (ap *applePassKitUsecase) GetPass(c context.Context, cafeID int, published 
 	return ap.passKitRepo.GetPassByID(ctx, int(passID.Int64))
 }
 
+func (ap *applePassKitUsecase) GetPass(c context.Context, cafeID int,
+	published bool) (map[string]string, error) {
+	passObj, err := ap.getRawPass(c, cafeID, published)
+	if err != nil {
+		return nil, err
+	}
+
+	return ap.getImageUrls(passObj, cafeID), nil
+}
+
 func (ap *applePassKitUsecase) GetImage(c context.Context, imageName string, cafeID int,
 	published bool) ([]byte, error) {
-	passObj, err := ap.GetPass(c, cafeID, published)
+	passObj, err := ap.getRawPass(c, cafeID, published)
 	if err != nil {
 		return nil, err
 	}
