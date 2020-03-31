@@ -16,7 +16,7 @@ type CustomerHandler struct {
 func NewCustomerHandler(r *mux.Router, us customer.Usecase) {
 	handler := CustomerHandler{CUsecase: us}
 	r.HandleFunc("/api/v1/customers/{uuid}/points/", handler.GetPoints).Methods("GET")
-	r.HandleFunc("/api/v1/customers/{uuid}/{points}/", handler.SetPoints).Methods("PUT")
+	r.HandleFunc("/api/v1/customers/{uuid}/{points:[0-9]+}/", handler.SetPoints).Methods("PUT")
 }
 
 func (h CustomerHandler) GetPoints(writer http.ResponseWriter, r *http.Request) {

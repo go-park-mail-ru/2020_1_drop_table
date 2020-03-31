@@ -33,7 +33,7 @@ func (p *postgresCustomerRepository) Add(ctx context.Context, cu models.Customer
 func (p *postgresCustomerRepository) SetLoyaltyPoints(ctx context.Context, points int,
 	customerID string) (models.Customer, error) {
 
-	query := `UPDATE Customer SET Points=$1 WHERE CustomerID=$2 returning *`
+	query := `UPDATE Customer SET Points=$1 WHERE CustomerID=$2 RETURNING *`
 
 	var customerDB models.Customer
 	err := p.conn.GetContext(ctx, &customerDB, query, points, customerID)

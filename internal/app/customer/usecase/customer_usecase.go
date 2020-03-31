@@ -40,19 +40,19 @@ func (u customerUsecase) SetPoints(ctx context.Context, uuid string, points int)
 	requestStaff, err := u.staffUsecase.GetFromSession(ctx)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return globalModels.RightsError
+			return globalModels.ErrForbidden
 		}
 		return err
 	}
 	targetCustomer, err := u.customerRepo.GetByID(ctx, uuid)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return globalModels.BadUuid
+			return globalModels.ErrNotFound
 		}
 		return err
 	}
 	if requestStaff.CafeId != targetCustomer.CafeID {
-		return globalModels.RightsError
+		return globalModels.ErrForbidden
 	}
 	if points < 0 {
 		return globalModels.PointsError

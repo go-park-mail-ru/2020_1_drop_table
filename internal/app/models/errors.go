@@ -28,6 +28,5 @@ var (
 
 	//Customer errors
 	BadUuid     = errors.New("bad uuid")
-	RightsError = errors.New("not enough rights")
 	PointsError = errors.New("points can't be <0")
 )
