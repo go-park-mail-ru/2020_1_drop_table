@@ -4,6 +4,7 @@ import (
 	"2020_1_drop_table/internal/app/apple_passkit"
 	"2020_1_drop_table/internal/app/apple_passkit/models"
 	"context"
+	"database/sql"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -85,4 +86,40 @@ func (p *postgresApplePassRepository) Delete(ctx context.Context, id int) error 
 	_, err := p.Conn.ExecContext(ctx, query, id)
 
 	return err
+}
+
+func (p *postgresApplePassRepository) createMeta(ctx context.Context, cafeID int) (models.ApplePassMeta, error) {
+	query := `INSERT INTO ApplePassMeta(
+	CafeID,
+	PassesCount)
+	VALUES ($1,1)
+	RETURNING *`
+
+	var dbApplePass models.ApplePassMeta
+	err := p.Conn.GetContext(ctx, &dbApplePass, query, cafeID)
+
+	if err != nil {
+		return models.ApplePassMeta{}, err
+	}
+
+	return dbApplePass, err
+}
+
+func (p *postgresApplePassRepository) UpdateMeta(ctx context.Context, cafeID int) (models.ApplePassMeta, error) {
+	query := `UPDATE ApplePassMeta 
+    SET PassesCount = PassesCount + 1
+	WHERE CafeID=$1 
+	RETURNING *`
+
+	var applePassMeta models.ApplePassMeta
+	err := p.Conn.GetContext(ctx, &applePassMeta, query, cafeID)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return p.createMeta(ctx, cafeID)
+		}
+		return models.ApplePassMeta{}, err
+	}
+
+	return applePassMeta, err
 }

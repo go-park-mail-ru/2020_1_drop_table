@@ -83,6 +83,7 @@ func (g *generator) createZip(files map[string][]byte) (*bytes.Buffer, error) {
 }
 
 func (g *generator) CreateNewPass(pass ApplePass) (*bytes.Buffer, error) {
+	pass.insertValues()
 	manifest, err := g.createManifest(pass)
 	if err != nil {
 		return nil, err

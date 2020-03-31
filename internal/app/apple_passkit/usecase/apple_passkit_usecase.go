@@ -14,6 +14,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/fatih/structs"
 	"github.com/gorilla/sessions"
 	"time"
 )
@@ -38,7 +39,7 @@ func NewApplePassKitUsecase(passKitRepo apple_passkit.Repository, cafeRepo cafe.
 	}
 }
 
-func passDBtoPassResource(db models.ApplePassDB) passesGenerator.ApplePass {
+func passDBtoPassResource(db models.ApplePassDB, env map[string]interface{}) passesGenerator.ApplePass {
 	files := map[string][]byte{
 		"icon.png":    db.Icon,
 		"icon@2x.png": db.Icon2x,
@@ -51,7 +52,7 @@ func passDBtoPassResource(db models.ApplePassDB) passesGenerator.ApplePass {
 		files["strip@2x.png"] = db.Strip2x
 	}
 
-	return passesGenerator.NewApplePass(db.Design, files)
+	return passesGenerator.NewApplePass(db.Design, files, env)
 }
 
 func (ap *applePassKitUsecase) addNewSavedPassToCafe(ctx context.Context, pass models.ApplePassDB,
@@ -239,7 +240,6 @@ func (ap *applePassKitUsecase) GetImage(c context.Context, imageName string, caf
 }
 
 func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int, published bool) (*bytes.Buffer, error) {
-	//ToDo make not only for published cards
 	ctx, cancel := context.WithTimeout(c, ap.contextTimeout)
 	defer cancel()
 
@@ -250,12 +250,18 @@ func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int,
 		return nil, err
 	}
 
-	//ToDo make valid barcode generation
-
 	cafeObj, err := ap.cafeRepo.GetByID(ctx, cafeID)
 	if err != nil {
 		return nil, err
 	}
+
+	passMeta, err := ap.passKitRepo.UpdateMeta(ctx, cafeID)
+	if err != nil {
+		return nil, err
+	}
+
+	passEnv := structs.Map(passMeta)
+	structs.FillMap(newCustomer, passEnv)
 
 	cardID := -1
 	if published {
@@ -281,7 +287,7 @@ func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int,
 	if err != nil {
 		return nil, err
 	}
-	passBuffer, err := ap.passesGenerator.CreateNewPass(passDBtoPassResource(publishedCardDB))
+	passBuffer, err := ap.passesGenerator.CreateNewPass(passDBtoPassResource(publishedCardDB, passEnv))
 
 	return passBuffer, err
 }
