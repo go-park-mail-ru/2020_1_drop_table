@@ -8,10 +8,10 @@ import (
 type ApplePass struct {
 	design    string
 	files     map[string][]byte
-	envValues map[string]string
+	envValues map[string]interface{}
 }
 
-func NewApplePass(design string, files map[string][]byte, envValues map[string]string) ApplePass {
+func NewApplePass(design string, files map[string][]byte, envValues map[string]interface{}) ApplePass {
 	return ApplePass{
 		design:    design,
 		files:     files,
@@ -28,7 +28,7 @@ func (p *ApplePass) insertValues() {
 	for key, value := range p.envValues {
 		valueName := fmt.Sprintf("<<%s>>", key)
 		replaceValues = append(replaceValues, valueName)
-		replaceValues = append(replaceValues, value)
+		replaceValues = append(replaceValues, fmt.Sprintf("%v", value))
 	}
 	r := strings.NewReplacer(replaceValues...)
 	p.design = r.Replace(p.design)

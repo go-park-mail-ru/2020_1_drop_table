@@ -10,3 +10,9 @@ type ApplePassDB struct {
 	Strip       []byte `json:"strip"`
 	Strip2x     []byte `json:"strip2x"`
 }
+
+type ApplePassMeta struct {
+	ApplePassMetaID string `structs:"-"`
+	CafeID          string `structs:"-"`
+	PassesCount     string `structs:"PassesCount"`
+}
