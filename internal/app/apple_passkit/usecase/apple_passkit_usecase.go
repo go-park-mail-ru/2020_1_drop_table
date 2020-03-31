@@ -105,48 +105,70 @@ func (ap *applePassKitUsecase) updatePass(ctx context.Context, pass models.Apple
 }
 
 func (ap *applePassKitUsecase) UpdatePass(c context.Context, pass models.ApplePassDB, cafeID int, publish bool,
-	designOnly bool) error {
+	designOnly bool) (models.UpdateResponse, error) {
 
 	ctx, cancel := context.WithTimeout(c, ap.contextTimeout)
 	defer cancel()
 
 	cafeObj, err := ap.getOwnersCafe(ctx, cafeID)
 	if err != nil {
-		return err
+		return models.UpdateResponse{}, err
 	}
 
 	if cafeObj.SavedApplePassID.Valid {
 		pass.ApplePassID = int(cafeObj.SavedApplePassID.Int64)
 		err := ap.updatePass(ctx, pass, designOnly)
 		if err != nil {
-			return err
+			return models.UpdateResponse{}, err
 		}
 	} else {
 		err = ap.addNewSavedPassToCafe(ctx, pass, cafeObj)
 		if err != nil {
-			return err
+			return models.UpdateResponse{}, err
 		}
 
+		err = ap.createQRs(cafeID)
+		if err != nil {
+			return models.UpdateResponse{}, err
+		}
 	}
 
 	if !publish {
-		return nil
+		savedPassURL := fmt.Sprintf("%s/%s/cafe/%d/apple_pass/new_customer?published=false",
+			configs.ServerUrl, configs.ApiVersion, cafeID)
+		QrUrl := fmt.Sprintf("%s/media/qr/%d_saved.png",
+			configs.ServerUrl, cafeID)
+
+		response := models.UpdateResponse{
+			URL: savedPassURL,
+			QR:  QrUrl,
+		}
+		return response, nil
 	}
 
 	if cafeObj.PublishedApplePassID.Valid {
 		pass.ApplePassID = int(cafeObj.PublishedApplePassID.Int64)
 		err := ap.updatePass(ctx, pass, designOnly)
 		if err != nil {
-			return err
+			return models.UpdateResponse{}, err
 		}
 	} else {
 		err = ap.addNewPublishedPassToCafe(ctx, pass, cafeObj)
 		if err != nil {
-			return err
+			return models.UpdateResponse{}, err
 		}
 	}
 
-	return nil
+	publishedPassURL := fmt.Sprintf("%s/%s/cafe/%d/apple_pass/new_customer?published=true",
+		configs.ServerUrl, configs.ApiVersion, cafeID)
+	QrUrl := fmt.Sprintf("%s/media/qr/%d_published.png",
+		configs.ServerUrl, cafeID)
+	response := models.UpdateResponse{
+		URL: publishedPassURL,
+		QR:  QrUrl,
+	}
+
+	return response, nil
 }
 
 func (ap *applePassKitUsecase) getImageUrls(passObj models.ApplePassDB, cafeID int) map[string]string {
@@ -293,17 +315,7 @@ func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int,
 	return passBuffer, err
 }
 
-func (ap *applePassKitUsecase) CreateQRs(c context.Context, cafeID int) error {
-	ctx, cancel := context.WithTimeout(c, ap.contextTimeout)
-	defer cancel()
-
-	session := ctx.Value("session").(*sessions.Session)
-	staffInterface, found := session.Values["userID"]
-	staffID, ok := staffInterface.(int)
-	if !found || !ok || staffID == -1 {
-		return globalModels.ErrForbidden
-	}
-
+func (ap *applePassKitUsecase) createQRs(cafeID int) error {
 	savedPassURL := fmt.Sprintf("%s/%s/cafe/%d/apple_pass/new_customer?published=false",
 		configs.ServerUrl, configs.ApiVersion, cafeID)
 	savedPassPath := fmt.Sprintf("%d_published", cafeID)

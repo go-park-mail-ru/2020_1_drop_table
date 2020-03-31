@@ -16,3 +16,8 @@ type ApplePassMeta struct {
 	CafeID          string `structs:"-"`
 	PassesCount     string `structs:"PassesCount"`
 }
+
+type UpdateResponse struct {
+	URL string
+	QR  string
+}
