@@ -10,6 +10,7 @@ import (
 	customerModels "2020_1_drop_table/internal/app/customer/models"
 	globalModels "2020_1_drop_table/internal/app/models"
 	passesGenerator "2020_1_drop_table/internal/pkg/apple_pass_generator"
+	"2020_1_drop_table/internal/pkg/qr"
 	"bytes"
 	"context"
 	"database/sql"
@@ -39,22 +40,6 @@ func NewApplePassKitUsecase(passKitRepo apple_passkit.Repository, cafeRepo cafe.
 	}
 }
 
-func passDBtoPassResource(db models.ApplePassDB, env map[string]interface{}) passesGenerator.ApplePass {
-	files := map[string][]byte{
-		"icon.png":    db.Icon,
-		"icon@2x.png": db.Icon2x,
-		"logo.png":    db.Logo,
-		"logo@2x.png": db.Logo2x,
-	}
-
-	if len(db.Strip) != 0 && len(db.Strip2x) != 0 {
-		files["strip.png"] = db.Strip
-		files["strip@2x.png"] = db.Strip2x
-	}
-
-	return passesGenerator.NewApplePass(db.Design, files, env)
-}
-
 func (ap *applePassKitUsecase) addNewSavedPassToCafe(ctx context.Context, pass models.ApplePassDB,
 	cafeObj cafeModels.Cafe) error {
 
@@ -69,7 +54,6 @@ func (ap *applePassKitUsecase) addNewSavedPassToCafe(ctx context.Context, pass m
 	}
 	cafeObj.SavedApplePassID = newPassId
 	_ = ap.cafeRepo.UpdateSavedPass(ctx, cafeObj)
-
 	return nil
 }
 
@@ -142,6 +126,7 @@ func (ap *applePassKitUsecase) UpdatePass(c context.Context, pass models.ApplePa
 		if err != nil {
 			return err
 		}
+
 	}
 
 	if !publish {
@@ -239,6 +224,22 @@ func (ap *applePassKitUsecase) GetImage(c context.Context, imageName string, caf
 	return image, nil
 }
 
+func passDBtoPassResource(db models.ApplePassDB, env map[string]interface{}) passesGenerator.ApplePass {
+	files := map[string][]byte{
+		"icon.png":    db.Icon,
+		"icon@2x.png": db.Icon2x,
+		"logo.png":    db.Logo,
+		"logo@2x.png": db.Logo2x,
+	}
+
+	if len(db.Strip) != 0 && len(db.Strip2x) != 0 {
+		files["strip.png"] = db.Strip
+		files["strip@2x.png"] = db.Strip2x
+	}
+
+	return passesGenerator.NewApplePass(db.Design, files, env)
+}
+
 func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int, published bool) (*bytes.Buffer, error) {
 	ctx, cancel := context.WithTimeout(c, ap.contextTimeout)
 	defer cancel()
@@ -290,4 +291,34 @@ func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int,
 	passBuffer, err := ap.passesGenerator.CreateNewPass(passDBtoPassResource(publishedCardDB, passEnv))
 
 	return passBuffer, err
+}
+
+func (ap *applePassKitUsecase) CreateQRs(c context.Context, cafeID int) error {
+	ctx, cancel := context.WithTimeout(c, ap.contextTimeout)
+	defer cancel()
+
+	session := ctx.Value("session").(*sessions.Session)
+	staffInterface, found := session.Values["userID"]
+	staffID, ok := staffInterface.(int)
+	if !found || !ok || staffID == -1 {
+		return globalModels.ErrForbidden
+	}
+
+	savedPassURL := fmt.Sprintf("%s/%s/cafe/%d/apple_pass/new_customer?published=false",
+		configs.ServerUrl, configs.ApiVersion, cafeID)
+	savedPassPath := fmt.Sprintf("%d_published", cafeID)
+	publishedPassURL := fmt.Sprintf("%s/%s/cafe/%d/apple_pass/new_customer?published=true",
+		configs.ServerUrl, configs.ApiVersion, cafeID)
+	publishedPassPath := fmt.Sprintf("%d_saved", cafeID)
+
+	_, err := qr.GenerateToFile(savedPassURL, savedPassPath)
+	if err != nil {
+		return err
+	}
+
+	_, err = qr.GenerateToFile(publishedPassURL, publishedPassPath)
+	if err != nil {
+		return err
+	}
+	return nil
 }
