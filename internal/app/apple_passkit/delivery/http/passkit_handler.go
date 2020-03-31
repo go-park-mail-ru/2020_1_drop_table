@@ -34,6 +34,9 @@ func NewPassKitHandler(r *mux.Router, us apple_passkit.Usecase) {
 	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}/apple_pass/new_customer",
 		handler.GenerateNewPass).Methods("GET")
 
+	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}/apple_pass/qrs",
+		handler.GenerateQR).Methods("POST")
+
 	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}/apple_pass/{image_name}",
 		permissions.CheckAuthenticated(handler.GetImageHandler)).Methods("GET")
 }
@@ -230,5 +233,23 @@ func (ap *applePassKitHandler) GenerateNewPass(w http.ResponseWriter, r *http.Re
 	w.Header().Set("Content-Type", "application/vnd.apple.pkpass")
 	http.ServeContent(w, r, filename, time.Time{}, bytes.NewReader(pass.Bytes()))
 
+	return
+}
+
+func (ap *applePassKitHandler) GenerateQR(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(mux.Vars(r)["id"])
+	if err != nil {
+		message := fmt.Sprintf("bad id: %s", mux.Vars(r)["id"])
+		responses.SendSingleError(message, w)
+		return
+	}
+
+	err = ap.passesUsecace.CreateQRs(r.Context(), id)
+	if err != nil {
+		responses.SendSingleError(err.Error(), w)
+		return
+	}
+
+	responses.SendOKAnswer("", w)
 	return
 }

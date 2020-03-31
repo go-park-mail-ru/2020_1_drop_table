@@ -22,20 +22,32 @@ func Generate(str string, qrSize int) ([]byte, error) {
 	return image, nil
 }
 
-func GenerateToFile(url string, uuid string) (string, error) {
+func GenerateToFile(url string, path string) (string, error) {
 	code, err := Generate(url, 256)
 	if err != nil {
 		return "", err
 	}
+
 	directoryPath := configs.MediaFolder + "/qr"
-	os.MkdirAll(directoryPath, os.ModePerm)
+
+	err = os.MkdirAll(directoryPath, os.ModePerm)
+	if err != nil {
+		return "", nil
+	}
+
 	extension := ".png"
-	finalPath := directoryPath + "/" + uuid + extension
+	finalPath := directoryPath + "/" + path + extension
+
 	file, err := os.Create(finalPath)
 	if err != nil {
 		return "", err
 	}
-	file.Write(code)
+
+	_, err = file.Write(code)
+	if err != nil {
+		return "", err
+	}
+
 	defer file.Close()
 	return finalPath, nil
 }
