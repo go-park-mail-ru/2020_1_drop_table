@@ -7,9 +7,10 @@ import (
 )
 
 type Usecase interface {
-	UpdatePass(c context.Context, pass models.ApplePassDB, cafeID int, publish bool, designOnly bool) error
+	UpdatePass(c context.Context, pass models.ApplePassDB, cafeID int, publish bool,
+		designOnly bool) (models.UpdateResponse, error)
+
 	GeneratePassObject(c context.Context, cafeID int, published bool) (*bytes.Buffer, error)
 	GetPass(c context.Context, cafeID int, published bool) (map[string]string, error)
 	GetImage(c context.Context, imageName string, cafeID int, published bool) ([]byte, error)
-	CreateQRs(c context.Context, cafeID int) error
 }
