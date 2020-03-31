@@ -85,7 +85,7 @@ func (p *postgresStaffRepository) GetCafeId(ctx context.Context, uuid string) (i
 
 func (p *postgresStaffRepository) GetStaffListByOwnerId(ctx context.Context, ownerId int) (map[string][]models.StaffByOwnerResponse, error) {
 	data := []models.StaffByOwnerResponse{}
-	query := `SELECT cafe.cafename,s.staffid,s.photo,s.name,s.position from cafe join staff s on cafe.cafeid = s.cafeid where cafe.staffid=$1 ORDER BY cafe.cafeid
+	query := `SELECT cafe.cafename,s.staffid,s.photo,s.name,s.position from cafe left join staff s on cafe.cafeid = s.cafeid where cafe.staffid=$1 ORDER BY cafe.cafeid
 `
 	err := p.Conn.SelectContext(ctx, &data, query, ownerId)
 	if err != nil {
@@ -99,6 +99,10 @@ func (p *postgresStaffRepository) GetStaffListByOwnerId(ctx context.Context, own
 func addCafeToList(staffList []models.StaffByOwnerResponse) map[string][]models.StaffByOwnerResponse {
 	result := make(map[string][]models.StaffByOwnerResponse)
 	for _, staff := range staffList {
+		if staff.StaffId == nil {
+			result[staff.CafeName] = nil
+			continue
+		}
 		result[staff.CafeName] = append(result[staff.CafeName], staff)
 	}
 	return result
