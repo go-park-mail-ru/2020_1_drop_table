@@ -55,7 +55,7 @@ func (u customerUsecase) SetPoints(ctx context.Context, uuid string, points int)
 		return globalModels.ErrForbidden
 	}
 	if points < 0 {
-		return globalModels.PointsError
+		return globalModels.ErrPointsError
 	}
 	_, err = u.customerRepo.SetLoyaltyPoints(ctx, points, uuid)
 	return err

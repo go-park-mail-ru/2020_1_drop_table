@@ -126,7 +126,7 @@ func (s *staffUsecase) GetByEmailAndPassword(c context.Context, form models.Logi
 	}
 
 	if !hasher.CheckWithHash(staffObj.Password, form.Password) {
-		return models.SafeStaff{}, globalModels.IncorrectPassword
+		return models.SafeStaff{}, globalModels.ErrUnauthorized
 	}
 
 	return app.GetSafeStaff(staffObj), nil

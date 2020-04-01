@@ -23,7 +23,7 @@ func (h CustomerHandler) GetPoints(writer http.ResponseWriter, r *http.Request) 
 	uuid := mux.Vars(r)["uuid"]
 	points, err := h.CUsecase.GetPoints(r.Context(), uuid)
 	if err != nil {
-		responses.SendSingleError(globalModels.BadUuid.Error(), writer)
+		responses.SendSingleError(globalModels.ErrBadUuid.Error(), writer)
 		return
 	}
 	responses.SendOKAnswer(points, writer)
