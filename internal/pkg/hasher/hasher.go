@@ -18,7 +18,7 @@ func HashAndSalt(salt []byte, plainPassword string) string {
 	return string(saltAndHash[:])
 }
 
-func checkWithHash(hashedStr string, plainStr string) bool {
+func CheckWithHash(hashedStr string, plainStr string) bool {
 	salt := []byte(hashedStr[0:8])
 	plainStrWithHash := HashAndSalt(salt, plainStr)
 	return plainStrWithHash == hashedStr

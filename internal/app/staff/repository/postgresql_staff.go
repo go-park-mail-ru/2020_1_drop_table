@@ -23,13 +23,13 @@ func (p *postgresStaffRepository) Add(ctx context.Context, st models.Staff) (mod
 	return dbStaff, err
 }
 
-func (p *postgresStaffRepository) GetByEmailAndPassword(ctx context.Context,
-	email string, password string) (models.Staff, error) {
+func (p *postgresStaffRepository) GetByEmail(ctx context.Context,
+	email string) (models.Staff, error) {
 
-	query := `SELECT * FROM Staff WHERE password=$1 AND email=$2`
+	query := `SELECT * FROM Staff WHERE email=$1`
 
 	var dbStaff models.Staff
-	err := p.Conn.GetContext(ctx, &dbStaff, query, password, email)
+	err := p.Conn.GetContext(ctx, &dbStaff, query, email)
 
 	return dbStaff, err
 }

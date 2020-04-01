@@ -29,4 +29,7 @@ var (
 	//Customer errors
 	BadUuid     = errors.New("bad uuid")
 	PointsError = errors.New("points can't be <0")
+
+	//Auth errors
+	IncorrectPassword = errors.New("Incorrect Password")
 )

@@ -7,7 +7,7 @@ import (
 
 type Repository interface {
 	Add(ctx context.Context, st models.Staff) (models.Staff, error)
-	GetByEmailAndPassword(ctx context.Context, email string, password string) (models.Staff, error)
+	GetByEmail(ctx context.Context, email string) (models.Staff, error)
 	GetByID(ctx context.Context, id int) (models.Staff, error)
 	Update(ctx context.Context, newStaff models.SafeStaff) error
 	AddUuid(ctx context.Context, uuid string, id int) error
