@@ -50,9 +50,10 @@ func (s *staffUsecase) Add(c context.Context, newStaff models.Staff) (models.Saf
 		return models.SafeStaff{}, err
 	}
 
-	newStaff.Password = hasher.GetMD5Hash(newStaff.Password)
+	newStaff.Password = hasher.HashAndSalt(nil, newStaff.Password)
 
 	_, err = s.staffRepo.GetByEmailAndPassword(ctx, newStaff.Email, newStaff.Password)
+
 	if err != sql.ErrNoRows {
 		return models.SafeStaff{}, globalModels.ErrExisted
 	}
@@ -61,6 +62,7 @@ func (s *staffUsecase) Add(c context.Context, newStaff models.Staff) (models.Saf
 	}
 
 	newStaff, err = s.staffRepo.Add(ctx, newStaff)
+
 	if err != nil {
 		return models.SafeStaff{}, err
 	}
@@ -116,7 +118,7 @@ func (s *staffUsecase) GetByEmailAndPassword(c context.Context, form models.Logi
 		return models.SafeStaff{}, err
 	}
 
-	form.Password = hasher.GetMD5Hash(form.Password)
+	form.Password = hasher.HashAndSalt(nil, form.Password)
 
 	staffObj, err := s.staffRepo.GetByEmailAndPassword(ctx, form.Email, form.Password)
 	if err == sql.ErrNoRows {
