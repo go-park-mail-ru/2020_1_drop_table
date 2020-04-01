@@ -1,7 +1,6 @@
 package hasher
 
 import (
-	"crypto/md5"
 	"crypto/rand"
 	"crypto/sha1"
 	"encoding/hex"
@@ -22,12 +21,6 @@ func CheckWithHash(hashedStr string, plainStr string) bool {
 	salt := []byte(hashedStr[0:8])
 	plainStrWithHash := HashAndSalt(salt, plainStr)
 	return plainStrWithHash == hashedStr
-}
-
-func GetMD5Hash(text string) string {
-	hasher := md5.New()
-	hasher.Write([]byte(text))
-	return hex.EncodeToString(hasher.Sum(nil))
 }
 
 func GetSha1(value []byte) string {
