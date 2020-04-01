@@ -50,8 +50,6 @@ func (s *staffUsecase) Add(c context.Context, newStaff models.Staff) (models.Saf
 		return models.SafeStaff{}, err
 	}
 
-	newStaff.Password = hasher.HashAndSalt(nil, newStaff.Password)
-
 	_, err = s.staffRepo.GetByEmail(ctx, newStaff.Email)
 
 	if err != sql.ErrNoRows {
