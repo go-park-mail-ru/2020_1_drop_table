@@ -2,6 +2,7 @@ package repository
 
 import (
 	"2020_1_drop_table/internal/app/staff/models"
+	"2020_1_drop_table/internal/pkg/hasher"
 	"context"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -19,17 +20,21 @@ func NewPostgresStaffRepository(conn *sqlx.DB) postgresStaffRepository {
 func (p *postgresStaffRepository) Add(ctx context.Context, st models.Staff) (models.Staff, error) {
 	query := `INSERT into staff(name, email, password, editedat, photo, isowner, cafeid, position) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`
 	var dbStaff models.Staff
-	err := p.Conn.GetContext(ctx, &dbStaff, query, st.Name, st.Email, st.Password, st.EditedAt, st.Photo, st.IsOwner, st.CafeId, st.Position)
+	hashedPassword, err := hasher.HashAndSalt(nil, st.Password)
+	if err != nil {
+		return dbStaff, err
+	}
+	err = p.Conn.GetContext(ctx, &dbStaff, query, st.Name, st.Email, hashedPassword, st.EditedAt, st.Photo, st.IsOwner, st.CafeId, st.Position)
 	return dbStaff, err
 }
 
-func (p *postgresStaffRepository) GetByEmailAndPassword(ctx context.Context,
-	email string, password string) (models.Staff, error) {
+func (p *postgresStaffRepository) GetByEmail(ctx context.Context,
+	email string) (models.Staff, error) {
 
-	query := `SELECT * FROM Staff WHERE password=$1 AND email=$2`
+	query := `SELECT * FROM Staff WHERE email=$1`
 
 	var dbStaff models.Staff
-	err := p.Conn.GetContext(ctx, &dbStaff, query, password, email)
+	err := p.Conn.GetContext(ctx, &dbStaff, query, email)
 
 	return dbStaff, err
 }

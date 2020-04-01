@@ -71,7 +71,6 @@ func (s *staffHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	safeStaff, err := s.SUsecase.Add(r.Context(), staffObj)
-
 	if err != nil {
 		responses.SendSingleError(err.Error(), w)
 		return

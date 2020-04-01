@@ -27,6 +27,9 @@ var (
 	ErrNoRequestedCard = errors.New("no card with requested params for this cafe")
 
 	//Customer errors
-	BadUuid     = errors.New("bad uuid")
-	PointsError = errors.New("points can't be <0")
+	ErrBadUuid     = errors.New("bad uuid")
+	ErrPointsError = errors.New("points can't be <0")
+
+	//Auth errors
+	ErrUnauthorized = errors.New("incorrect password or email")
 )
