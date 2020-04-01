@@ -117,14 +117,16 @@ func (s *staffUsecase) GetByEmailAndPassword(c context.Context, form models.Logi
 	}
 
 	staffObj, err := s.staffRepo.GetByEmail(ctx, form.Email)
-	if !hasher.CheckWithHash(staffObj.Password, form.Password) {
-		return models.SafeStaff{}, globalModels.IncorrectPassword
-	}
+
 	if err == sql.ErrNoRows {
 		return models.SafeStaff{}, globalModels.ErrNotFound
 	}
 	if err != nil {
 		return models.SafeStaff{}, globalModels.ErrNotFound
+	}
+
+	if !hasher.CheckWithHash(staffObj.Password, form.Password) {
+		return models.SafeStaff{}, globalModels.IncorrectPassword
 	}
 
 	return app.GetSafeStaff(staffObj), nil
