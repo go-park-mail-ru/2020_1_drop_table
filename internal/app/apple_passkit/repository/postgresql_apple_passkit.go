@@ -5,7 +5,6 @@ import (
 	"2020_1_drop_table/internal/app/apple_passkit/models"
 	"context"
 	"database/sql"
-	"fmt"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -36,7 +35,6 @@ func (p *postgresApplePassRepository) Add(ctx context.Context, ap models.ApplePa
 		ap.Logo2x, ap.Strip, ap.Strip2x)
 
 	if err != nil {
-		fmt.Println("HERE")
 		return models.ApplePassDB{}, err
 	}
 

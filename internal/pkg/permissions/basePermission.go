@@ -2,7 +2,6 @@ package permissions
 
 import (
 	"2020_1_drop_table/internal/pkg/responses"
-	"fmt"
 	"github.com/gorilla/sessions"
 	uuid "github.com/nu7hatch/gouuid"
 	"net/http"
@@ -34,7 +33,7 @@ func generateCsrfLogic(w http.ResponseWriter) {
 	cookie1 := &http.Cookie{Name: "csrf", Value: csrf.String(), Path: "/", HttpOnly: true}
 	http.SetCookie(w, cookie1)
 	w.Header().Set("csrf", csrf.String())
-	fmt.Println(cookie1)
+
 }
 
 func SetCSRF(next http.HandlerFunc) http.HandlerFunc {
@@ -52,7 +51,7 @@ func CheckCSRF(next http.HandlerFunc) http.HandlerFunc {
 		func(w http.ResponseWriter, r *http.Request) {
 			csrf := r.Header.Get("X-Csrf-Token")
 			csrfCookie, err := r.Cookie("csrf")
-			fmt.Println(csrfCookie, csrf, err)
+
 			if err != nil || csrf == "" || csrfCookie.Value == "" || csrfCookie.Value != csrf {
 				responses.SendSingleError("csrf-protection", w)
 				return
