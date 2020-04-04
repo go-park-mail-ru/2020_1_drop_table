@@ -23,6 +23,7 @@ func NewCafeHandler(r *mux.Router, us cafe.Usecase) {
 	handler := cafeHandler{
 		CUsecase: us,
 	}
+
 	r.HandleFunc("/api/v1/cafe", permissions.CheckAuthenticated(handler.AddCafeHandler)).Methods("POST")
 	r.HandleFunc("/api/v1/cafe", handler.GetByOwnerIDHandler).Methods("GET")
 	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}", handler.GetByIDHandler).Methods("GET")

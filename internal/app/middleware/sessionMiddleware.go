@@ -17,13 +17,11 @@ type sessionMiddleware struct {
 func (s *sessionMiddleware) SessionMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session, err := s.sessionRepo.Get(r, sessionCookieName)
-
 		if err != nil {
 			errMessage := fmt.Sprintf("err: %s, while getting cookie", err.Error())
 			responses.SendServerError(errMessage, w)
 			return
 		}
-
 		if _, found := session.Values["userID"]; !found {
 			session.Values["userID"] = -1
 			err = session.Save(r, w)
