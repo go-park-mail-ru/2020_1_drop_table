@@ -26,10 +26,9 @@ func NewStaffHandler(r *mux.Router, us staff.Usecase) {
 	handler := staffHandler{
 		SUsecase: us,
 	}
-
-	r.HandleFunc("/api/v1/staff", handler.RegisterHandler).Methods("POST")
+	r.HandleFunc("/api/v1/staff", permissions.SetCSRF(handler.RegisterHandler)).Methods("POST")
 	r.HandleFunc("/api/v1/get_current_staff/", handler.GetCurrentStaffHandler).Methods("GET")
-	r.HandleFunc("/api/v1/staff/login", handler.LoginHandler).Methods("POST")
+	r.HandleFunc("/api/v1/staff/login", permissions.SetCSRF(handler.LoginHandler)).Methods("POST")
 	r.HandleFunc("/api/v1/staff/{id:[0-9]+}", permissions.CheckAuthenticated(handler.GetStaffByIdHandler)).Methods("GET")
 	r.HandleFunc("/api/v1/staff/{id:[0-9]+}", permissions.CheckAuthenticated(handler.EditStaffHandler)).Methods("PUT")
 	r.HandleFunc("/api/v1/staff/generateQr/{id:[0-9]+}", handler.GenerateQrHandler).Methods("GET")
