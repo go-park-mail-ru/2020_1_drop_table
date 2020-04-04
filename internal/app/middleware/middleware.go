@@ -12,4 +12,5 @@ func NewMiddleware(r *mux.Router, sp *redistore.RediStore) {
 	r.Use(MyCORSMethodMiddleware(r))
 	r.Use(sessionMiddleware.SessionMiddleware)
 	r.Use(LoggingMiddleware)
+	r.Use(PanicMiddleware)
 }
