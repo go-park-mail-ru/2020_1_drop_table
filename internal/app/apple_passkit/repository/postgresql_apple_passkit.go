@@ -5,6 +5,7 @@ import (
 	"2020_1_drop_table/internal/app/apple_passkit/models"
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -35,6 +36,7 @@ func (p *postgresApplePassRepository) Add(ctx context.Context, ap models.ApplePa
 		ap.Logo2x, ap.Strip, ap.Strip2x)
 
 	if err != nil {
+		fmt.Println("HERE")
 		return models.ApplePassDB{}, err
 	}
 
@@ -56,18 +58,18 @@ func (p *postgresApplePassRepository) GetPassByID(ctx context.Context, id int) (
 
 func (p *postgresApplePassRepository) Update(ctx context.Context, newApplePass models.ApplePassDB) error {
 	query := `UPDATE ApplePass SET  
-	Design=$1, 
-	Icon=$2, 
-	Icon2x=$3, 
-	Logo=$4, 
-	Logo2x=$5, 
-	Strip=$6, 
-	Strip2x=$7 
+	Design=NotEmpty($1, Design),
+	Icon=NotEmpty($2, Icon),
+	Icon2x=NotEmpty($3, Icon2x),
+	Logo=NotEmpty($4, Logo),
+	Logo2x=NotEmpty($5, Logo2x),
+	Strip=NotEmpty($6, Strip),
+	Strip2x=NotEmpty($7, Strip2x)
 	WHERE ApplePassID=$8`
 
-	_, err := p.Conn.ExecContext(ctx, query, newApplePass.Design, newApplePass.Icon, newApplePass.Icon2x,
-		newApplePass.Logo, newApplePass.Logo2x, newApplePass.Strip, newApplePass.Strip2x,
-		newApplePass.ApplePassID)
+	_, err := p.Conn.ExecContext(ctx, query, newApplePass.Design, newApplePass.Icon,
+		newApplePass.Icon2x, newApplePass.Logo, newApplePass.Logo2x,
+		newApplePass.Strip, newApplePass.Strip2x, newApplePass.ApplePassID)
 
 	return err
 }

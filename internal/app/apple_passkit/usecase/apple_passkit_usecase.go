@@ -97,15 +97,7 @@ func (ap *applePassKitUsecase) getOwnersCafe(ctx context.Context, cafeID int) (c
 	return cafeObj, nil
 }
 
-func (ap *applePassKitUsecase) updatePass(ctx context.Context, pass models.ApplePassDB, designOnly bool) error {
-	if designOnly {
-		return ap.passKitRepo.UpdateDesign(ctx, pass.Design, pass.ApplePassID)
-	}
-	return ap.passKitRepo.Update(ctx, pass)
-}
-
-func (ap *applePassKitUsecase) UpdatePass(c context.Context, pass models.ApplePassDB, cafeID int, publish bool,
-	designOnly bool) (models.UpdateResponse, error) {
+func (ap *applePassKitUsecase) UpdatePass(c context.Context, pass models.ApplePassDB, cafeID int, publish bool) (models.UpdateResponse, error) {
 
 	ctx, cancel := context.WithTimeout(c, ap.contextTimeout)
 	defer cancel()
@@ -117,7 +109,7 @@ func (ap *applePassKitUsecase) UpdatePass(c context.Context, pass models.ApplePa
 
 	if cafeObj.SavedApplePassID.Valid {
 		pass.ApplePassID = int(cafeObj.SavedApplePassID.Int64)
-		err := ap.updatePass(ctx, pass, designOnly)
+		err := ap.passKitRepo.Update(ctx, pass)
 		if err != nil {
 			return models.UpdateResponse{}, err
 		}
@@ -148,7 +140,7 @@ func (ap *applePassKitUsecase) UpdatePass(c context.Context, pass models.ApplePa
 
 	if cafeObj.PublishedApplePassID.Valid {
 		pass.ApplePassID = int(cafeObj.PublishedApplePassID.Int64)
-		err := ap.updatePass(ctx, pass, designOnly)
+		err := ap.passKitRepo.Update(ctx, pass)
 		if err != nil {
 			return models.UpdateResponse{}, err
 		}

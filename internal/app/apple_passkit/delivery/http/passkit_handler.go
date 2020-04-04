@@ -7,7 +7,6 @@ import (
 	"2020_1_drop_table/internal/pkg/permissions"
 	"2020_1_drop_table/internal/pkg/responses"
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"io/ioutil"
@@ -53,14 +52,6 @@ func (ap *applePassKitHandler) fetchPass(r *http.Request) (models.ApplePassDB, e
 	}
 
 	jsonData := r.FormValue("jsonData")
-	if jsonData == "" || jsonData == "null" {
-		return models.ApplePassDB{}, globalModels.ErrEmptyJSON
-	}
-
-	var jsonDataMap map[string]interface{}
-	if err := json.Unmarshal([]byte(jsonData), &jsonDataMap); err != nil {
-		return models.ApplePassDB{}, globalModels.ErrBadJSON
-	}
 
 	PassObjDB := models.ApplePassDB{Design: jsonData}
 
@@ -133,13 +124,7 @@ func (ap *applePassKitHandler) UpdatePassHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	designOnly, err := extractBoolValue(r, "design_only")
-	if err != nil {
-		responses.SendSingleError(err.Error(), w)
-		return
-	}
-
-	response, err := ap.passesUsecace.UpdatePass(r.Context(), applePassObj, id, publish, designOnly)
+	response, err := ap.passesUsecace.UpdatePass(r.Context(), applePassObj, id, publish)
 	if err != nil {
 		responses.SendSingleError(err.Error(), w)
 		return
