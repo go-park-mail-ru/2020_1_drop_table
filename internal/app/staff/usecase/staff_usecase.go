@@ -101,6 +101,15 @@ func (s *staffUsecase) Update(c context.Context, newStaff models.SafeStaff) (mod
 	}
 	newStaff.EditedAt = time.Now()
 
+	validation, _, err := validators.GetValidator()
+	if err != nil {
+		return models.SafeStaff{}, fmt.Errorf("HttpResponse in validator: %s", err.Error())
+	}
+
+	if err := validation.Struct(newStaff); err != nil {
+		return models.SafeStaff{}, err
+	}
+
 	return newStaff, s.staffRepo.Update(ctx, newStaff)
 }
 
