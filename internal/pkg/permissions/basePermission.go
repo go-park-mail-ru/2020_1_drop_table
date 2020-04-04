@@ -32,7 +32,7 @@ func generateCsrfLogic(w http.ResponseWriter) {
 		responses.SendForbidden(w)
 		return
 	}
-	expiresDate := time.Now().Add(time.Hour)
+	expiresDate := time.Now().Add(time.Hour * 24 * 30)
 	cookie1 := &http.Cookie{Name: "csrf", Value: csrf.String(), HttpOnly: true, Expires: expiresDate}
 	http.SetCookie(w, cookie1)
 	w.Header().Set("csrf", csrf.String())

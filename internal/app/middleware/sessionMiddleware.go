@@ -9,7 +9,6 @@ import (
 )
 
 const sessionCookieName = "authCookie"
-const csrfName = "csrf"
 
 type sessionMiddleware struct {
 	sessionRepo *redistore.RediStore
