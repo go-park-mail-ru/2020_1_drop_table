@@ -27,13 +27,13 @@ func NewStaffHandler(r *mux.Router, us staff.Usecase) {
 		SUsecase: us,
 	}
 	r.HandleFunc("/api/v1/staff", permissions.SetCSRF(handler.RegisterHandler)).Methods("POST")
-	r.HandleFunc("/api/v1/get_current_staff/", permissions.CheckCSRF(handler.GetCurrentStaffHandler)).Methods("GET")
+	r.HandleFunc("/api/v1/get_current_staff/", permissions.SetCSRF(handler.GetCurrentStaffHandler)).Methods("GET")
 	r.HandleFunc("/api/v1/staff/login", permissions.SetCSRF(handler.LoginHandler)).Methods("POST")
-	r.HandleFunc("/api/v1/staff/{id:[0-9]+}", permissions.CheckAuthenticated(handler.GetStaffByIdHandler)).Methods("GET")
-	r.HandleFunc("/api/v1/staff/{id:[0-9]+}", permissions.CheckAuthenticated(handler.EditStaffHandler)).Methods("PUT")
-	r.HandleFunc("/api/v1/staff/generateQr/{id:[0-9]+}", handler.GenerateQrHandler).Methods("GET")
-	r.HandleFunc("/api/v1/add_staff", handler.AddStaffHandler).Methods("POST")
-	r.HandleFunc("/api/v1/staff/get_staff_list/{id:[0-9]+}", handler.GetStaffListHandler).Methods("GET")
+	r.HandleFunc("/api/v1/staff/{id:[0-9]+}", permissions.SetCSRF(permissions.CheckAuthenticated(handler.GetStaffByIdHandler))).Methods("GET")
+	r.HandleFunc("/api/v1/staff/{id:[0-9]+}", permissions.CheckCSRF(permissions.CheckAuthenticated(handler.EditStaffHandler))).Methods("PUT")
+	r.HandleFunc("/api/v1/staff/generateQr/{id:[0-9]+}", permissions.SetCSRF(handler.GenerateQrHandler)).Methods("GET")
+	r.HandleFunc("/api/v1/add_staff", permissions.SetCSRF(handler.AddStaffHandler)).Methods("POST")
+	r.HandleFunc("/api/v1/staff/get_staff_list/{id:[0-9]+}", permissions.SetCSRF(handler.GetStaffListHandler)).Methods("GET")
 }
 
 func (s *staffHandler) fetchStaff(r *http.Request) (models.Staff, error) {

@@ -24,10 +24,10 @@ func NewCafeHandler(r *mux.Router, us cafe.Usecase) {
 		CUsecase: us,
 	}
 
-	r.HandleFunc("/api/v1/cafe", permissions.CheckAuthenticated(handler.AddCafeHandler)).Methods("POST")
-	r.HandleFunc("/api/v1/cafe", handler.GetByOwnerIDHandler).Methods("GET")
-	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}", handler.GetByIDHandler).Methods("GET")
-	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}", permissions.CheckAuthenticated(handler.EditCafeHandler)).Methods("PUT")
+	r.HandleFunc("/api/v1/cafe", permissions.CheckCSRF(permissions.CheckAuthenticated(handler.AddCafeHandler))).Methods("POST")
+	r.HandleFunc("/api/v1/cafe", permissions.SetCSRF(handler.GetByOwnerIDHandler)).Methods("GET")
+	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}", permissions.SetCSRF(handler.GetByIDHandler)).Methods("GET")
+	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}", permissions.CheckCSRF(permissions.CheckAuthenticated(handler.EditCafeHandler))).Methods("PUT")
 }
 
 func (c *cafeHandler) fetchCafe(r *http.Request) (models.Cafe, error) {

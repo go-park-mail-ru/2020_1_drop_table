@@ -31,7 +31,7 @@ func generateCsrfLogic(w http.ResponseWriter) {
 		responses.SendForbidden(w)
 		return
 	}
-	cookie1 := &http.Cookie{Name: "csrf", Value: csrf.String(), HttpOnly: true}
+	cookie1 := &http.Cookie{Name: "csrf", Value: csrf.String(), Path: "/", HttpOnly: true}
 	http.SetCookie(w, cookie1)
 	w.Header().Set("csrf", csrf.String())
 	fmt.Println(cookie1)

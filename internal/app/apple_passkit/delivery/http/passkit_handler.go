@@ -25,16 +25,16 @@ func NewPassKitHandler(r *mux.Router, us apple_passkit.Usecase) {
 		passesUsecace: us,
 	}
 	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}/apple_pass",
-		permissions.CheckAuthenticated(handler.UpdatePassHandler)).Methods("PUT")
+		permissions.CheckCSRF(permissions.CheckAuthenticated(handler.UpdatePassHandler))).Methods("PUT")
 
 	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}/apple_pass",
-		permissions.CheckAuthenticated(handler.GetPassHandler)).Methods("GET")
+		permissions.SetCSRF(permissions.CheckAuthenticated(handler.GetPassHandler))).Methods("GET")
 
 	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}/apple_pass/new_customer",
-		handler.GenerateNewPass).Methods("GET")
+		permissions.SetCSRF(handler.GenerateNewPass)).Methods("GET")
 
 	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}/apple_pass/{image_name}",
-		permissions.CheckAuthenticated(handler.GetImageHandler)).Methods("GET")
+		permissions.SetCSRF(permissions.CheckAuthenticated(handler.GetImageHandler))).Methods("GET")
 }
 
 func getContent(header *multipart.FileHeader) ([]byte, error) {
