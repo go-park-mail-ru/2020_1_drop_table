@@ -5,10 +5,9 @@ import (
 	"2020_1_drop_table/internal/app/cafe/models"
 	globalModels "2020_1_drop_table/internal/app/models"
 	"2020_1_drop_table/internal/app/staff"
-	"2020_1_drop_table/internal/pkg/validators"
 	"context"
-	"fmt"
 	"github.com/gorilla/sessions"
+	"gopkg.in/go-playground/validator.v9"
 	"time"
 )
 
@@ -59,10 +58,7 @@ func (cu *cafeUsecase) Add(c context.Context, newCafe models.Cafe) (models.Cafe,
 
 	newCafe.StaffID = staffID
 
-	validation, _, err := validators.GetValidator()
-	if err != nil {
-		return models.Cafe{}, fmt.Errorf("HttpResponse in validator: %cu", err.Error())
-	}
+	validation := validator.New()
 
 	if err := validation.Struct(newCafe); err != nil {
 		return models.Cafe{}, err

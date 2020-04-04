@@ -9,7 +9,6 @@ import (
 	"2020_1_drop_table/internal/app/staff/models"
 	"2020_1_drop_table/internal/pkg/hasher"
 	"2020_1_drop_table/internal/pkg/qr"
-	"2020_1_drop_table/internal/pkg/validators"
 	"context"
 	"database/sql"
 	"errors"
@@ -17,6 +16,7 @@ import (
 	"github.com/gorilla/sessions"
 	uuid "github.com/nu7hatch/gouuid"
 	"github.com/rs/zerolog/log"
+	"gopkg.in/go-playground/validator.v9"
 	"os"
 	"time"
 )
@@ -41,16 +41,13 @@ func (s *staffUsecase) Add(c context.Context, newStaff models.Staff) (models.Saf
 
 	newStaff.EditedAt = time.Now()
 
-	validation, _, err := validators.GetValidator()
-	if err != nil {
-		return models.SafeStaff{}, fmt.Errorf("HttpResponse in validator: %s", err.Error())
-	}
+	validation := validator.New()
 
 	if err := validation.Struct(newStaff); err != nil {
 		return models.SafeStaff{}, err
 	}
 
-	_, err = s.staffRepo.GetByEmail(ctx, newStaff.Email)
+	_, err := s.staffRepo.GetByEmail(ctx, newStaff.Email)
 
 	if err != sql.ErrNoRows {
 		return models.SafeStaff{}, globalModels.ErrExisted
@@ -101,17 +98,20 @@ func (s *staffUsecase) Update(c context.Context, newStaff models.SafeStaff) (mod
 	}
 	newStaff.EditedAt = time.Now()
 
-	return newStaff, s.staffRepo.Update(ctx, newStaff)
+	validation := validator.New()
+
+	if err := validation.Struct(newStaff); err != nil {
+		return models.SafeStaff{}, err
+	}
+
+	return s.staffRepo.Update(ctx, newStaff)
 }
 
 func (s *staffUsecase) GetByEmailAndPassword(c context.Context, form models.LoginForm) (models.SafeStaff, error) {
 	ctx, cancel := context.WithTimeout(c, s.contextTimeout)
 	defer cancel()
 
-	validation, _, err := validators.GetValidator()
-	if err != nil {
-		return models.SafeStaff{}, fmt.Errorf("HttpResponse in validator: %s", err.Error())
-	}
+	validation := validator.New()
 	if err := validation.Struct(form); err != nil {
 		return models.SafeStaff{}, err
 	}

@@ -9,7 +9,7 @@ type Repository interface {
 	Add(ctx context.Context, st models.Staff) (models.Staff, error)
 	GetByEmail(ctx context.Context, email string) (models.Staff, error)
 	GetByID(ctx context.Context, id int) (models.Staff, error)
-	Update(ctx context.Context, newStaff models.SafeStaff) error
+	Update(ctx context.Context, newStaff models.SafeStaff) (models.SafeStaff, error)
 	AddUuid(ctx context.Context, uuid string, id int) error
 	CheckIsOwner(ctx context.Context, staffId int) (bool, error)
 	DeleteUuid(ctx context.Context, uuid string) error
