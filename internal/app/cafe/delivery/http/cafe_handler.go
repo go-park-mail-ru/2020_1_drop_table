@@ -89,13 +89,13 @@ func (c *cafeHandler) EditCafeHandler(w http.ResponseWriter, r *http.Request) {
 
 	cafeObj.CafeID = id
 
-	err = c.CUsecase.Update(r.Context(), cafeObj)
+	cafeDB, err := c.CUsecase.Update(r.Context(), cafeObj)
 	if err != nil {
 		responses.SendSingleError(err.Error(), w)
 		return
 	}
 
-	responses.SendOKAnswer(cafeObj, w)
+	responses.SendOKAnswer(cafeDB, w)
 	return
 }
 

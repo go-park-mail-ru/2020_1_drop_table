@@ -62,7 +62,7 @@ func (p *postgresCafeRepository) GetByOwnerID(ctx context.Context, staffID int) 
 	return cafes, nil
 }
 
-func (p *postgresCafeRepository) Update(ctx context.Context, newCafe models.Cafe) error {
+func (p *postgresCafeRepository) Update(ctx context.Context, newCafe models.Cafe) (models.Cafe, error) {
 	query := `UPDATE Cafe SET 
 	CafeName=$1, 
 	Address=$2, 
@@ -70,13 +70,16 @@ func (p *postgresCafeRepository) Update(ctx context.Context, newCafe models.Cafe
 	StaffID=$4, 
 	OpenTime=$5, 
 	CloseTime=$6, 
-	Photo=$7 
-	WHERE CafeID=$8`
+	Photo=NotEmpty($7,Photo) 
+	WHERE CafeID=$8
+	RETURNING *`
 
-	_, err := p.Conn.ExecContext(ctx, query, newCafe.CafeName, newCafe.Address, newCafe.Description,
+	var CafeDB models.Cafe
+
+	err := p.Conn.GetContext(ctx, &CafeDB, query, newCafe.CafeName, newCafe.Address, newCafe.Description,
 		newCafe.StaffID, newCafe.OpenTime, newCafe.CloseTime, newCafe.Photo, newCafe.CafeID)
 
-	return err
+	return CafeDB, err
 }
 
 func (p *postgresCafeRepository) UpdateSavedPass(ctx context.Context, newCafe models.Cafe) error {
