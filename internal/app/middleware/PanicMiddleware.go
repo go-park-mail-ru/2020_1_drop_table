@@ -7,7 +7,6 @@ import (
 
 func PanicMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Error().Msgf("panic in " + r.URL.Path)
 		defer func() {
 			if err := recover(); err != nil {
 				log.Error().Msgf("recovered after error")
