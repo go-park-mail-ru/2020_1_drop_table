@@ -310,10 +310,10 @@ func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int,
 func (ap *applePassKitUsecase) createQRs(cafeID int) error {
 	savedPassURL := fmt.Sprintf("%s/%s/cafe/%d/apple_pass/new_customer?published=false",
 		configs.ServerUrl, configs.ApiVersion, cafeID)
-	savedPassPath := fmt.Sprintf("%d_published", cafeID)
+	savedPassPath := fmt.Sprintf("%d_saved", cafeID)
 	publishedPassURL := fmt.Sprintf("%s/%s/cafe/%d/apple_pass/new_customer?published=true",
 		configs.ServerUrl, configs.ApiVersion, cafeID)
-	publishedPassPath := fmt.Sprintf("%d_saved", cafeID)
+	publishedPassPath := fmt.Sprintf("%d_published", cafeID)
 
 	_, err := qr.GenerateToFile(savedPassURL, savedPassPath)
 	if err != nil {
