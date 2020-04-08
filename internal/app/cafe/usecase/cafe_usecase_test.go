@@ -1,8 +1,9 @@
-package usecase
+package usecase_test
 
 import (
 	cafeMocks "2020_1_drop_table/internal/app/cafe/mocks"
 	cafeModels "2020_1_drop_table/internal/app/cafe/models"
+	_cafeUsecase "2020_1_drop_table/internal/app/cafe/usecase"
 	globalModels "2020_1_drop_table/internal/app/models"
 	staffMocks "2020_1_drop_table/internal/app/staff/mocks"
 	staffModels "2020_1_drop_table/internal/app/staff/models"
@@ -27,7 +28,7 @@ func TestAdd(t *testing.T) {
 	mockCafeRepo := new(cafeMocks.Repository)
 	mockStaffUcase := new(staffMocks.Usecase)
 
-	cafeUsecase := NewCafeUsecase(mockCafeRepo, mockStaffUcase, time.Second*2)
+	cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffUcase, time.Second*2)
 
 	var owner staffModels.SafeStaff
 	err := faker.FakeData(&owner)
@@ -110,7 +111,7 @@ func TestGetByOwnerID(t *testing.T) {
 	mockCafeRepo := new(cafeMocks.Repository)
 	mockStaffUcase := new(staffMocks.Usecase)
 
-	cafeUsecase := NewCafeUsecase(mockCafeRepo, mockStaffUcase, time.Second*2)
+	cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffUcase, time.Second*2)
 
 	var owner staffModels.SafeStaff
 	err := faker.FakeData(&owner)
@@ -173,7 +174,7 @@ func TestGetByID(t *testing.T) {
 	mockCafeRepo := new(cafeMocks.Repository)
 	mockStaffUcase := new(staffMocks.Usecase)
 
-	cafeUsecase := NewCafeUsecase(mockCafeRepo, mockStaffUcase, time.Second*2)
+	cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffUcase, time.Second*2)
 
 	ownerID := 1
 
@@ -189,7 +190,7 @@ func TestGetByID(t *testing.T) {
 			expectedCafe: expectedCafe,
 			err:          nil,
 		},
-		//Test OK
+		//Test OK (anonymous user)
 		{
 			staffID:      -1,
 			expectedCafe: expectedCafe,
@@ -228,7 +229,7 @@ func TestUpdate(t *testing.T) {
 	mockCafeRepo := new(cafeMocks.Repository)
 	mockStaffUcase := new(staffMocks.Usecase)
 
-	cafeUsecase := NewCafeUsecase(mockCafeRepo, mockStaffUcase, time.Second*2)
+	cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffUcase, time.Second*2)
 
 	var owner staffModels.SafeStaff
 	err := faker.FakeData(&owner)
@@ -317,6 +318,5 @@ func TestUpdate(t *testing.T) {
 		if err == nil {
 			assert.Equal(t, testCase.outputCafe, realCafee, message)
 		}
-
 	}
 }
