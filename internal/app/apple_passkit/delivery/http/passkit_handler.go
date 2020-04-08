@@ -34,7 +34,7 @@ func NewPassKitHandler(r *mux.Router, us apple_passkit.Usecase) {
 		permissions.SetCSRF(handler.GenerateNewPass)).Methods("GET")
 
 	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}/apple_pass/{image_name}",
-		permissions.SetCSRF(permissions.CheckAuthenticated(handler.GetImageHandler))).Methods("GET")
+		permissions.CheckAuthenticated(handler.GetImageHandler)).Methods("GET")
 }
 
 func getContent(header *multipart.FileHeader) ([]byte, error) {

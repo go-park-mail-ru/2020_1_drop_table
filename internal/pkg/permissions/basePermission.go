@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/sessions"
 	uuid "github.com/nu7hatch/gouuid"
 	"net/http"
+	"time"
 )
 
 func CheckAuthenticated(next http.HandlerFunc) http.HandlerFunc {
@@ -30,7 +31,9 @@ func generateCsrfLogic(w http.ResponseWriter) {
 		responses.SendForbidden(w)
 		return
 	}
-	cookie1 := &http.Cookie{Name: "csrf", Value: csrf.String(), Path: "/", HttpOnly: true}
+	timeDelta := time.Now().Add(time.Hour * 24 * 30)
+	cookie1 := &http.Cookie{Name: "csrf", Value: csrf.String(), Path: "/", HttpOnly: true, Expires: timeDelta}
+
 	http.SetCookie(w, cookie1)
 	w.Header().Set("csrf", csrf.String())
 
