@@ -3,7 +3,6 @@ package test
 import (
 	cafeMock "2020_1_drop_table/internal/app/cafe/mocks"
 	cafeModels "2020_1_drop_table/internal/app/cafe/models"
-	repository2 "2020_1_drop_table/internal/app/cafe/repository"
 	globalModels "2020_1_drop_table/internal/app/models"
 	"2020_1_drop_table/internal/app/staff/mocks"
 	"2020_1_drop_table/internal/app/staff/models"
@@ -13,20 +12,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/gorilla/sessions"
-	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"
 	"time"
 )
-
-func getDataBaseForAdd() (*sqlx.DB, error) {
-	db, _, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
-	sqlxDB := sqlx.NewDb(db, "sqlmock")
-	return sqlxDB, err
-}
 
 type AddTestCase struct {
 	user         models.Staff
@@ -112,14 +103,11 @@ func TestAdd(t *testing.T) {
 	//
 	empty := models.Staff{}
 	timeout := time.Second * 4
-	conn, err := getDataBaseForAdd()
-	if err != nil {
-		fmt.Println("err while open db", err)
-	}
+
 	srepo := new(mocks.Repository)
 	emptyContext := context.TODO()
-	cafeRepo := repository2.NewPostgresCafeRepository(conn)
-	s := usecase.NewStaffUsecase(srepo, cafeRepo, timeout)
+	cafeRepo := cafeMock.Repository{}
+	s := usecase.NewStaffUsecase(srepo, &cafeRepo, timeout)
 
 	for _, testCase := range testCases {
 		emailMatchesWithStaff := func(staff models.Staff) bool {
@@ -166,13 +154,10 @@ func TestGeById(t *testing.T) {
 		},
 	}
 	timeout := time.Second * 4
-	conn, err := getDataBaseForAdd()
-	if err != nil {
-		fmt.Println("err while open db", err)
-	}
+
 	srepo := mocks.Repository{}
-	cafeRepo := repository2.NewPostgresCafeRepository(conn)
-	s := usecase.NewStaffUsecase(&srepo, cafeRepo, timeout)
+	cafeRepo := cafeMock.Repository{}
+	s := usecase.NewStaffUsecase(&srepo, &cafeRepo, timeout)
 
 	for _, testCase := range testCases {
 		srepo.On("GetByID",
@@ -214,13 +199,10 @@ func TestUpdate(t *testing.T) {
 	}
 	//
 	timeout := time.Second * 4
-	conn, err := getDataBaseForAdd()
-	if err != nil {
-		fmt.Println("err while open db", err)
-	}
+
 	srepo := mocks.Repository{}
-	cafeRepo := repository2.NewPostgresCafeRepository(conn)
-	s := usecase.NewStaffUsecase(&srepo, cafeRepo, timeout)
+	cafeRepo := cafeMock.Repository{}
+	s := usecase.NewStaffUsecase(&srepo, &cafeRepo, timeout)
 
 	for _, testCase := range testCases {
 
@@ -276,13 +258,9 @@ func TestGet(t *testing.T) {
 		},
 	}
 	timeout := time.Second * 4
-	conn, err := getDataBaseForAdd()
-	if err != nil {
-		fmt.Println("err while open db", err)
-	}
 	srepo := mocks.Repository{}
-	cafeRepo := repository2.NewPostgresCafeRepository(conn)
-	s := usecase.NewStaffUsecase(&srepo, cafeRepo, timeout)
+	cafeRepo := cafeMock.Repository{}
+	s := usecase.NewStaffUsecase(&srepo, &cafeRepo, timeout)
 
 	for _, testCase := range testCases {
 		testCase.form.Password, _ = hasher.HashAndSalt(nil, testCase.form.Password)
