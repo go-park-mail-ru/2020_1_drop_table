@@ -39,14 +39,14 @@ func (p *postgresCafeRepository) Add(ctx context.Context, ca models.Cafe) (model
 func (p *postgresCafeRepository) GetByID(ctx context.Context, id int) (models.Cafe, error) {
 	query := `SELECT * FROM Cafe WHERE CafeID=$1`
 
-	var dbStaff models.Cafe
-	err := p.Conn.GetContext(ctx, &dbStaff, query, id)
+	var dbCafe models.Cafe
+	err := p.Conn.GetContext(ctx, &dbCafe, query, id)
 
 	if err != nil {
 		return models.Cafe{}, err
 	}
 
-	return dbStaff, nil
+	return dbCafe, nil
 }
 
 func (p *postgresCafeRepository) GetByOwnerID(ctx context.Context, staffID int) ([]models.Cafe, error) {

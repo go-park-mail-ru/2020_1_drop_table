@@ -15,12 +15,12 @@ import (
 	"strconv"
 )
 
-type cafeHandler struct {
+type CafeHandler struct {
 	CUsecase cafe.Usecase
 }
 
 func NewCafeHandler(r *mux.Router, us cafe.Usecase) {
-	handler := cafeHandler{
+	handler := CafeHandler{
 		CUsecase: us,
 	}
 
@@ -30,13 +30,14 @@ func NewCafeHandler(r *mux.Router, us cafe.Usecase) {
 	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}", permissions.CheckCSRF(permissions.CheckAuthenticated(handler.EditCafeHandler))).Methods("PUT")
 }
 
-func (c *cafeHandler) fetchCafe(r *http.Request) (models.Cafe, error) {
+func (c *CafeHandler) fetchCafe(r *http.Request) (models.Cafe, error) {
 	err := r.ParseMultipartForm(32 << 20)
 	if err != nil {
 		return models.Cafe{}, globalModels.ErrBadRequest
 	}
 
 	jsonData := r.FormValue("jsonData")
+	fmt.Println(jsonData)
 	if jsonData == "" || jsonData == "null" {
 		return models.Cafe{}, globalModels.ErrEmptyJSON
 	}
@@ -56,7 +57,7 @@ func (c *cafeHandler) fetchCafe(r *http.Request) (models.Cafe, error) {
 	return cafeObj, nil
 }
 
-func (c *cafeHandler) AddCafeHandler(w http.ResponseWriter, r *http.Request) {
+func (c *CafeHandler) AddCafeHandler(w http.ResponseWriter, r *http.Request) {
 	cafeObj, err := c.fetchCafe(r)
 	if err != nil {
 		responses.SendSingleError(err.Error(), w)
@@ -73,7 +74,7 @@ func (c *cafeHandler) AddCafeHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (c *cafeHandler) EditCafeHandler(w http.ResponseWriter, r *http.Request) {
+func (c *CafeHandler) EditCafeHandler(w http.ResponseWriter, r *http.Request) {
 	cafeObj, err := c.fetchCafe(r)
 	if err != nil {
 		responses.SendSingleError(err.Error(), w)
@@ -99,7 +100,7 @@ func (c *cafeHandler) EditCafeHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (c *cafeHandler) GetByOwnerIDHandler(w http.ResponseWriter, r *http.Request) {
+func (c *CafeHandler) GetByOwnerIDHandler(w http.ResponseWriter, r *http.Request) {
 	cafesObj, err := c.CUsecase.GetByOwnerID(r.Context())
 	if err != nil {
 		responses.SendSingleError(err.Error(), w)
@@ -110,14 +111,13 @@ func (c *cafeHandler) GetByOwnerIDHandler(w http.ResponseWriter, r *http.Request
 	return
 }
 
-func (c *cafeHandler) GetByIDHandler(w http.ResponseWriter, r *http.Request) {
+func (c *CafeHandler) GetByIDHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
 		message := fmt.Sprintf("bad id: %s", mux.Vars(r)["id"])
 		responses.SendSingleError(message, w)
 		return
 	}
-
 	cafeObj, err := c.CUsecase.GetByID(r.Context(), id)
 	if err != nil {
 		responses.SendSingleError(err.Error(), w)
