@@ -3,6 +3,7 @@ package test
 import (
 	middleware2 "2020_1_drop_table/internal/app/middleware"
 	"context"
+	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -38,4 +39,26 @@ func TestLog(t *testing.T) {
 
 	recorder := httptest.NewRecorder()
 	handlerToTest.ServeHTTP(recorder, req)
+}
+
+func TestCors(t *testing.T) {
+	r := mux.NewRouter()
+	middleware2.MyCORSMethodMiddleware(r)
+	defer func() {
+		if r := recover(); r != nil {
+			assert.Equal(t, true, false)
+		}
+	}()
+	assert.Equal(t, true, true)
+}
+
+func TestNew(t *testing.T) {
+	r := mux.NewRouter()
+	middleware2.NewMiddleware(r, nil)
+	defer func() {
+		if r := recover(); r != nil {
+			assert.Equal(t, true, false)
+		}
+	}()
+	assert.Equal(t, true, true)
 }
