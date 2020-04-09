@@ -1,7 +1,6 @@
-package test
+package middleware
 
 import (
-	middleware2 "2020_1_drop_table/internal/app/middleware"
 	"context"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
@@ -16,7 +15,7 @@ func TestPanic(t *testing.T) {
 		panic("test")
 		assert.True(t, true)
 	})
-	handlerToTest := middleware2.PanicMiddleware(nextHandler)
+	handlerToTest := PanicMiddleware(nextHandler)
 
 	req := httptest.NewRequest("GET", "http://testing", nil)
 	session := sessions.Session{Values: map[interface{}]interface{}{"userID": 228}}
@@ -31,7 +30,7 @@ func TestLog(t *testing.T) {
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.True(t, true)
 	})
-	handlerToTest := middleware2.LoggingMiddleware(nextHandler)
+	handlerToTest := LoggingMiddleware(nextHandler)
 
 	req := httptest.NewRequest("GET", "http://testing", nil)
 	session := sessions.Session{Values: map[interface{}]interface{}{"userID": 228}}
@@ -43,7 +42,7 @@ func TestLog(t *testing.T) {
 
 func TestCors(t *testing.T) {
 	r := mux.NewRouter()
-	middleware2.MyCORSMethodMiddleware(r)
+	MyCORSMethodMiddleware(r)
 	defer func() {
 		if r := recover(); r != nil {
 			assert.Equal(t, true, false)
@@ -54,7 +53,7 @@ func TestCors(t *testing.T) {
 
 func TestNew(t *testing.T) {
 	r := mux.NewRouter()
-	middleware2.NewMiddleware(r, nil)
+	NewMiddleware(r, nil)
 	defer func() {
 		if r := recover(); r != nil {
 			assert.Equal(t, true, false)

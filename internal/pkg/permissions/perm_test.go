@@ -1,7 +1,6 @@
-package test
+package permissions
 
 import (
-	"2020_1_drop_table/internal/pkg/permissions"
 	"context"
 	"fmt"
 	"github.com/gorilla/sessions"
@@ -17,7 +16,7 @@ func TestSetCsrf(t *testing.T) {
 
 		assert.NotEqual(t, "", csrf)
 	})
-	handlerToTest := permissions.SetCSRF(nextHandler)
+	handlerToTest := SetCSRF(nextHandler)
 
 	req := httptest.NewRequest("GET", "http://testing", nil)
 
@@ -32,7 +31,7 @@ func TestCheckCsrf(t *testing.T) {
 		fmt.Println(csrf)
 		assert.Equal(t, "", csrf)
 	})
-	handlerToTest := permissions.CheckCSRF(nextHandler)
+	handlerToTest := CheckCSRF(nextHandler)
 
 	req := httptest.NewRequest("GET", "http://testing", nil)
 
@@ -44,7 +43,7 @@ func TestCheckAuth(t *testing.T) {
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.True(t, true)
 	})
-	handlerToTest := permissions.CheckAuthenticated(nextHandler)
+	handlerToTest := CheckAuthenticated(nextHandler)
 
 	req := httptest.NewRequest("GET", "http://testing", nil)
 	session := sessions.Session{Values: map[interface{}]interface{}{"userID": 228}}

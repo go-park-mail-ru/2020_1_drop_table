@@ -1,8 +1,7 @@
-package test
+package http
 
 import (
 	"2020_1_drop_table/internal/app"
-	http2 "2020_1_drop_table/internal/app/staff/delivery/http"
 	"2020_1_drop_table/internal/app/staff/mocks"
 	"2020_1_drop_table/internal/app/staff/models"
 	staffModels "2020_1_drop_table/internal/app/staff/models"
@@ -65,7 +64,7 @@ func TestGetById(t *testing.T) {
 
 	mockstaffUcase := new(mocks.Usecase)
 	mockstaffUcase.On("GetByID", mock.AnythingOfType("*context.valueCtx"), 228).Return(returnStaff, nil)
-	handler := http2.StaffHandler{SUsecase: mockstaffUcase}
+	handler := StaffHandler{SUsecase: mockstaffUcase}
 	buf, wr := createMultipartFormData(t, "")
 	req, err := http.NewRequest("GET", url, &buf)
 	req = mux.SetURLVars(req, map[string]string{
@@ -105,7 +104,7 @@ func TestGetCurrStaff(t *testing.T) {
 		Position: "",
 	}
 	mockstaffUcase.On("GetFromSession", mock.AnythingOfType("*context.emptyCtx")).Return(returnStaff, nil)
-	handler := http2.StaffHandler{SUsecase: mockstaffUcase}
+	handler := StaffHandler{SUsecase: mockstaffUcase}
 	buf, wr := createMultipartFormData(t, "")
 	req, err := http.NewRequest("POST", url, &buf)
 	assert.Nil(t, err)
@@ -132,7 +131,7 @@ func TestGenerateQrHandler(t *testing.T) {
 
 	mockstaffUcase := new(mocks.Usecase)
 	mockstaffUcase.On("GetQrForStaff", mock.AnythingOfType("*context.valueCtx"), 228).Return("path", nil)
-	handler := http2.StaffHandler{SUsecase: mockstaffUcase}
+	handler := StaffHandler{SUsecase: mockstaffUcase}
 	buf, wr := createMultipartFormData(t, "")
 	req, err := http.NewRequest("GET", url, &buf)
 	req = mux.SetURLVars(req, map[string]string{
@@ -168,7 +167,7 @@ func TestEditStaff(t *testing.T) {
 
 	mockstaffUcase := new(mocks.Usecase)
 	mockstaffUcase.On("Update", mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("models.SafeStaff")).Return(returnStaff, nil)
-	handler := http2.StaffHandler{SUsecase: mockstaffUcase}
+	handler := StaffHandler{SUsecase: mockstaffUcase}
 	str, _ := json.Marshal(returnStaff)
 	buf, wr := createMultipartFormData(t, string(str))
 	req, err := http.NewRequest("GET", url, &buf)
@@ -200,7 +199,7 @@ func TestAdd(t *testing.T) {
 	}
 
 	mockstaffUcase := new(mocks.Usecase)
-	handler := http2.StaffHandler{SUsecase: mockstaffUcase}
+	handler := StaffHandler{SUsecase: mockstaffUcase}
 	var inputstaff staffModels.Staff
 	err := faker.FakeData(&inputstaff)
 	assert.NoError(t, err)

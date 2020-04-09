@@ -1,4 +1,4 @@
-package test
+package usecase
 
 import (
 	cafeMock "2020_1_drop_table/internal/app/cafe/mocks"
@@ -6,7 +6,6 @@ import (
 	globalModels "2020_1_drop_table/internal/app/models"
 	"2020_1_drop_table/internal/app/staff/mocks"
 	"2020_1_drop_table/internal/app/staff/models"
-	"2020_1_drop_table/internal/app/staff/usecase"
 	"2020_1_drop_table/internal/pkg/hasher"
 	"context"
 	"database/sql"
@@ -107,7 +106,7 @@ func TestAdd(t *testing.T) {
 	srepo := new(mocks.Repository)
 	emptyContext := context.TODO()
 	cafeRepo := cafeMock.Repository{}
-	s := usecase.NewStaffUsecase(srepo, &cafeRepo, timeout)
+	s := NewStaffUsecase(srepo, &cafeRepo, timeout)
 
 	for _, testCase := range testCases {
 		emailMatchesWithStaff := func(staff models.Staff) bool {
@@ -157,7 +156,7 @@ func TestGeById(t *testing.T) {
 
 	srepo := mocks.Repository{}
 	cafeRepo := cafeMock.Repository{}
-	s := usecase.NewStaffUsecase(&srepo, &cafeRepo, timeout)
+	s := NewStaffUsecase(&srepo, &cafeRepo, timeout)
 
 	for _, testCase := range testCases {
 		srepo.On("GetByID",
@@ -202,7 +201,7 @@ func TestUpdate(t *testing.T) {
 
 	srepo := mocks.Repository{}
 	cafeRepo := cafeMock.Repository{}
-	s := usecase.NewStaffUsecase(&srepo, &cafeRepo, timeout)
+	s := NewStaffUsecase(&srepo, &cafeRepo, timeout)
 
 	for _, testCase := range testCases {
 
@@ -260,7 +259,7 @@ func TestGet(t *testing.T) {
 	timeout := time.Second * 4
 	srepo := mocks.Repository{}
 	cafeRepo := cafeMock.Repository{}
-	s := usecase.NewStaffUsecase(&srepo, &cafeRepo, timeout)
+	s := NewStaffUsecase(&srepo, &cafeRepo, timeout)
 
 	for _, testCase := range testCases {
 		testCase.form.Password, _ = hasher.HashAndSalt(nil, testCase.form.Password)
@@ -312,7 +311,7 @@ func TestGenerateQr(t *testing.T) {
 		mock.AnythingOfType("*context.timerCtx"), 2).Return(
 		returnedCafe, nil)
 	srepo.On("AddUuid", mock.AnythingOfType("*context.timerCtx"), mock.AnythingOfType("string"), 2).Return(nil)
-	s := usecase.NewStaffUsecase(&srepo, &cafeRepo, timeout)
+	s := NewStaffUsecase(&srepo, &cafeRepo, timeout)
 	session := sessions.Session{Values: map[interface{}]interface{}{"userID": 228}}
 	c := context.WithValue(context.Background(), "session", &session)
 	_, err := s.GetQrForStaff(c, 2)
@@ -324,7 +323,7 @@ func TestDelQr(t *testing.T) {
 	timeout := time.Second * 4
 	srepo := mocks.Repository{}
 	cafeRepo := cafeMock.Repository{}
-	s := usecase.NewStaffUsecase(&srepo, &cafeRepo, timeout)
+	s := NewStaffUsecase(&srepo, &cafeRepo, timeout)
 	err := s.DeleteQrCodes("not exist")
 	assert.Equal(t, err.Error(), "remove media/qr/not exist.png: no such file or directory")
 }
@@ -350,7 +349,7 @@ func TestGetStaffList(t *testing.T) {
 
 	srepo.On("GetStaffListByOwnerId", mock.AnythingOfType("*context.valueCtx"), 2).Return(resMap, nil)
 	cafeRepo := cafeMock.Repository{}
-	s := usecase.NewStaffUsecase(&srepo, &cafeRepo, timeout)
+	s := NewStaffUsecase(&srepo, &cafeRepo, timeout)
 	session := sessions.Session{Values: map[interface{}]interface{}{"userID": 2}}
 	c := context.WithValue(context.Background(), "session", &session)
 	res, err := s.GetStaffListByOwnerId(c, 2)
