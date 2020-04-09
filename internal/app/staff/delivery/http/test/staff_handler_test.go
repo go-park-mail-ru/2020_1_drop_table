@@ -4,7 +4,7 @@ import (
 	http2 "2020_1_drop_table/internal/app/staff/delivery/http"
 	"2020_1_drop_table/internal/app/staff/mocks"
 	"2020_1_drop_table/internal/app/staff/models"
-	"2020_1_drop_table/responses"
+	"2020_1_drop_table/internal/pkg/responses"
 	"bytes"
 	"encoding/json"
 	"github.com/gorilla/mux"
