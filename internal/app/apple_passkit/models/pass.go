@@ -2,7 +2,7 @@ package models
 
 type ApplePassDB struct {
 	ApplePassID int    `json:"-"`
-	Design      string `json:"design" validate:"required"`
+	Design      string `json:"design" validate:"required" faker:"url"`
 	Icon        []byte `json:"icon" validate:"required"`
 	Icon2x      []byte `json:"icon2x" validate:"required"`
 	Logo        []byte `json:"logo" validate:"required"`
