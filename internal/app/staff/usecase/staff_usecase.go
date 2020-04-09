@@ -192,13 +192,13 @@ func (s *staffUsecase) GetQrForStaff(ctx context.Context, idCafe int) (string, e
 }
 
 func (s *staffUsecase) DeleteQrCodes(uString string) error {
+	ctx, cancel := context.WithTimeout(context.TODO(), s.contextTimeout)
+	defer cancel()
 	pathToQr := configs.MediaFolder + "/qr/" + uString + ".png"
 	err := os.Remove(pathToQr)
 	if err != nil {
 		return err
 	}
-	ctx, cancel := context.WithTimeout(context.TODO(), s.contextTimeout)
-	defer cancel()
 	err = s.staffRepo.DeleteUuid(ctx, uString)
 	return err
 

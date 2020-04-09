@@ -18,12 +18,12 @@ import (
 	"strconv"
 )
 
-type staffHandler struct {
+type StaffHandler struct {
 	SUsecase staff.Usecase
 }
 
 func NewStaffHandler(r *mux.Router, us staff.Usecase) {
-	handler := staffHandler{
+	handler := StaffHandler{
 		SUsecase: us,
 	}
 	r.HandleFunc("/api/v1/staff", permissions.SetCSRF(handler.RegisterHandler)).Methods("POST")
@@ -36,7 +36,7 @@ func NewStaffHandler(r *mux.Router, us staff.Usecase) {
 	r.HandleFunc("/api/v1/staff/get_staff_list/{id:[0-9]+}", permissions.SetCSRF(handler.GetStaffListHandler)).Methods("GET")
 }
 
-func (s *staffHandler) fetchStaff(r *http.Request) (models.Staff, error) {
+func (s *StaffHandler) fetchStaff(r *http.Request) (models.Staff, error) {
 	err := r.ParseMultipartForm(32 << 20)
 	if err != nil {
 		return models.Staff{}, globalModels.ErrBadRequest
@@ -62,7 +62,7 @@ func (s *staffHandler) fetchStaff(r *http.Request) (models.Staff, error) {
 	return staffObj, nil
 }
 
-func (s *staffHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
+func (s *StaffHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	staffObj, err := s.fetchStaff(r)
 
 	if err != nil {
@@ -87,7 +87,7 @@ func (s *staffHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	responses.SendOKAnswer(safeStaff, w)
 }
 
-func (s *staffHandler) AddStaffHandler(w http.ResponseWriter, r *http.Request) {
+func (s *StaffHandler) AddStaffHandler(w http.ResponseWriter, r *http.Request) {
 	staffObj, err := s.fetchStaff(r)
 	uuid := r.FormValue("uuid")
 	if err != nil && uuid != "" {
@@ -115,9 +115,9 @@ func (s *staffHandler) AddStaffHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session := r.Context().Value("session").(*sessions.Session)
-
 	session.Values["userID"] = safeStaff.StaffID
 	err = session.Save(r, w)
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -126,7 +126,7 @@ func (s *staffHandler) AddStaffHandler(w http.ResponseWriter, r *http.Request) {
 	responses.SendOKAnswer(safeStaff, w)
 }
 
-func (s *staffHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
+func (s *StaffHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	data, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 
@@ -168,7 +168,7 @@ func (s *staffHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (s *staffHandler) GetStaffByIdHandler(w http.ResponseWriter, r *http.Request) {
+func (s *StaffHandler) GetStaffByIdHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
 		message := fmt.Sprintf("bad id: %s", mux.Vars(r)["id"])
@@ -187,7 +187,7 @@ func (s *staffHandler) GetStaffByIdHandler(w http.ResponseWriter, r *http.Reques
 	return
 }
 
-func (s *staffHandler) GetCurrentStaffHandler(w http.ResponseWriter, r *http.Request) {
+func (s *StaffHandler) GetCurrentStaffHandler(w http.ResponseWriter, r *http.Request) {
 	staffObj, err := s.SUsecase.GetFromSession(r.Context())
 
 	if err != nil {
@@ -199,7 +199,7 @@ func (s *staffHandler) GetCurrentStaffHandler(w http.ResponseWriter, r *http.Req
 	return
 }
 
-func (s *staffHandler) EditStaffHandler(w http.ResponseWriter, r *http.Request) {
+func (s *StaffHandler) EditStaffHandler(w http.ResponseWriter, r *http.Request) {
 	staffUnsafe, err := s.fetchStaff(r)
 	if err != nil {
 		responses.SendSingleError(err.Error(), w)
@@ -227,7 +227,7 @@ func (s *staffHandler) EditStaffHandler(w http.ResponseWriter, r *http.Request) 
 	return
 }
 
-func (s *staffHandler) GenerateQrHandler(w http.ResponseWriter, r *http.Request) {
+func (s *StaffHandler) GenerateQrHandler(w http.ResponseWriter, r *http.Request) {
 	CafeId, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
 		message := fmt.Sprintf("bad id: %s", mux.Vars(r)["id"])
@@ -242,7 +242,7 @@ func (s *staffHandler) GenerateQrHandler(w http.ResponseWriter, r *http.Request)
 	responses.SendOKAnswer(pathToQr, w)
 }
 
-func (s *staffHandler) GetStaffListHandler(w http.ResponseWriter, r *http.Request) {
+func (s *StaffHandler) GetStaffListHandler(w http.ResponseWriter, r *http.Request) {
 	ownerId, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
 		responses.SendSingleError(err.Error(), w)
