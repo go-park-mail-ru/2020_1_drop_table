@@ -132,12 +132,3 @@ func TestAddUuid(t *testing.T) {
 	err := rep.AddUuid(context.TODO(), "asdasdasdasd", -1)
 	assert.NotNil(t, err)
 }
-
-func TestGetList(t *testing.T) {
-	con, mock := getEmptyDb()
-	rows := sqlmock.NewRows([]string{"cafename", "staffid", "photo", "position"}).AddRow("test", 2, "photo", "position")
-	mock.ExpectQuery("SELECT cafe.cafename,s.staffid,s.photo,s.name,s.position from cafe left join staff s on cafe.cafeid = s.cafeid where cafe.staffid=$1 ORDER BY cafe.cafeid").WithArgs(229).WillReturnRows(rows)
-	rep := NewPostgresStaffRepository(con)
-	_, err := rep.GetStaffListByOwnerId(context.TODO(), 229)
-	assert.Nil(t, err)
-}
