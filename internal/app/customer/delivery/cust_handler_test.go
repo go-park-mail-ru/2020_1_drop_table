@@ -1,4 +1,4 @@
-package test
+package delivery
 
 import (
 	http3 "2020_1_drop_table/internal/app/customer/delivery/http"

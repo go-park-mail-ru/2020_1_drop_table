@@ -1,8 +1,7 @@
-package test
+package repository
 
 import (
 	"2020_1_drop_table/internal/app/staff/models"
-	"2020_1_drop_table/internal/app/staff/repository"
 	"2020_1_drop_table/internal/pkg/hasher"
 	"context"
 	"database/sql"
@@ -70,7 +69,7 @@ func TestAdd(t *testing.T) {
 		Password: "123",
 	}
 	con, err := getDataBase()
-	rep := repository.NewPostgresStaffRepository(con)
+	rep := NewPostgresStaffRepository(con)
 	_, err = rep.Add(context.TODO(), st)
 	assert.NotNil(t, err)
 
@@ -89,7 +88,7 @@ func TestGetByEmail(t *testing.T) {
 		CafeId:   0,
 		Position: "position",
 	}
-	rep := repository.NewPostgresStaffRepository(con)
+	rep := NewPostgresStaffRepository(con)
 	res, err := rep.GetByEmail(context.TODO(), "valid@valid.ru")
 	assert.Nil(t, err)
 	assert.Equal(t, resUser.Email, res.Email)
@@ -100,7 +99,7 @@ func TestGetByEmail(t *testing.T) {
 
 func TestGetById(t *testing.T) {
 	con, err := getDataBase()
-	rep := repository.NewPostgresStaffRepository(con)
+	rep := NewPostgresStaffRepository(con)
 	_, err = rep.GetByID(context.TODO(), -228)
 	fmt.Println(err)
 	assert.NotNil(t, err)
@@ -109,7 +108,7 @@ func TestGetById(t *testing.T) {
 func TestUpdate(t *testing.T) {
 	con, mock := getEmptyDb()
 	addUpdateSupport(mock)
-	rep := repository.NewPostgresStaffRepository(con)
+	rep := NewPostgresStaffRepository(con)
 	resUser := models.SafeStaff{
 		StaffID:  1,
 		Name:     "test",
@@ -129,16 +128,7 @@ func TestAddUuid(t *testing.T) {
 	db, mock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	con := sqlx.NewDb(db, "sqlmock")
 	mock.ExpectQuery("INSERT into UuidCafeRepository(uuid, cafeId) VALUES ($1,$2)").WithArgs("asdasdasdasd", -1).WillReturnError(nil)
-	rep := repository.NewPostgresStaffRepository(con)
+	rep := NewPostgresStaffRepository(con)
 	err := rep.AddUuid(context.TODO(), "asdasdasdasd", -1)
 	assert.NotNil(t, err)
-}
-
-func TestGetList(t *testing.T) {
-	con, mock := getEmptyDb()
-	rows := sqlmock.NewRows([]string{"cafename", "staffid", "photo", "position"}).AddRow("test", 2, "photo", "position")
-	mock.ExpectQuery("SELECT cafe.cafename,s.staffid,s.photo,s.name,s.position from cafe left join staff s on cafe.cafeid = s.cafeid where cafe.staffid=$1 ORDER BY cafe.cafeid").WithArgs(229).WillReturnRows(rows)
-	rep := repository.NewPostgresStaffRepository(con)
-	_, err := rep.GetStaffListByOwnerId(context.TODO(), 229)
-	assert.Nil(t, err)
 }

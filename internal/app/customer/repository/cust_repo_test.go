@@ -1,8 +1,7 @@
-package test
+package repository
 
 import (
 	"2020_1_drop_table/internal/app/customer/models"
-	"2020_1_drop_table/internal/app/customer/repository"
 	"context"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jmoiron/sqlx"
@@ -22,7 +21,7 @@ func TestAdd(t *testing.T) {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
 	sqlxDB := sqlx.NewDb(db, "sqlmock")
-	rep := repository.NewPostgresCustomerRepository(sqlxDB)
+	rep := NewPostgresCustomerRepository(sqlxDB)
 	query := `INSERT INTO Customer(
     CafeID, 
 	Points) 
@@ -47,7 +46,7 @@ func TestSetLoyalityPoints(t *testing.T) {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
 	sqlxDB := sqlx.NewDb(db, "sqlmock")
-	rep := repository.NewPostgresCustomerRepository(sqlxDB)
+	rep := NewPostgresCustomerRepository(sqlxDB)
 	query := `UPDATE Customer SET Points=$1 WHERE CustomerID=$2 RETURNING *`
 	ret := models.Customer{
 		CustomerID: "1",
@@ -67,7 +66,7 @@ func TestGetById(t *testing.T) {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
 	sqlxDB := sqlx.NewDb(db, "sqlmock")
-	rep := repository.NewPostgresCustomerRepository(sqlxDB)
+	rep := NewPostgresCustomerRepository(sqlxDB)
 	query := `SELECT * FROM Customer WHERE CustomerID=$1`
 	ret := models.Customer{
 		CustomerID: "1",

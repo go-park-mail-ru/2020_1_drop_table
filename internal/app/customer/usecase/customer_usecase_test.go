@@ -1,9 +1,8 @@
-package test
+package usecase
 
 import (
 	"2020_1_drop_table/internal/app/customer/mocks"
 	"2020_1_drop_table/internal/app/customer/models"
-	"2020_1_drop_table/internal/app/customer/usecase"
 	staffMocks "2020_1_drop_table/internal/app/staff/mocks"
 	models2 "2020_1_drop_table/internal/app/staff/models"
 	"context"
@@ -24,7 +23,7 @@ func TestGetPoints(t *testing.T) {
 		Points:     228,
 	}
 	crepo.On("GetByID", mock.AnythingOfType("*context.timerCtx"), uuid).Return(retCust, nil)
-	ucase := usecase.NewCustomerUsecase(crepo, sucase, timeout)
+	ucase := NewCustomerUsecase(crepo, sucase, timeout)
 
 	points, err := ucase.GetPoints(context.TODO(), uuid)
 	assert.Nil(t, err)
@@ -58,7 +57,7 @@ func TestSetPoints(t *testing.T) {
 	}
 	sucase.On("GetFromSession", mock.AnythingOfType("*context.timerCtx")).Return(returnStaff, nil)
 
-	ucase := usecase.NewCustomerUsecase(crepo, sucase, timeout)
+	ucase := NewCustomerUsecase(crepo, sucase, timeout)
 
 	err := ucase.SetPoints(context.TODO(), uuid, newPoints)
 	assert.Nil(t, err)
