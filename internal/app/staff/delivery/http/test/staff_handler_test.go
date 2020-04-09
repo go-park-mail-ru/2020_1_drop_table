@@ -42,6 +42,42 @@ func createMultipartFormData(t *testing.T, data string) (bytes.Buffer, *multipar
 	return b, w
 }
 
+func TestGetById(t *testing.T) {
+
+	returnStaff := models.SafeStaff{
+		StaffID:  228,
+		Name:     "",
+		Email:    "",
+		EditedAt: time.Time{},
+		Photo:    "",
+		IsOwner:  false,
+		CafeId:   0,
+		Position: "",
+	}
+	const url = "/api/v1/staff/"
+
+	mockstaffUcase := new(mocks.Usecase)
+	mockstaffUcase.On("GetByID", mock.AnythingOfType("*context.valueCtx"), 228).Return(returnStaff, nil)
+	handler := http2.StaffHandler{SUsecase: mockstaffUcase}
+	buf, wr := createMultipartFormData(t, "")
+	req, err := http.NewRequest("GET", url, &buf)
+	req = mux.SetURLVars(req, map[string]string{
+		"id": "228",
+	})
+	assert.Nil(t, err)
+	req.Header.Set("Content-Type", wr.FormDataContentType())
+	respWriter := httptest.NewRecorder()
+	handler.GetStaffByIdHandler(respWriter, req)
+	resp := respWriter.Result()
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	var responseStruct staffHttpResponse
+	err = json.Unmarshal(body, &responseStruct)
+	assert.NoError(t, err)
+	assert.Equal(t, responseStruct.Data, returnStaff)
+
+}
+
 type staffHttpResponse struct {
 	Data   models.SafeStaff
 	Errors []responses.HttpError
@@ -106,6 +142,43 @@ func TestGenerateQrHandler(t *testing.T) {
 	err = json.Unmarshal(body, &responseStruct)
 	assert.NoError(t, err)
 	assert.Equal(t, responseStruct.Data, "path")
+
+}
+
+func TestEditStaff(t *testing.T) {
+
+	returnStaff := models.SafeStaff{
+		StaffID:  228,
+		Name:     "",
+		Email:    "",
+		EditedAt: time.Time{},
+		Photo:    "",
+		IsOwner:  false,
+		CafeId:   0,
+		Position: "",
+	}
+	const url = "/api/v1/staff/"
+
+	mockstaffUcase := new(mocks.Usecase)
+	mockstaffUcase.On("Update", mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("models.SafeStaff")).Return(returnStaff, nil)
+	handler := http2.StaffHandler{SUsecase: mockstaffUcase}
+	str, _ := json.Marshal(returnStaff)
+	buf, wr := createMultipartFormData(t, string(str))
+	req, err := http.NewRequest("GET", url, &buf)
+	req = mux.SetURLVars(req, map[string]string{
+		"id": "228",
+	})
+	assert.Nil(t, err)
+	req.Header.Set("Content-Type", wr.FormDataContentType())
+	respWriter := httptest.NewRecorder()
+	handler.EditStaffHandler(respWriter, req)
+	resp := respWriter.Result()
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	var responseStruct staffHttpResponse
+	err = json.Unmarshal(body, &responseStruct)
+	assert.NoError(t, err)
+	assert.Equal(t, responseStruct.Data, returnStaff)
 
 }
 
