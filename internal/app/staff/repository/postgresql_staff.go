@@ -107,11 +107,12 @@ func (p *postgresStaffRepository) GetStaffListByOwnerId(ctx context.Context, own
 func addCafeToList(staffList []models.StaffByOwnerResponse) map[string][]models.StaffByOwnerResponse {
 	result := make(map[string][]models.StaffByOwnerResponse)
 	for _, staff := range staffList {
+		key := staff.CafeId + "," + staff.CafeName
 		if staff.StaffId == nil {
-			result[staff.CafeId] = nil
+			result[key] = nil
 			continue
 		}
-		result[staff.CafeId] = append(result[staff.CafeId], staff)
+		result[key] = append(result[key], staff)
 	}
 	return result
 }
