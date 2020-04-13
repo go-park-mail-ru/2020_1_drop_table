@@ -296,7 +296,6 @@ func TestUpdate(t *testing.T) {
 	CafeName=$1, 
 	Address=$2, 
 	Description=$3, 
-	StaffID=$4, 
 	OpenTime=$5, 
 	CloseTime=$6, 
 	Photo=NotEmpty($7,Photo) 
