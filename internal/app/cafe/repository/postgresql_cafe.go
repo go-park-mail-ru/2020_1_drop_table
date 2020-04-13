@@ -23,7 +23,7 @@ func (p *postgresCafeRepository) Add(ctx context.Context, ca models.Cafe) (model
 	Address, 
 	Description, 
 	StaffID, 
-	OpenTime, 
+	OpenTime,
 	CloseTime, 
 	Photo) 
 	VALUES ($1,$2,$3,$4,$5,$6,$7) 
@@ -67,7 +67,6 @@ func (p *postgresCafeRepository) Update(ctx context.Context, newCafe models.Cafe
 	CafeName=$1, 
 	Address=$2, 
 	Description=$3, 
-	StaffID=$4, 
 	OpenTime=$5, 
 	CloseTime=$6, 
 	Photo=NotEmpty($7,Photo) 
@@ -77,7 +76,7 @@ func (p *postgresCafeRepository) Update(ctx context.Context, newCafe models.Cafe
 	var CafeDB models.Cafe
 
 	err := p.Conn.GetContext(ctx, &CafeDB, query, newCafe.CafeName, newCafe.Address, newCafe.Description,
-		newCafe.StaffID, newCafe.OpenTime, newCafe.CloseTime, newCafe.Photo, newCafe.CafeID)
+		newCafe.OpenTime, newCafe.CloseTime, newCafe.Photo, newCafe.CafeID)
 
 	return CafeDB, err
 }
