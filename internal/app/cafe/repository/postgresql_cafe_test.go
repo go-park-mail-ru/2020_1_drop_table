@@ -296,10 +296,10 @@ func TestUpdate(t *testing.T) {
 	CafeName=$1, 
 	Address=$2, 
 	Description=$3, 
-	OpenTime=$5, 
-	CloseTime=$6, 
-	Photo=NotEmpty($7,Photo) 
-	WHERE CafeID=$8
+	OpenTime=$4, 
+	CloseTime=$5, 
+	Photo=NotEmpty($6,Photo) 
+	WHERE CafeID=$7
 	RETURNING *`
 
 	testCases := []updateTestCase{
@@ -319,12 +319,17 @@ func TestUpdate(t *testing.T) {
 		message := fmt.Sprintf("test case number: %d", i)
 
 		args := []driver.Value{testCase.cafe.CafeID, testCase.cafe.CafeName,
+			testCase.cafe.Address, testCase.cafe.Description, testCase.cafe.OpenTime,
+			testCase.cafe.CloseTime, testCase.cafe.Photo, testCase.cafe.PublishedApplePassID,
+			testCase.cafe.SavedApplePassID}
+
+		rows := []driver.Value{testCase.cafe.CafeID, testCase.cafe.CafeName,
 			testCase.cafe.Address, testCase.cafe.Description, testCase.cafe.StaffID,
 			testCase.cafe.OpenTime, testCase.cafe.CloseTime, testCase.cafe.Photo,
 			testCase.cafe.PublishedApplePassID, testCase.cafe.SavedApplePassID}
 
 		if testCase.err == nil {
-			rows := sqlmock.NewRows(columnNames).AddRow(args...)
+			rows := sqlmock.NewRows(columnNames).AddRow(rows...)
 			// append is needed to make cafeID last param
 			// till the second before end to delete apple passes IDs
 			mock.ExpectQuery(query).WithArgs(append(args[1:len(args)-2], args[0])...).WillReturnRows(rows)
