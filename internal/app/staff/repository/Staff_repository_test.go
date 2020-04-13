@@ -16,15 +16,21 @@ import (
 func addGetByEmailSupport(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{"staffid", "name", "email", "password", "editedat", "photo", "isowner", "cafeid", "position"}).
 		AddRow(1, "test", "valid@valid.ru", "123", time.Now().UTC(), "photo", true, 0, "position")
-	mock.ExpectQuery("SELECT * FROM Staff WHERE email=$1").WithArgs("valid@valid.ru").WillReturnRows(rows)
-	mock.ExpectQuery("SELECT * FROM Staff WHERE email=$1").WithArgs("notexist").WillReturnError(sql.ErrNoRows)
+	mock.ExpectQuery("SELECT StaffID, Name, Email, EditedAt, Photo, IsOwner, CafeId, Position FROM Staff WHERE email=$1").WithArgs("valid@valid.ru").WillReturnRows(rows)
+	mock.ExpectQuery("SELECT StaffID, Name, Email, EditedAt, Photo, IsOwner, CafeId, Position FROM Staff WHERE email=$1").WithArgs("notexist").WillReturnError(sql.ErrNoRows)
 }
 
 func addUpdateSupport(mock sqlmock.Sqlmock) {
+	query := `UPDATE Staff SET 
+                 name=$1,
+                 email=$2,
+                 editedat=$3,
+                 photo=$4 WHERE staffid = $5
+				RETURNING StaffID, Name, Email, EditedAt, Photo, IsOwner, CafeId, Position`
+
 	rows := sqlmock.NewRows([]string{"staffid", "name", "email", "editedat", "photo", "isowner", "cafeid", "position"}).
 		AddRow(1, "test", "valid@valid.ru", time.Now().UTC(), "photo", true, 0, "position")
-	mock.ExpectQuery(`UPDATE Staff SET name=$1,email=$2,editedat=$3,photo=$4 WHERE staffid = $5 RETURNING StaffID, Name, Email,
-			  EditedAt, Photo, IsOwner, CafeId, Position`).WithArgs("test", "valid@valid.ru", time.Time{}, "", 1).WillReturnRows(rows)
+	mock.ExpectQuery(query).WithArgs("test", "valid@valid.ru", time.Time{}, "", 1).WillReturnRows(rows)
 
 }
 
