@@ -23,7 +23,6 @@ import (
 	"github.com/rs/zerolog/log"
 	redisStore "gopkg.in/boj/redistore.v1"
 	"net/http"
-	"time"
 )
 
 func main() {
@@ -39,7 +38,8 @@ func main() {
 
 	middleware.NewMiddleware(r, CookieStore)
 
-	timeoutContext := configs.TimeOut
+	timeoutContext := configs.Timeouts.ContextTimeout
+
 	connStr := fmt.Sprintf("user=%s password=%s dbname=postgres sslmode=disable port=%s",
 		configs.PostgresPreferences.User,
 		configs.PostgresPreferences.Password,
@@ -87,8 +87,8 @@ func main() {
 	srv := &http.Server{
 		Handler:      r,
 		Addr:         "127.0.0.1:8080",
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
+		WriteTimeout: configs.Timeouts.WriteTimeout,
+		ReadTimeout:  configs.Timeouts.ReadTimeout,
 	}
 	log.Error().Msgf(srv.ListenAndServe().Error())
 }
