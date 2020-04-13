@@ -87,18 +87,16 @@ func (ap *applePassKitHandler) fetchPass(r *http.Request) (models.ApplePassDB, e
 
 func extractBoolValue(r *http.Request, valueName string) (bool, error) {
 	ValueStr, ok := r.URL.Query()[valueName]
-	var value bool
-	var err error
 
 	if !ok {
-		value = false
-	} else {
-		value, err = strconv.ParseBool(ValueStr[0])
-		if err != nil {
-			return false, err
-		} else if len(ValueStr) > 1 {
-			return false, err
-		}
+		return false, nil
+	}
+
+	value, err := strconv.ParseBool(ValueStr[0])
+	if err != nil {
+		return false, err
+	} else if len(ValueStr) > 1 {
+		return false, err
 	}
 
 	return value, nil
