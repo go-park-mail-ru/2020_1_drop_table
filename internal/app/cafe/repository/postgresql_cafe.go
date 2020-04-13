@@ -67,10 +67,10 @@ func (p *postgresCafeRepository) Update(ctx context.Context, newCafe models.Cafe
 	CafeName=$1, 
 	Address=$2, 
 	Description=$3, 
-	OpenTime=$5, 
-	CloseTime=$6, 
-	Photo=NotEmpty($7,Photo) 
-	WHERE CafeID=$8
+	OpenTime=$4, 
+	CloseTime=$5, 
+	Photo=NotEmpty($6,Photo) 
+	WHERE CafeID=$7
 	RETURNING *`
 
 	var CafeDB models.Cafe
