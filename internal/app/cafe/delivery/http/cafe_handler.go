@@ -37,7 +37,6 @@ func (c *CafeHandler) fetchCafe(r *http.Request) (models.Cafe, error) {
 	}
 
 	jsonData := r.FormValue("jsonData")
-	fmt.Println(jsonData)
 	if jsonData == "" || jsonData == "null" {
 		return models.Cafe{}, globalModels.ErrEmptyJSON
 	}
