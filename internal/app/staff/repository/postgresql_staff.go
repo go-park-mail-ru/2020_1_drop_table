@@ -18,7 +18,18 @@ func NewPostgresStaffRepository(conn *sqlx.DB) PostgresStaffRepository {
 }
 
 func (p *PostgresStaffRepository) Add(ctx context.Context, st models.Staff) (models.Staff, error) {
-	query := `INSERT into staff(name, email, password, editedat, photo, isowner, cafeid, position) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`
+	query := `INSERT into staff(
+                  name, 
+                  email, 
+                  password,
+                  editedat,
+                  photo, 
+                  isowner, 
+                  cafeid, 
+                  position) 
+                  VALUES ($1,$2,$3,$4,$5,$6,$7,$8) 
+                  RETURNING StaffID, Name, Email, EditedAt, Photo, IsOwner, CafeId, Position`
+
 	var dbStaff models.Staff
 	hashedPassword, err := hasher.HashAndSalt(nil, st.Password)
 	if err != nil {
@@ -31,7 +42,7 @@ func (p *PostgresStaffRepository) Add(ctx context.Context, st models.Staff) (mod
 func (p *PostgresStaffRepository) GetByEmail(ctx context.Context,
 	email string) (models.Staff, error) {
 
-	query := `SELECT * FROM Staff WHERE email=$1`
+	query := `SELECT StaffID, Name, Email, EditedAt, Photo, IsOwner, CafeId, Position FROM Staff WHERE email=$1`
 
 	var dbStaff models.Staff
 	err := p.conn.GetContext(ctx, &dbStaff, query, email)
@@ -40,7 +51,7 @@ func (p *PostgresStaffRepository) GetByEmail(ctx context.Context,
 }
 
 func (p *PostgresStaffRepository) GetByID(ctx context.Context, id int) (models.Staff, error) {
-	query := `SELECT * FROM Staff WHERE StaffID=$1`
+	query := `SELECT StaffID, Name, Email, EditedAt, Photo, IsOwner, CafeId, Position FROM Staff WHERE StaffID=$1`
 
 	var dbStaff models.Staff
 	err := p.conn.GetContext(ctx, &dbStaff, query, id)
@@ -53,8 +64,12 @@ func (p *PostgresStaffRepository) GetByID(ctx context.Context, id int) (models.S
 }
 
 func (p *PostgresStaffRepository) Update(ctx context.Context, newStaff models.SafeStaff) (models.SafeStaff, error) {
-	query := `UPDATE Staff SET name=$1,email=$2,editedat=$3,photo=$4 WHERE staffid = $5 RETURNING StaffID, Name, Email,
-			  EditedAt, Photo, IsOwner, CafeId, Position`
+	query := `UPDATE Staff SET 
+                 name=$1,
+                 email=$2,
+                 editedat=$3,
+                 photo=$4 WHERE staffid = $5
+				RETURNING StaffID, Name, Email, EditedAt, Photo, IsOwner, CafeId, Position`
 
 	var dbStaff models.SafeStaff
 	err := p.conn.GetContext(ctx, &dbStaff, query, newStaff.Name, newStaff.Email, newStaff.EditedAt,
@@ -83,17 +98,21 @@ func (p *PostgresStaffRepository) DeleteUuid(ctx context.Context, uuid string) e
 	return err
 }
 
-func (p *PostgresStaffRepository) GetCafeId(ctx context.Context, uuid string) (int, error) {
-	var id int
+func (p *PostgresStaffRepository) GetCafeId(ctx context.Context, uuid string) (id int, err error) {
 	query := `SELECT cafeid FROM uuidcaferepository WHERE uuid=$1`
-	err := p.conn.GetContext(ctx, &id, query, uuid)
+	err = p.conn.GetContext(ctx, &id, query, uuid)
 	return id, err
-
 }
 
 func (p *PostgresStaffRepository) GetStaffListByOwnerId(ctx context.Context, ownerId int) (map[string][]models.StaffByOwnerResponse, error) {
 	var data []models.StaffByOwnerResponse
-	query := `SELECT cafe.cafeid,cafe.cafename,s.staffid,s.photo,s.name,s.position from cafe left join staff s on cafe.cafeid = s.cafeid where cafe.staffid=$1 ORDER BY cafe.cafeid
+	query := `SELECT 
+       cafe.cafeid,
+       cafe.cafename,
+       s.staffid,
+       s.photo,
+       s.name,
+       s.position from cafe left join staff s on cafe.cafeid = s.cafeid where cafe.staffid=$1 ORDER BY cafe.cafeid
 `
 	err := p.conn.SelectContext(ctx, &data, query, ownerId)
 	if err != nil {
