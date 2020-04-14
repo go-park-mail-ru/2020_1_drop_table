@@ -68,12 +68,13 @@ func (p *PostgresStaffRepository) Update(ctx context.Context, newStaff models.Sa
                  name=$1,
                  email=$2,
                  editedat=$3,
-                 photo=$4 WHERE staffid = $5
+                 photo=$4,
+                 position=$5 WHERE staffid = $6
 				RETURNING StaffID, Name, Email, EditedAt, Photo, IsOwner, CafeId, Position`
 
 	var dbStaff models.SafeStaff
 	err := p.conn.GetContext(ctx, &dbStaff, query, newStaff.Name, newStaff.Email, newStaff.EditedAt,
-		newStaff.Photo, newStaff.StaffID)
+		newStaff.Photo, newStaff.Position, newStaff.StaffID)
 
 	return dbStaff, err
 }
