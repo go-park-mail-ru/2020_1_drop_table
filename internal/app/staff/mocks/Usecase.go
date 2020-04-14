@@ -49,6 +49,20 @@ func (_m *Usecase) DeleteQrCodes(uString string) error {
 	return r0
 }
 
+// DeleteStaffById provides a mock function with given fields: ctx, staffId
+func (_m *Usecase) DeleteStaffById(ctx context.Context, staffId int) error {
+	ret := _m.Called(ctx, staffId)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int) error); ok {
+		r0 = rf(ctx, staffId)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // GetByEmailAndPassword provides a mock function with given fields: c, form
 func (_m *Usecase) GetByEmailAndPassword(c context.Context, form models.LoginForm) (models.SafeStaff, error) {
 	ret := _m.Called(c, form)

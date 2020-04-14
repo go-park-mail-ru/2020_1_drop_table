@@ -70,6 +70,20 @@ func (_m *Repository) CheckIsOwner(ctx context.Context, staffId int) (bool, erro
 	return r0, r1
 }
 
+// DeleteStaff provides a mock function with given fields: ctx, staffId
+func (_m *Repository) DeleteStaff(ctx context.Context, staffId int) error {
+	ret := _m.Called(ctx, staffId)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int) error); ok {
+		r0 = rf(ctx, staffId)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // DeleteUuid provides a mock function with given fields: ctx, uuid
 func (_m *Repository) DeleteUuid(ctx context.Context, uuid string) error {
 	ret := _m.Called(ctx, uuid)
