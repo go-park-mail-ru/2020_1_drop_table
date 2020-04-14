@@ -17,4 +17,5 @@ type Usecase interface {
 	GetCafeId(c context.Context, uuid string) (int, error)
 	GetStaffId(c context.Context) (int, error)
 	GetStaffListByOwnerId(ctx context.Context, ownerId int) (map[string][]models.StaffByOwnerResponse, error)
+	DeleteStaffById(ctx context.Context, staffId int) error
 }
