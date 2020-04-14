@@ -25,12 +25,13 @@ func addUpdateSupport(mock sqlmock.Sqlmock) {
                  name=$1,
                  email=$2,
                  editedat=$3,
-                 photo=$4 WHERE staffid = $5
+                 photo=$4,
+				 position=$5 WHERE staffid = $6
 				RETURNING StaffID, Name, Email, EditedAt, Photo, IsOwner, CafeId, Position`
 
 	rows := sqlmock.NewRows([]string{"staffid", "name", "email", "editedat", "photo", "isowner", "cafeid", "position"}).
 		AddRow(1, "test", "valid@valid.ru", time.Now().UTC(), "photo", true, 0, "position")
-	mock.ExpectQuery(query).WithArgs("test", "valid@valid.ru", time.Time{}, "", 1).WillReturnRows(rows)
+	mock.ExpectQuery(query).WithArgs("test", "valid@valid.ru", time.Time{}, "", "position", 1).WillReturnRows(rows)
 
 }
 
