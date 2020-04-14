@@ -251,3 +251,20 @@ func (s *staffUsecase) GetStaffListByOwnerId(ctx context.Context, ownerId int) (
 
 	return emptMap, globalModels.ErrForbidden
 }
+
+func (s *staffUsecase) DeleteStaffById(ctx context.Context, staffId int) error {
+	ctx, cancel := context.WithTimeout(ctx, s.contextTimeout)
+	defer cancel()
+
+	requestUser, err := s.GetFromSession(ctx)
+	if err != nil {
+		return globalModels.ErrForbidden
+	}
+	fmt.Println(requestUser) //TODO все проверки на овнера и тд
+	staffList, err := s.GetStaffListByOwnerId(ctx, requestUser.StaffID)
+	if err != nil {
+		return globalModels.ErrForbidden
+	}
+	fmt.Println(staffList)
+	return nil
+}

@@ -34,6 +34,8 @@ func NewStaffHandler(r *mux.Router, us staff.Usecase) {
 	r.HandleFunc("/api/v1/staff/generateQr/{id:[0-9]+}", permissions.SetCSRF(handler.GenerateQrHandler)).Methods("GET")
 	r.HandleFunc("/api/v1/add_staff", permissions.SetCSRF(handler.AddStaffHandler)).Methods("POST")
 	r.HandleFunc("/api/v1/staff/get_staff_list/{id:[0-9]+}", permissions.SetCSRF(handler.GetStaffListHandler)).Methods("GET")
+	r.HandleFunc("/api/v1/staff/delete_staff/{id:[0-9]+}", permissions.CheckCSRF(handler.DeleteStaff)).Methods("POST")
+
 }
 
 func (s *StaffHandler) fetchStaff(r *http.Request) (models.Staff, error) {
@@ -254,4 +256,18 @@ func (s *StaffHandler) GetStaffListHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	responses.SendOKAnswer(res, w)
+}
+
+func (s *StaffHandler) DeleteStaff(w http.ResponseWriter, r *http.Request) {
+	staffID, err := strconv.Atoi(mux.Vars(r)["id"])
+	if err != nil {
+		responses.SendSingleError(globalModels.ErrBadRequest.Error(), w)
+		return
+	}
+	err = s.SUsecase.DeleteStaffById(r.Context(), staffID)
+	if err != nil {
+		responses.SendSingleError(err.Error(), w)
+		return
+	}
+	responses.SendOKAnswer(nil, w)
 }
