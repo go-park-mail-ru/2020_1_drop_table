@@ -42,7 +42,7 @@ func (p *PostgresStaffRepository) Add(ctx context.Context, st models.Staff) (mod
 func (p *PostgresStaffRepository) GetByEmail(ctx context.Context,
 	email string) (models.Staff, error) {
 
-	query := `SELECT StaffID, Name, Email, EditedAt, Photo, IsOwner, CafeId, Position FROM Staff WHERE email=$1`
+	query := `SELECT StaffID, Name, Email, EditedAt, Photo, IsOwner, CafeId, Position, Password FROM Staff WHERE email=$1`
 
 	var dbStaff models.Staff
 	err := p.conn.GetContext(ctx, &dbStaff, query, email)
@@ -121,6 +121,12 @@ func (p *PostgresStaffRepository) GetStaffListByOwnerId(ctx context.Context, own
 	}
 	return addCafeToList(data), err
 
+}
+
+func (p *PostgresStaffRepository) DeleteStaff(ctx context.Context, staffId int) error {
+	query := `DELETE FROM staff where staffid=$1`
+	_, err := p.conn.ExecContext(ctx, query, staffId)
+	return err
 }
 
 func addCafeToList(staffList []models.StaffByOwnerResponse) map[string][]models.StaffByOwnerResponse {

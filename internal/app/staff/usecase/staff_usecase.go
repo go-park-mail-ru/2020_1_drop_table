@@ -252,19 +252,33 @@ func (s *staffUsecase) GetStaffListByOwnerId(ctx context.Context, ownerId int) (
 	return emptMap, globalModels.ErrForbidden
 }
 
+func (s *staffUsecase) CheckIfStaffInOwnerCafes(ctx context.Context, requestUser models.SafeStaff, staffId int) (bool, error) {
+
+	staffList, err := s.GetStaffListByOwnerId(ctx, requestUser.StaffID)
+	if err != nil {
+		return false, globalModels.ErrForbidden
+	}
+	for _, cafeStaffList := range staffList {
+		for _, staf := range cafeStaffList {
+			if *staf.StaffId == staffId {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
+}
+
 func (s *staffUsecase) DeleteStaffById(ctx context.Context, staffId int) error {
 	ctx, cancel := context.WithTimeout(ctx, s.contextTimeout)
 	defer cancel()
-
 	requestUser, err := s.GetFromSession(ctx)
 	if err != nil {
 		return globalModels.ErrForbidden
 	}
-	fmt.Println(requestUser) //TODO все проверки на овнера и тд
-	staffList, err := s.GetStaffListByOwnerId(ctx, requestUser.StaffID)
-	if err != nil {
+	isIn, err := s.CheckIfStaffInOwnerCafes(ctx, requestUser, staffId)
+	if err != nil || !isIn {
 		return globalModels.ErrForbidden
 	}
-	fmt.Println(staffList)
-	return nil
+	err = s.staffRepo.DeleteStaff(ctx, staffId)
+	return err
 }

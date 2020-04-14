@@ -16,8 +16,8 @@ import (
 func addGetByEmailSupport(mock sqlmock.Sqlmock) {
 	rows := sqlmock.NewRows([]string{"staffid", "name", "email", "password", "editedat", "photo", "isowner", "cafeid", "position"}).
 		AddRow(1, "test", "valid@valid.ru", "123", time.Now().UTC(), "photo", true, 0, "position")
-	mock.ExpectQuery("SELECT StaffID, Name, Email, EditedAt, Photo, IsOwner, CafeId, Position FROM Staff WHERE email=$1").WithArgs("valid@valid.ru").WillReturnRows(rows)
-	mock.ExpectQuery("SELECT StaffID, Name, Email, EditedAt, Photo, IsOwner, CafeId, Position FROM Staff WHERE email=$1").WithArgs("notexist").WillReturnError(sql.ErrNoRows)
+	mock.ExpectQuery("SELECT StaffID, Name, Email, EditedAt, Photo, IsOwner, CafeId, Position, Password FROM Staff WHERE email=$1").WithArgs("valid@valid.ru").WillReturnRows(rows)
+	mock.ExpectQuery("SELECT StaffID, Name, Email, EditedAt, Photo, IsOwner, CafeId, Position, Password FROM Staff WHERE email=$1").WithArgs("notexist").WillReturnError(sql.ErrNoRows)
 }
 
 func addUpdateSupport(mock sqlmock.Sqlmock) {
@@ -129,6 +129,16 @@ func TestUpdate(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, res.Email, resUser.Email)
 }
+
+//func TestDeleteStaff(t *testing.T)  {
+//	db, mock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+//	con := sqlx.NewDb(db, "sqlmock")
+//	query:=`DELETE FROM staff where staffid=$1`
+//	mock.ExpectQuery(query).WithArgs(228).WillReturnError(nil)
+//	rep := NewPostgresStaffRepository(con)
+//	err := rep.DeleteStaff(context.TODO(), 228)
+//	assert.Nil(t,err)
+//}
 
 func TestAddUuid(t *testing.T) {
 	db, mock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
