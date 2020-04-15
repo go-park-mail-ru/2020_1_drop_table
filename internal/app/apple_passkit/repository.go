@@ -11,5 +11,6 @@ type Repository interface {
 	Update(ctx context.Context, newApplePass models.ApplePassDB) error
 	UpdateDesign(ctx context.Context, Design string, id int) error
 	Delete(ctx context.Context, id int) error
-	UpdateMeta(ctx context.Context, cafeID int) (models.ApplePassMeta, error)
+	UpdateMeta(ctx context.Context, cafeID int, meta []byte) error
+	GetMeta(ctx context.Context, cafeID int) (applePassMeta models.ApplePassMeta, err error)
 }

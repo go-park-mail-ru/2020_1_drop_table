@@ -450,7 +450,7 @@ func TestUpdateMeta(t *testing.T) {
 		}
 		rep := repository.NewPostgresApplePassRepository(sqlxDB)
 
-		metaObj, err := rep.UpdateMeta(context.Background(), testCase.cafeID)
+		metaObj, err := rep.UpdateMeta(context.Background(), testCase.cafeID, "")
 		assert.Equal(t, testCase.finalErr, err, message)
 		if err == nil {
 			assert.Equal(t, testCase.outputMeta, metaObj, message)

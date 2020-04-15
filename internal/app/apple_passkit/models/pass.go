@@ -12,9 +12,8 @@ type ApplePassDB struct {
 }
 
 type ApplePassMeta struct {
-	ApplePassMetaID string `structs:"-"`
-	CafeID          string `structs:"-"`
-	PassesCount     string `structs:"PassesCount"`
+	CafeID int                    `structs:"-"`
+	Meta   map[string]interface{} `structs:"Meta"`
 }
 
 type UpdateResponse struct {

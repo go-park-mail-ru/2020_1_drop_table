@@ -8,8 +8,15 @@ type updateFunc func(oldVal interface{}) (interface{}, error)
 
 var onUpdateFunctions map[string]updateFunc
 
+var EmptyMeta map[string]interface{}
+
 func init() {
 	onUpdateFunctions = map[string]updateFunc{}
 
 	onUpdateFunctions["PassesCount"] = update_functions.UpdateVarPassesCount
+
+	EmptyMeta = map[string]interface{}{}
+	for key := range onUpdateFunctions {
+		EmptyMeta[key] = ""
+	}
 }

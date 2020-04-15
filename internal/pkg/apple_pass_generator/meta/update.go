@@ -5,7 +5,9 @@ import (
 	"fmt"
 )
 
-func UpdateMeta(oldValues map[string]interface{}) (map[string]interface{}, error) {
+type Meta struct{}
+
+func (m *Meta) UpdateMeta(oldValues map[string]interface{}) (map[string]interface{}, error) {
 	newValues := map[string]interface{}{}
 	for key, element := range oldValues {
 		f, ok := onUpdateFunctions[key]

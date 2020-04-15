@@ -99,7 +99,7 @@ func (_m *Repository) UpdateDesign(ctx context.Context, Design string, id int) e
 }
 
 // UpdateMeta provides a mock function with given fields: ctx, cafeID
-func (_m *Repository) UpdateMeta(ctx context.Context, cafeID int) (models.ApplePassMeta, error) {
+func (_m *Repository) UpdateMeta(ctx context.Context, cafeID int, meta string) (models.ApplePassMeta, error) {
 	ret := _m.Called(ctx, cafeID)
 
 	var r0 models.ApplePassMeta
