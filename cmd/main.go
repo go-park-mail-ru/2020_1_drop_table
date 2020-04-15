@@ -83,7 +83,6 @@ func main() {
 			http.FileServer(http.Dir(configs.MediaFolder))))
 
 	http.Handle("/", r)
-	log.Info().Msgf("starting server at :8080")
 	srv := &http.Server{
 		Handler:      r,
 		Addr:         "127.0.0.1:8080",

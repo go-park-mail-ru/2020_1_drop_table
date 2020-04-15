@@ -97,7 +97,8 @@ func (ap *applePassKitUsecase) getOwnersCafe(ctx context.Context, cafeID int) (c
 	return cafeObj, nil
 }
 
-func (ap *applePassKitUsecase) UpdatePass(c context.Context, pass models.ApplePassDB, cafeID int, publish bool) (models.UpdateResponse, error) {
+func (ap *applePassKitUsecase) UpdatePass(c context.Context, pass models.ApplePassDB, cafeID int,
+	publish bool) (models.UpdateResponse, error) {
 
 	ctx, cancel := context.WithTimeout(c, ap.contextTimeout)
 	defer cancel()
