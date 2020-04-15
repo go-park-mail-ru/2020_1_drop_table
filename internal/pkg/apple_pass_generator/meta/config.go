@@ -17,6 +17,6 @@ func init() {
 
 	EmptyMeta = map[string]interface{}{}
 	for key := range onUpdateFunctions {
-		EmptyMeta[key] = ""
+		EmptyMeta[key] = nil
 	}
 }

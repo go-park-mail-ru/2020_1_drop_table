@@ -16,6 +16,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/fatih/structs"
 	"github.com/gorilla/sessions"
 	"time"
 )
@@ -297,10 +298,12 @@ func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int,
 		return nil, err
 	}
 
-	//passEnv, err := ap.updateMeta(ctx, cafeID)
-	//if err != nil {
-	//	return nil, err
-	//}
+	passEnv, err := ap.updateMeta(ctx, cafeID)
+	if err != nil {
+		return nil, err
+	}
+
+	structs.FillMap(newCustomer, passEnv)
 
 	cardID := -1
 	if published {
@@ -326,7 +329,7 @@ func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int,
 	if err != nil {
 		return nil, err
 	}
-	passBuffer, err := ap.passesGenerator.CreateNewPass(passDBtoPassResource(publishedCardDB, nil))
+	passBuffer, err := ap.passesGenerator.CreateNewPass(passDBtoPassResource(publishedCardDB, passEnv))
 
 	return passBuffer, err
 }
