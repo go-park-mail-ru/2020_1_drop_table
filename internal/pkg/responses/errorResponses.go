@@ -41,7 +41,6 @@ func SendSeveralErrors(errors []HttpError, w http.ResponseWriter) {
 		SendServerError(message, w)
 		return
 	}
-	log.Info().Msgf("errors sent")
 }
 
 func SendForbidden(w http.ResponseWriter) {

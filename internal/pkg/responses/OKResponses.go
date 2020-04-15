@@ -19,5 +19,4 @@ func SendOKAnswer(data interface{}, w http.ResponseWriter) {
 		SendServerError(message, w)
 		return
 	}
-	log.Info().Msgf("OK message sent")
 }
