@@ -16,6 +16,7 @@ import (
 	_staffRepo "2020_1_drop_table/internal/app/staff/repository"
 	_staffUsecase "2020_1_drop_table/internal/app/staff/usecase"
 	"2020_1_drop_table/internal/pkg/apple_pass_generator"
+	"2020_1_drop_table/internal/pkg/apple_pass_generator/meta"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
@@ -68,7 +69,8 @@ func main() {
 	applePassKitRepo := _appleRepo.NewPostgresApplePassRepository(conn)
 
 	applePassKitUcase := _appleUsecase.NewApplePassKitUsecase(applePassKitRepo, cafeRepo, customerRepo,
-		&applePassGenerator, timeoutContext)
+		&applePassGenerator, timeoutContext, &meta.Meta{})
+
 	_appleHttpDeliver.NewPassKitHandler(r, applePassKitUcase)
 
 	customerUseCase := _customerUseCase.NewCustomerUsecase(customerRepo, staffUsecase, timeoutContext)
@@ -83,7 +85,6 @@ func main() {
 			http.FileServer(http.Dir(configs.MediaFolder))))
 
 	http.Handle("/", r)
-	log.Info().Msgf("starting server at :8080")
 	srv := &http.Server{
 		Handler:      r,
 		Addr:         "127.0.0.1:8080",

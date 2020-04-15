@@ -14,6 +14,7 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"github.com/fatih/structs"
 	"github.com/gorilla/sessions"
@@ -25,17 +26,19 @@ type applePassKitUsecase struct {
 	cafeRepo        cafe.Repository
 	customerRepo    customer.Repository
 	passesGenerator passesGenerator.Generator
+	passesMeta      passesGenerator.PassMeta
 	contextTimeout  time.Duration
 }
 
 func NewApplePassKitUsecase(passKitRepo apple_passkit.Repository, cafeRepo cafe.Repository,
 	customerRepo customer.Repository, passesGenerator passesGenerator.Generator,
-	contextTimeout time.Duration) apple_passkit.Usecase {
+	contextTimeout time.Duration, updateMeta passesGenerator.PassMeta) apple_passkit.Usecase {
 	return &applePassKitUsecase{
 		passKitRepo:     passKitRepo,
 		cafeRepo:        cafeRepo,
 		customerRepo:    customerRepo,
 		passesGenerator: passesGenerator,
+		passesMeta:      updateMeta,
 		contextTimeout:  contextTimeout,
 	}
 }
@@ -97,7 +100,8 @@ func (ap *applePassKitUsecase) getOwnersCafe(ctx context.Context, cafeID int) (c
 	return cafeObj, nil
 }
 
-func (ap *applePassKitUsecase) UpdatePass(c context.Context, pass models.ApplePassDB, cafeID int, publish bool) (models.UpdateResponse, error) {
+func (ap *applePassKitUsecase) UpdatePass(c context.Context, pass models.ApplePassDB, cafeID int,
+	publish bool) (models.UpdateResponse, error) {
 
 	ctx, cancel := context.WithTimeout(c, ap.contextTimeout)
 	defer cancel()
@@ -254,6 +258,30 @@ func passDBtoPassResource(db models.ApplePassDB, env map[string]interface{}) pas
 	return passesGenerator.NewApplePass(db.Design, files, env)
 }
 
+func (ap *applePassKitUsecase) updateMeta(ctx context.Context, cafeID int) (map[string]interface{}, error) {
+	meta, err := ap.passKitRepo.GetMeta(ctx, cafeID)
+	if err != nil {
+		return nil, err
+	}
+
+	newMeta, err := ap.passesMeta.UpdateMeta(meta.Meta)
+	if err != nil {
+		return nil, err
+	}
+
+	jsonMeta, err := json.Marshal(newMeta)
+	if err != nil {
+		return nil, err
+	}
+
+	err = ap.passKitRepo.UpdateMeta(ctx, meta.CafeID, jsonMeta)
+	if err != nil {
+		return nil, err
+	}
+
+	return newMeta, nil
+}
+
 func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int, published bool) (*bytes.Buffer, error) {
 	ctx, cancel := context.WithTimeout(c, ap.contextTimeout)
 	defer cancel()
@@ -270,12 +298,11 @@ func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int,
 		return nil, err
 	}
 
-	passMeta, err := ap.passKitRepo.UpdateMeta(ctx, cafeID)
+	passEnv, err := ap.updateMeta(ctx, cafeID)
 	if err != nil {
 		return nil, err
 	}
 
-	passEnv := structs.Map(passMeta)
 	structs.FillMap(newCustomer, passEnv)
 
 	cardID := -1

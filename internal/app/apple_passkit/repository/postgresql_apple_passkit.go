@@ -3,8 +3,10 @@ package repository
 import (
 	"2020_1_drop_table/internal/app/apple_passkit"
 	"2020_1_drop_table/internal/app/apple_passkit/models"
+	"2020_1_drop_table/internal/pkg/apple_pass_generator/meta"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -88,36 +90,60 @@ func (p *postgresApplePassRepository) Delete(ctx context.Context, id int) error 
 	return err
 }
 
-func (p *postgresApplePassRepository) createMeta(ctx context.Context, cafeID int) (models.ApplePassMeta, error) {
+func (p *postgresApplePassRepository) createMeta(ctx context.Context, cafeID int) error {
 	query := `INSERT INTO ApplePassMeta(
 	CafeID,
-	PassesCount)
-	VALUES ($1,1)
-	RETURNING *`
-
-	var dbApplePass models.ApplePassMeta
-	err := p.Conn.GetContext(ctx, &dbApplePass, query, cafeID)
-
+    meta)
+	VALUES ($1, $2)`
+	emptyMeta, err := json.Marshal(meta.EmptyMeta)
 	if err != nil {
-		return models.ApplePassMeta{}, err
+		return err
 	}
 
-	return dbApplePass, err
+	_, err = p.Conn.ExecContext(ctx, query, cafeID, emptyMeta)
+	if err != nil {
+		return err
+	}
+
+	return err
 }
 
-func (p *postgresApplePassRepository) UpdateMeta(ctx context.Context, cafeID int) (models.ApplePassMeta, error) {
+func (p *postgresApplePassRepository) UpdateMeta(ctx context.Context, cafeID int, meta []byte) error {
 	query := `UPDATE ApplePassMeta 
-    SET PassesCount = PassesCount + 1
-	WHERE CafeID=$1 
-	RETURNING *`
+    SET meta=$1
+	WHERE CafeID=$2`
 
-	var applePassMeta models.ApplePassMeta
-	err := p.Conn.GetContext(ctx, &applePassMeta, query, cafeID)
+	_, err := p.Conn.ExecContext(ctx, query, meta, cafeID)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return p.createMeta(ctx, cafeID)
 		}
+		return err
+	}
+
+	return err
+}
+
+func (p *postgresApplePassRepository) GetMeta(ctx context.Context,
+	cafeID int) (applePassMeta models.ApplePassMeta, err error) {
+
+	query := `SELECT meta FROM ApplePassMeta WHERE CafeID=$1`
+
+	var metaJson []byte
+	err = p.Conn.GetContext(ctx, &metaJson, query, cafeID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			applePassMeta.CafeID = cafeID
+			applePassMeta.Meta = meta.EmptyMeta
+
+			return applePassMeta, p.createMeta(ctx, cafeID)
+		}
+		return models.ApplePassMeta{}, err
+	}
+
+	applePassMeta.CafeID = cafeID
+	if err := json.Unmarshal(metaJson, &applePassMeta.Meta); err != nil {
 		return models.ApplePassMeta{}, err
 	}
 

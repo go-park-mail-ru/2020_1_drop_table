@@ -49,6 +49,27 @@ func (_m *Repository) Delete(ctx context.Context, id int) error {
 	return r0
 }
 
+// GetMeta provides a mock function with given fields: ctx, cafeID
+func (_m *Repository) GetMeta(ctx context.Context, cafeID int) (models.ApplePassMeta, error) {
+	ret := _m.Called(ctx, cafeID)
+
+	var r0 models.ApplePassMeta
+	if rf, ok := ret.Get(0).(func(context.Context, int) models.ApplePassMeta); ok {
+		r0 = rf(ctx, cafeID)
+	} else {
+		r0 = ret.Get(0).(models.ApplePassMeta)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, cafeID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetPassByID provides a mock function with given fields: ctx, id
 func (_m *Repository) GetPassByID(ctx context.Context, id int) (models.ApplePassDB, error) {
 	ret := _m.Called(ctx, id)
@@ -98,23 +119,16 @@ func (_m *Repository) UpdateDesign(ctx context.Context, Design string, id int) e
 	return r0
 }
 
-// UpdateMeta provides a mock function with given fields: ctx, cafeID
-func (_m *Repository) UpdateMeta(ctx context.Context, cafeID int) (models.ApplePassMeta, error) {
-	ret := _m.Called(ctx, cafeID)
+// UpdateMeta provides a mock function with given fields: ctx, cafeID, meta
+func (_m *Repository) UpdateMeta(ctx context.Context, cafeID int, meta []byte) error {
+	ret := _m.Called(ctx, cafeID, meta)
 
-	var r0 models.ApplePassMeta
-	if rf, ok := ret.Get(0).(func(context.Context, int) models.ApplePassMeta); ok {
-		r0 = rf(ctx, cafeID)
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, []byte) error); ok {
+		r0 = rf(ctx, cafeID, meta)
 	} else {
-		r0 = ret.Get(0).(models.ApplePassMeta)
+		r0 = ret.Error(0)
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
-		r1 = rf(ctx, cafeID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
