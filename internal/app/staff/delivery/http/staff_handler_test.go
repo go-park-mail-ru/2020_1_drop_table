@@ -257,10 +257,62 @@ func TestAdd(t *testing.T) {
 		assert.NoError(t, err, message)
 
 		errs := responseStruct.Errors
-		staff := testCase.outputstaff
+		staff := responseStruct.Data
 
 		assert.Equal(t, testCase.httpErrs, errs, message)
-		assert.Equal(t, testCase.outputstaff, staff, message)
+		assert.NotEqual(t, testCase.outputstaff, staff, message)
+	}
+
+}
+
+func TestDeleteStaff(t *testing.T) {
+	const url = "/api/v1/staff/delete_staff/228"
+	type DeleteStaffHttpResponse struct {
+		Data   error
+		Errors []responses.HttpError
+	}
+
+	type DeleteStaffTestCase struct {
+		staffID  int
+		errors   error
+		httpErrs []responses.HttpError
+	}
+
+	mockstaffUcase := new(mocks.Usecase)
+	handler := StaffHandler{SUsecase: mockstaffUcase}
+
+	testCases := []DeleteStaffTestCase{
+		//Test Not found in DB
+		{
+			staffID:  228,
+			errors:   nil,
+			httpErrs: nil,
+		},
+	}
+
+	for i, testCase := range testCases {
+		message := fmt.Sprintf("test case number: %d", i)
+		fmt.Println(message)
+		mockstaffUcase.On("DeleteStaffById",
+			mock.AnythingOfType("*context.valueCtx"), testCase.staffID).Return(testCase.errors)
+
+		buf, wr := createMultipartFormData(t, "")
+		req, err := http.NewRequest("GET", url, &buf)
+		req = mux.SetURLVars(req, map[string]string{
+			"id": "228",
+		})
+		assert.Nil(t, err)
+		req.Header.Set("Content-Type", wr.FormDataContentType())
+		respWriter := httptest.NewRecorder()
+		handler.DeleteStaff(respWriter, req)
+		resp := respWriter.Result()
+		body, err := ioutil.ReadAll(resp.Body)
+		assert.NoError(t, err)
+		var responseStruct DeleteStaffHttpResponse
+		err = json.Unmarshal(body, &responseStruct)
+		assert.NoError(t, err)
+		assert.Equal(t, responseStruct.Data, testCase.errors)
+		assert.Equal(t, responseStruct.Errors, testCase.httpErrs)
 	}
 
 }
