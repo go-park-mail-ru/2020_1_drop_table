@@ -149,3 +149,31 @@ func TestAddUuid(t *testing.T) {
 	err := rep.AddUuid(context.TODO(), "asdasdasdasd", -1)
 	assert.NotNil(t, err)
 }
+
+func TestAddCafeToList(t *testing.T) {
+	var s1 = 228
+	var s2 = 229
+	staffList := []models.StaffByOwnerResponse{
+		{
+			CafeId:   "228",
+			CafeName: "Пушкин",
+			StaffId:  &s1,
+			Photo:    nil,
+			Name:     nil,
+			Position: nil,
+		},
+		{
+			CafeId:   "229",
+			CafeName: "Лермонтов",
+			StaffId:  &s2,
+			Photo:    nil,
+			Name:     nil,
+			Position: nil,
+		},
+	}
+	expectedResult := make(map[string][]models.StaffByOwnerResponse)
+	expectedResult["228,Пушкин"] = []models.StaffByOwnerResponse{staffList[0]}
+	expectedResult["229,Лермонтов"] = []models.StaffByOwnerResponse{staffList[1]}
+	res := addCafeToList(staffList)
+	assert.Equal(t, expectedResult, res)
+}
