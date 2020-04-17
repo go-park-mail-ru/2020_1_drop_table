@@ -356,3 +356,245 @@ func TestGetStaffList(t *testing.T) {
 	assert.Equal(t, resMap, res)
 	assert.Nil(t, err)
 }
+
+func TestStaffUsecase_CheckIfStaffInOwnerCafes(t *testing.T) {
+	type CheckStructInput struct {
+		Ctx         context.Context
+		RequestUser models.SafeStaff
+		StaffId     int
+	}
+	type CheckStructOutput struct {
+		IsIn bool
+		Err  error
+	}
+	type testCaseStruct struct {
+		InputData  CheckStructInput
+		OutputData CheckStructOutput
+		RetGetById models.Staff
+	}
+
+	session := sessions.Session{Values: map[interface{}]interface{}{"userID": 228}}
+	c := context.WithValue(context.Background(), "session", &session)
+
+	session2 := sessions.Session{Values: map[interface{}]interface{}{"userID": 1}}
+	c2 := context.WithValue(context.Background(), "session", &session2)
+
+	testCases := []testCaseStruct{
+		{
+			InputData: CheckStructInput{
+				Ctx: c,
+				RequestUser: models.SafeStaff{
+					StaffID:  228,
+					Name:     "GoodStaffIn",
+					Email:    "",
+					EditedAt: time.Time{},
+					Photo:    "",
+					IsOwner:  true,
+					CafeId:   0,
+					Position: "",
+				},
+				StaffId: 229,
+			},
+			OutputData: CheckStructOutput{
+				IsIn: true,
+				Err:  nil,
+			},
+			RetGetById: models.Staff{
+				StaffID:  228,
+				Name:     "GoodStaffIn",
+				Email:    "",
+				EditedAt: time.Time{},
+				Photo:    "",
+				IsOwner:  true,
+				CafeId:   0,
+				Position: "",
+			},
+		},
+		{
+			InputData: CheckStructInput{
+				Ctx: c2,
+				RequestUser: models.SafeStaff{
+					StaffID:  1,
+					Name:     "NotIn",
+					Email:    "",
+					EditedAt: time.Time{},
+					Photo:    "",
+					IsOwner:  true,
+					CafeId:   0,
+					Position: "",
+				},
+				StaffId: -1, //not in
+			},
+			OutputData: CheckStructOutput{
+				IsIn: false,
+				Err:  nil,
+			},
+			RetGetById: models.Staff{
+				StaffID:  1,
+				Name:     "NotIn",
+				Email:    "",
+				EditedAt: time.Time{},
+				Photo:    "",
+				IsOwner:  true,
+				CafeId:   0,
+				Position: "",
+			},
+		},
+	}
+
+	timeout := time.Second * 4
+	srepo := mocks.Repository{}
+	cafeRepo := cafeMock.Repository{}
+	s := NewStaffUsecase(&srepo, &cafeRepo, timeout)
+
+	resMap := make(map[string][]models.StaffByOwnerResponse)
+	var staffId = testCases[0].InputData.StaffId
+	resMap["228"] = []models.StaffByOwnerResponse{
+		{
+			CafeId:   "",
+			CafeName: "",
+			StaffId:  &staffId,
+			Photo:    nil,
+			Name:     nil,
+			Position: nil,
+		},
+	}
+
+	srepo.On("GetStaffListByOwnerId", mock.AnythingOfType("*context.valueCtx"), testCases[0].InputData.RequestUser.StaffID).Return(resMap, nil)
+
+	emptMap := make(map[string][]models.StaffByOwnerResponse)
+	srepo.On("GetStaffListByOwnerId", mock.AnythingOfType("*context.valueCtx"), testCases[1].InputData.RequestUser.StaffID).Return(emptMap, nil)
+	for _, testCase := range testCases {
+		srepo.On("GetByID",
+			mock.AnythingOfType("*context.cancelCtx"), testCase.InputData.RequestUser.StaffID).Return(
+			testCase.RetGetById, nil)
+
+		isInRes, errRes := s.CheckIfStaffInOwnerCafes(testCase.InputData.Ctx, testCase.InputData.RequestUser, testCase.InputData.StaffId)
+		assert.Equal(t, testCase.OutputData.IsIn, isInRes)
+		assert.Equal(t, testCase.OutputData.Err, errRes)
+
+	}
+
+}
+
+func TestStaffUsecase_DeleteStaffById(t *testing.T) {
+	type CheckStructInput struct {
+		Ctx         context.Context
+		RequestUser models.SafeStaff
+		StaffId     int
+	}
+	type CheckStructOutput struct {
+		IsIn bool
+		Err  error
+	}
+	type testCaseStruct struct {
+		InputData  CheckStructInput
+		OutputData CheckStructOutput
+		RetGetById models.Staff
+	}
+
+	session := sessions.Session{Values: map[interface{}]interface{}{"userID": 228}}
+	c := context.WithValue(context.Background(), "session", &session)
+
+	session2 := sessions.Session{Values: map[interface{}]interface{}{"userID": 1}}
+	c2 := context.WithValue(context.Background(), "session", &session2)
+
+	testCases := []testCaseStruct{
+		{
+			InputData: CheckStructInput{
+				Ctx: c,
+				RequestUser: models.SafeStaff{
+					StaffID:  228,
+					Name:     "GoodStaffIn",
+					Email:    "",
+					EditedAt: time.Time{},
+					Photo:    "",
+					IsOwner:  true,
+					CafeId:   0,
+					Position: "",
+				},
+				StaffId: 229,
+			},
+			OutputData: CheckStructOutput{
+				IsIn: true,
+				Err:  nil,
+			},
+			RetGetById: models.Staff{
+				StaffID:  228,
+				Name:     "GoodStaffIn",
+				Email:    "",
+				EditedAt: time.Time{},
+				Photo:    "",
+				IsOwner:  true,
+				CafeId:   0,
+				Position: "",
+			},
+		},
+		{
+			InputData: CheckStructInput{
+				Ctx: c2,
+				RequestUser: models.SafeStaff{
+					StaffID:  1,
+					Name:     "NotIn",
+					Email:    "",
+					EditedAt: time.Time{},
+					Photo:    "",
+					IsOwner:  true,
+					CafeId:   0,
+					Position: "",
+				},
+				StaffId: -1, //not in
+			},
+			OutputData: CheckStructOutput{
+				IsIn: false,
+				Err:  globalModels.ErrForbidden,
+			},
+			RetGetById: models.Staff{
+				StaffID:  1,
+				Name:     "NotIn",
+				Email:    "",
+				EditedAt: time.Time{},
+				Photo:    "",
+				IsOwner:  true,
+				CafeId:   0,
+				Position: "",
+			},
+		},
+	}
+
+	timeout := time.Second * 4
+	srepo := mocks.Repository{}
+	cafeRepo := cafeMock.Repository{}
+	s := NewStaffUsecase(&srepo, &cafeRepo, timeout)
+
+	resMap := make(map[string][]models.StaffByOwnerResponse)
+	var staffId = testCases[0].InputData.StaffId
+	resMap["228"] = []models.StaffByOwnerResponse{
+		{
+			CafeId:   "",
+			CafeName: "",
+			StaffId:  &staffId,
+			Photo:    nil,
+			Name:     nil,
+			Position: nil,
+		},
+	}
+
+	srepo.On("GetStaffListByOwnerId", mock.AnythingOfType("*context.timerCtx"), testCases[0].InputData.RequestUser.StaffID).Return(resMap, nil)
+
+	emptMap := make(map[string][]models.StaffByOwnerResponse)
+	srepo.On("GetStaffListByOwnerId", mock.AnythingOfType("*context.timerCtx"), testCases[1].InputData.RequestUser.StaffID).Return(emptMap, nil)
+
+	srepo.On("DeleteStaff", mock.AnythingOfType("*context.timerCtx"), testCases[0].InputData.StaffId).Return(nil)
+
+	for _, testCase := range testCases {
+		srepo.On("GetByID",
+			mock.AnythingOfType("*context.cancelCtx"), testCase.InputData.RequestUser.StaffID).Return(
+			testCase.RetGetById, nil)
+
+		errRes := s.DeleteStaffById(testCase.InputData.Ctx, testCase.InputData.StaffId)
+		assert.Equal(t, testCase.OutputData.Err, errRes)
+
+	}
+
+}
