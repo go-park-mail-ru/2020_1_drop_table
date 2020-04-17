@@ -3,9 +3,11 @@ package repository_test
 import (
 	passKitModels "2020_1_drop_table/internal/app/apple_passkit/models"
 	"2020_1_drop_table/internal/app/apple_passkit/repository"
+	"2020_1_drop_table/internal/pkg/apple_pass_generator/meta"
 	"context"
 	"database/sql"
 	"database/sql/driver"
+	"encoding/json"
 	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/bxcodec/faker"
@@ -362,97 +364,152 @@ func TestDelete(t *testing.T) {
 }
 
 //ToDo rewrite and write for getMeta
-//func TestUpdateMeta(t *testing.T) {
-//	type addTestCase struct {
-//		cafeID     int
-//		outputMeta passKitModels.ApplePassMeta
-//		query      string
-//		err        error
-//		finalErr   error
-//	}
-//
-//	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
-//	if err != nil {
-//		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-//	}
-//	sqlxDB := sqlx.NewDb(db, "sqlmock")
-//
-//	var cafeID int
-//	err = faker.FakeData(&cafeID)
-//	assert.NoError(t, err)
-//
-//	var outputMeta passKitModels.ApplePassMeta
-//	err = faker.FakeData(&outputMeta)
-//	assert.NoError(t, err)
-//	outputMeta.CafeID = cafeID
-//
-//	columnNames := []string{
-//		"applepassmetaid",
-//		"cafeid",
-//		"passescount",
-//	}
-//
-//	queryUpdate := `UPDATE ApplePassMeta
-//    SET meta=$1
-//	WHERE CafeID=$2`
-//
-//	queryInsert := `INSERT INTO ApplePassMeta(
-//	CafeID,
-//    meta)
-//	VALUES ($1, $2)`
-//
-//	testCases := []addTestCase{
-//		//Test OK
-//		{
-//			cafeID:     cafeID,
-//			outputMeta: outputMeta,
-//			query:      "",
-//			err:        nil,
-//		},
-//		//Test error
-//		{
-//			cafeID:     cafeID + 1,
-//			outputMeta: outputMeta,
-//			query:      queryInsert,
-//			err:        sql.ErrNoRows,
-//			finalErr:   nil,
-//		},
-//		//Test no cafe
-//		{
-//			cafeID:     cafeID + 1,
-//			outputMeta: outputMeta,
-//			query:      queryInsert,
-//			err:        sql.ErrNoRows,
-//			finalErr:   sql.ErrNoRows,
-//		},
-//	}
-//	for i, testCase := range testCases {
-//		message := fmt.Sprintf("test case number: %d", i)
-//
-//		rows := []driver.Value{testCase.outputMeta.CafeID, testCase.outputMeta.CafeID,
-//			testCase.outputMeta.Meta}
-//
-//		if testCase.err == nil {
-//			rows := sqlmock.NewRows(columnNames).AddRow(rows...)
-//			// from 1st to delete id
-//			mock.ExpectQuery(queryUpdate).WithArgs(testCase.cafeID).WillReturnRows(rows)
-//		} else {
-//			rows := sqlmock.NewRows(columnNames).AddRow(rows...)
-//			mock.ExpectQuery(queryUpdate).WithArgs(testCase.cafeID).WillReturnError(testCase.err)
-//
-//			if testCase.finalErr == nil {
-//				mock.ExpectQuery(testCase.query).WithArgs(testCase.cafeID).WillReturnRows(rows)
-//			} else {
-//				mock.ExpectQuery(testCase.query).WithArgs(testCase.cafeID).WillReturnError(testCase.finalErr)
-//			}
-//		}
-//		rep := repository.NewPostgresApplePassRepository(sqlxDB)
-//
-//		err := rep.UpdateMeta(context.Background(), testCase.cafeID, )
-//		assert.Equal(t, testCase.finalErr, err, message)
-//
-//		if err := mock.ExpectationsWereMet(); err != nil {
-//			t.Errorf("there were unfulfilled expectations: %s", err)
-//		}
-//	}
-//}
+func TestUpdateMeta(t *testing.T) {
+	type addTestCase struct {
+		cafeID    int
+		inputMeta []byte
+		err       error
+		finalErr  error
+	}
+
+	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	sqlxDB := sqlx.NewDb(db, "sqlmock")
+
+	var cafeID int
+	err = faker.FakeData(&cafeID)
+	assert.NoError(t, err)
+
+	var inputMeta []byte
+	err = faker.FakeData(&inputMeta)
+	assert.NoError(t, err)
+
+	emptyMetaJson, err := json.Marshal(meta.EmptyMeta)
+
+	queryUpdate := `UPDATE ApplePassMeta
+   SET meta=$1
+	WHERE CafeID=$2`
+
+	queryInsert := `INSERT INTO ApplePassMeta(
+	CafeID,
+   	meta)
+	VALUES ($1, $2)`
+
+	testCases := []addTestCase{
+		//Test OK
+		{
+			cafeID:    cafeID,
+			inputMeta: inputMeta,
+			err:       nil,
+		},
+		//Test error
+		{
+			cafeID:    cafeID + 1,
+			inputMeta: inputMeta,
+			err:       sql.ErrNoRows,
+			finalErr:  nil,
+		},
+		////Test no cafe
+		{
+			cafeID:    cafeID + 1,
+			inputMeta: inputMeta,
+			err:       sql.ErrNoRows,
+			finalErr:  sql.ErrNoRows,
+		},
+	}
+	for i, testCase := range testCases {
+		message := fmt.Sprintf("test case number: %d", i)
+
+		if testCase.err == nil {
+			mock.ExpectExec(queryUpdate).WithArgs(testCase.inputMeta, testCase.cafeID).WillReturnResult(sqlmock.NewResult(0, 0))
+		} else {
+			mock.ExpectExec(queryUpdate).WithArgs(testCase.inputMeta, testCase.cafeID).WillReturnError(testCase.err)
+
+			if testCase.finalErr == nil {
+				mock.ExpectExec(queryInsert).WithArgs(
+					testCase.cafeID, emptyMetaJson).WillReturnResult(
+					sqlmock.NewResult(0, 0))
+			} else {
+				mock.ExpectExec(queryInsert).WithArgs(testCase.cafeID, emptyMetaJson).WillReturnError(testCase.finalErr)
+			}
+		}
+		rep := repository.NewPostgresApplePassRepository(sqlxDB)
+
+		err := rep.UpdateMeta(context.Background(), testCase.cafeID, testCase.inputMeta)
+		assert.Equal(t, testCase.finalErr, err, message)
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("there were unfulfilled expectations: %s", err)
+		}
+	}
+}
+
+func TestGetMeta(t *testing.T) {
+	type addTestCase struct {
+		cafeID         int
+		outputMeta     passKitModels.ApplePassMeta
+		outputMetaJson []byte
+		err            error
+	}
+
+	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	sqlxDB := sqlx.NewDb(db, "sqlmock")
+
+	var cafeID int
+	err = faker.FakeData(&cafeID)
+	assert.NoError(t, err)
+
+	outputMeta := passKitModels.ApplePassMeta{
+		CafeID: cafeID,
+		Meta: map[string]interface{}{
+			"PassesCount": float64(1345),
+		},
+	}
+
+	outputMetaJson, err := json.Marshal(outputMeta.Meta)
+	assert.NoError(t, err)
+
+	query := `SELECT meta FROM ApplePassMeta WHERE CafeID=$1`
+
+	columnNames := []string{
+		"meta",
+	}
+
+	testCases := []addTestCase{
+		//Test OK
+		{
+			cafeID:         cafeID,
+			outputMeta:     outputMeta,
+			outputMetaJson: outputMetaJson,
+		},
+	}
+
+	for i, testCase := range testCases {
+		message := fmt.Sprintf("test case number: %d", i)
+
+		req := mock.ExpectQuery(query).WithArgs(testCase.cafeID)
+
+		if testCase.err == nil {
+			//args := []driver.Value{testCase.outputMetaJson}
+			rows := sqlmock.NewRows(columnNames).AddRow(testCase.outputMetaJson)
+			req.WillReturnRows(rows)
+		} else {
+			req.WillReturnError(testCase.err)
+		}
+
+		rep := repository.NewPostgresApplePassRepository(sqlxDB)
+		realMeta, err := rep.GetMeta(context.Background(), testCase.cafeID)
+		assert.Equal(t, testCase.err, err, message)
+
+		assert.Equal(t, testCase.outputMeta, realMeta)
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("there were unfulfilled expectations: %s", err)
+		}
+	}
+}

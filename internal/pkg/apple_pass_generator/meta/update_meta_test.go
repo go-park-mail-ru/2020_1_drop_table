@@ -1,7 +1,6 @@
 package meta
 
 import (
-	"2020_1_drop_table/internal/pkg/apple_pass_generator/meta/update_functions"
 	"errors"
 	"fmt"
 	"github.com/bxcodec/faker"
@@ -30,8 +29,8 @@ func TestUpdateMeta(t *testing.T) {
 		// Test not int
 		{
 			oldValues: map[string]interface{}{"PassesCount": "NOT INT"},
-			newValues: nil,
-			err:       update_functions.ErrNotInt,
+			newValues: map[string]interface{}{"PassesCount": 1},
+			err:       nil,
 		},
 		// Test unresolved value name
 		{
@@ -44,7 +43,8 @@ func TestUpdateMeta(t *testing.T) {
 	for i, testCase := range testCases {
 		message := fmt.Sprintf("test case number: %d", i)
 
-		newValues, err := UpdateMeta(testCase.oldValues)
+		var m Meta
+		newValues, err := m.UpdateMeta(testCase.oldValues)
 		assert.Equal(t, err, testCase.err, message)
 
 		if testCase.err == nil {
