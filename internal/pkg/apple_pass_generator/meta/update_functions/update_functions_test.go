@@ -20,7 +20,7 @@ func TestResource(t *testing.T) {
 	err = faker.FakeData(&incorrectData)
 	assert.NoError(t, err)
 
-	_, err = UpdateVarPassesCount(incorrectData)
-	assert.Equal(t, err, ErrNotInt)
-
+	newVal, err = UpdateVarPassesCount(incorrectData)
+	assert.NoError(t, err)
+	assert.Equal(t, newVal, 1)
 }
