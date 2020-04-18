@@ -22,20 +22,23 @@ func NewPostgresApplePassRepository(conn *sqlx.DB) apple_passkit.Repository {
 
 func (p *postgresApplePassRepository) Add(ctx context.Context, ap models.ApplePassDB) (models.ApplePassDB, error) {
 	query := `INSERT INTO ApplePass(
-	Design, 
     CafeID,
+    Type,        
+	LoyaltyInfo, 
+	published,   
+	Design, 
 	Icon, 
 	Icon2x, 
 	Logo, 
 	Logo2x, 
 	Strip, 
 	Strip2x) 
-	VALUES ($1,$2,$3,$4,$5,$6,$7,$8) 
+	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) 
 	RETURNING *`
 
 	var dbApplePass models.ApplePassDB
-	err := p.Conn.GetContext(ctx, &dbApplePass, query, ap.Design, ap.CafeID, ap.Icon, ap.Icon2x, ap.Logo,
-		ap.Logo2x, ap.Strip, ap.Strip2x)
+	err := p.Conn.GetContext(ctx, &dbApplePass, query, ap.CafeID, ap.Type, ap.LoyaltyInfo, ap.Published, ap.Design,
+		ap.Icon, ap.Icon2x, ap.Logo, ap.Logo2x, ap.Strip, ap.Strip2x)
 
 	if err != nil {
 		return models.ApplePassDB{}, err
@@ -49,6 +52,19 @@ func (p *postgresApplePassRepository) GetPassByID(ctx context.Context, id int) (
 
 	var dbApplePass models.ApplePassDB
 	err := p.Conn.GetContext(ctx, &dbApplePass, query, id)
+
+	if err != nil {
+		return models.ApplePassDB{}, err
+	}
+
+	return dbApplePass, err
+}
+
+func (p *postgresApplePassRepository) GetPassByCafeID(ctx context.Context, cafeID int, Type string, published bool) (models.ApplePassDB, error) {
+	query := `SELECT * FROM ApplePass WHERE CafeID=$1 AND Type=$2 AND published=$3`
+
+	var dbApplePass models.ApplePassDB
+	err := p.Conn.GetContext(ctx, &dbApplePass, query, cafeID, Type, published)
 
 	if err != nil {
 		return models.ApplePassDB{}, err
