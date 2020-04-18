@@ -57,3 +57,9 @@ func (p *postgresCustomerRepository) DeleteByID(ctx context.Context, customerID 
 
 	return err
 }
+
+func (p *postgresCustomerRepository) IncrementSum(ctx context.Context, newValue float32, uuid string) error {
+	query := `UPDATE customer SET sum=sum+$1 where customerid=$2`
+	_, err := p.conn.ExecContext(ctx, query, newValue, uuid)
+	return err
+}

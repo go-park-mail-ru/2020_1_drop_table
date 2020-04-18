@@ -10,4 +10,5 @@ type Repository interface {
 	SetLoyaltyPoints(ctx context.Context, points int, customerID string) (models.Customer, error)
 	GetByID(ctx context.Context, customerID string) (models.Customer, error)
 	DeleteByID(ctx context.Context, customerID string) error
+	IncrementSum(ctx context.Context, sum float32, uuid string) error
 }

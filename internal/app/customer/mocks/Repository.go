@@ -71,6 +71,20 @@ func (_m *Repository) GetByID(ctx context.Context, customerID string) (models.Cu
 	return r0, r1
 }
 
+// IncrementSum provides a mock function with given fields: ctx, sum, uuid
+func (_m *Repository) IncrementSum(ctx context.Context, sum float32, uuid string) error {
+	ret := _m.Called(ctx, sum, uuid)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, float32, string) error); ok {
+		r0 = rf(ctx, sum, uuid)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // SetLoyaltyPoints provides a mock function with given fields: ctx, points, customerID
 func (_m *Repository) SetLoyaltyPoints(ctx context.Context, points int, customerID string) (models.Customer, error) {
 	ret := _m.Called(ctx, points, customerID)
