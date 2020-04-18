@@ -35,6 +35,27 @@ func (_m *Usecase) Add(c context.Context, newStaff models.Staff) (models.SafeSta
 	return r0, r1
 }
 
+// CheckIfStaffInOwnerCafes provides a mock function with given fields: ctx, requestUser, staffId
+func (_m *Usecase) CheckIfStaffInOwnerCafes(ctx context.Context, requestUser models.SafeStaff, staffId int) (bool, error) {
+	ret := _m.Called(ctx, requestUser, staffId)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(context.Context, models.SafeStaff, int) bool); ok {
+		r0 = rf(ctx, requestUser, staffId)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, models.SafeStaff, int) error); ok {
+		r1 = rf(ctx, requestUser, staffId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // DeleteQrCodes provides a mock function with given fields: uString
 func (_m *Usecase) DeleteQrCodes(uString string) error {
 	ret := _m.Called(uString)
