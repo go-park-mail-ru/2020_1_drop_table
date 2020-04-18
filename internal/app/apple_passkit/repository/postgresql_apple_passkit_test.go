@@ -39,6 +39,7 @@ func TestAdd(t *testing.T) {
 	columnNames := []string{
 		"applepassid",
 		"design",
+		"cafeid",
 		"icon",
 		"icon2x",
 		"logo",
@@ -49,13 +50,14 @@ func TestAdd(t *testing.T) {
 
 	query := `INSERT INTO ApplePass(
 	Design, 
+    CafeID,
 	Icon, 
 	Icon2x, 
 	Logo, 
 	Logo2x, 
 	Strip, 
 	Strip2x) 
-	VALUES ($1,$2,$3,$4,$5,$6,$7) 
+	VALUES ($1,$2,$3,$4,$5,$6,$7,$8) 
 	RETURNING *`
 
 	testCases := []addTestCase{
@@ -76,8 +78,9 @@ func TestAdd(t *testing.T) {
 		message := fmt.Sprintf("test case number: %d", i)
 
 		args := []driver.Value{testCase.outputPass.ApplePassID, testCase.outputPass.Design,
-			testCase.outputPass.Icon, testCase.outputPass.Icon2x, testCase.outputPass.Logo,
-			testCase.outputPass.Logo2x, testCase.outputPass.Strip, testCase.outputPass.Strip2x}
+			testCase.outputPass.CafeID, testCase.outputPass.Icon, testCase.outputPass.Icon2x,
+			testCase.outputPass.Logo, testCase.outputPass.Logo2x, testCase.outputPass.Strip,
+			testCase.outputPass.Strip2x}
 
 		if testCase.err == nil {
 			rows := sqlmock.NewRows(columnNames).AddRow(args...)
@@ -123,6 +126,7 @@ func TestGetByID(t *testing.T) {
 	columnNames := []string{
 		"applepassid",
 		"design",
+		"cafeid",
 		"icon",
 		"icon2x",
 		"logo",
@@ -151,8 +155,9 @@ func TestGetByID(t *testing.T) {
 		message := fmt.Sprintf("test case number: %d", i)
 
 		row := []driver.Value{testCase.outputPass.ApplePassID, testCase.outputPass.Design,
-			testCase.outputPass.Icon, testCase.outputPass.Icon2x, testCase.outputPass.Logo,
-			testCase.outputPass.Logo2x, testCase.outputPass.Strip, testCase.outputPass.Strip2x}
+			testCase.outputPass.CafeID, testCase.outputPass.Icon, testCase.outputPass.Icon2x,
+			testCase.outputPass.Logo, testCase.outputPass.Logo2x, testCase.outputPass.Strip,
+			testCase.outputPass.Strip2x}
 
 		if testCase.err == nil {
 			rows := sqlmock.NewRows(columnNames).AddRow(row...)

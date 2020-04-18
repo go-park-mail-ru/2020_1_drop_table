@@ -23,17 +23,18 @@ func NewPostgresApplePassRepository(conn *sqlx.DB) apple_passkit.Repository {
 func (p *postgresApplePassRepository) Add(ctx context.Context, ap models.ApplePassDB) (models.ApplePassDB, error) {
 	query := `INSERT INTO ApplePass(
 	Design, 
+    CafeID,
 	Icon, 
 	Icon2x, 
 	Logo, 
 	Logo2x, 
 	Strip, 
 	Strip2x) 
-	VALUES ($1,$2,$3,$4,$5,$6,$7) 
+	VALUES ($1,$2,$3,$4,$5,$6,$7,$8) 
 	RETURNING *`
 
 	var dbApplePass models.ApplePassDB
-	err := p.Conn.GetContext(ctx, &dbApplePass, query, ap.Design, ap.Icon, ap.Icon2x, ap.Logo,
+	err := p.Conn.GetContext(ctx, &dbApplePass, query, ap.Design, ap.CafeID, ap.Icon, ap.Icon2x, ap.Logo,
 		ap.Logo2x, ap.Strip, ap.Strip2x)
 
 	if err != nil {
