@@ -97,7 +97,6 @@ func (s *staffUsecase) Update(c context.Context, newStaff models.SafeStaff) (mod
 		return models.SafeStaff{}, globalModels.ErrForbidden
 	}
 	newStaff.EditedAt = time.Now()
-
 	validation := validator.New()
 
 	if err := validation.Struct(newStaff); err != nil {

@@ -47,7 +47,7 @@ type custHttpResponse struct {
 }
 
 func TestGet(t *testing.T) {
-	const url = "/api/v1/asd/customer"
+	const url = "/api/v1/customers/points-system/asd/points/"
 	mockcustomerUcase := new(mocks.Usecase)
 	returncustomer := models.Customer{
 		CustomerID: "",
@@ -77,7 +77,8 @@ func TestGet(t *testing.T) {
 }
 
 func TestSet(t *testing.T) {
-	const url = "/api/v1/asd/customer/228"
+
+	const url = "/api/v1/customers/points-system/asd/points/228"
 	mockcustomerUcase := new(mocks.Usecase)
 	returncustomer := models.Customer{
 		CustomerID: "asd",

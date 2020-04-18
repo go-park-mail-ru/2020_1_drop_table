@@ -60,3 +60,33 @@ func (u customerUsecase) SetPoints(ctx context.Context, uuid string, points int)
 	_, err = u.customerRepo.SetLoyaltyPoints(ctx, points, uuid)
 	return err
 }
+
+func calcSalePercent(sum float32, uuid string) float32 {
+	//TODO implement
+	return 0.5
+
+}
+
+func (u customerUsecase) GetSale(ctx context.Context, sum float32, uuid string) (float32, error) {
+	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+	cust, err := u.customerRepo.GetByID(ctx, uuid)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return 0, globalModels.ErrNotFound
+		}
+		return 0, err
+	}
+
+	requestStaff, err := u.staffUsecase.GetFromSession(ctx)
+	if err != nil || requestStaff.CafeId != cust.CafeID {
+		return 0, globalModels.ErrForbidden
+	}
+
+	oldSum := cust.Sum
+	salePercent := calcSalePercent(oldSum, uuid)
+	sumWithSale := sum * salePercent
+	err = u.customerRepo.IncrementSum(ctx, sumWithSale, uuid)
+	return sumWithSale, err
+
+}

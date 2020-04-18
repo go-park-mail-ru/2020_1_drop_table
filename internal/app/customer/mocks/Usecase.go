@@ -34,6 +34,27 @@ func (_m *Usecase) GetPoints(ctx context.Context, uuid string) (int, error) {
 	return r0, r1
 }
 
+// GetSale provides a mock function with given fields: ctx, sum, uuid
+func (_m *Usecase) GetSale(ctx context.Context, sum float32, uuid string) (float32, error) {
+	ret := _m.Called(ctx, sum, uuid)
+
+	var r0 float32
+	if rf, ok := ret.Get(0).(func(context.Context, float32, string) float32); ok {
+		r0 = rf(ctx, sum, uuid)
+	} else {
+		r0 = ret.Get(0).(float32)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, float32, string) error); ok {
+		r1 = rf(ctx, sum, uuid)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // SetPoints provides a mock function with given fields: ctx, uuid, points
 func (_m *Usecase) SetPoints(ctx context.Context, uuid string, points int) error {
 	ret := _m.Called(ctx, uuid, points)
