@@ -7,17 +7,17 @@ import (
 	"2020_1_drop_table/internal/app/cafe"
 	cafeModels "2020_1_drop_table/internal/app/cafe/models"
 	"2020_1_drop_table/internal/app/customer"
-	//customerModels "2020_1_drop_table/internal/app/customer/models"
+	customerModels "2020_1_drop_table/internal/app/customer/models"
 	globalModels "2020_1_drop_table/internal/app/models"
 	passesGenerator "2020_1_drop_table/internal/pkg/apple_pass_generator"
 	loyaltySystems "2020_1_drop_table/internal/pkg/apple_pass_generator/loyalty_systems"
 	"2020_1_drop_table/internal/pkg/qr"
-	//"bytes"
+	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	//"github.com/fatih/structs"
+	"github.com/fatih/structs"
 	"github.com/gorilla/sessions"
 	"time"
 )
@@ -117,8 +117,8 @@ func (ap *applePassKitUsecase) UpdatePass(c context.Context, pass models.ApplePa
 			return models.UpdateResponse{}, err
 		}
 
-		savedPassURL := fmt.Sprintf("%s/%s/cafe/%d/apple_pass/new_customer?published=false",
-			configs.ServerUrl, configs.ApiVersion, pass.CafeID)
+		savedPassURL := fmt.Sprintf("%s/%s/cafe/%d/apple_pass/%s/new_customer?published=false",
+			configs.ServerUrl, configs.ApiVersion, pass.CafeID, pass.Type)
 		QrUrl := fmt.Sprintf("%s/media/qr/%d_saved.png",
 			configs.ServerUrl, pass.CafeID)
 
@@ -134,8 +134,8 @@ func (ap *applePassKitUsecase) UpdatePass(c context.Context, pass models.ApplePa
 		return models.UpdateResponse{}, err
 	}
 
-	publishedPassURL := fmt.Sprintf("%s/%s/cafe/%d/apple_pass/new_customer?published=true",
-		configs.ServerUrl, configs.ApiVersion, pass.CafeID)
+	publishedPassURL := fmt.Sprintf("%s/%s/cafe/%d/apple_pass/%s/new_customer?published=true",
+		configs.ServerUrl, configs.ApiVersion, pass.CafeID, pass.Type)
 	QrUrl := fmt.Sprintf("%s/media/qr/%d_published.png",
 		configs.ServerUrl, pass.CafeID)
 	response := models.UpdateResponse{
@@ -236,59 +236,49 @@ func (ap *applePassKitUsecase) updateMeta(ctx context.Context, cafeID int) (map[
 	return newMeta, nil
 }
 
-//func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int, Type string,
-//	published bool) (*bytes.Buffer, error) {
-//
-//	ctx, cancel := context.WithTimeout(c, ap.contextTimeout)
-//	defer cancel()
-//
-//	newCustomer := customerModels.Customer{CafeID: cafeID}
-//
-//	newCustomer, err := ap.customerRepo.Add(ctx, newCustomer)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	cafeObj, err := ap.cafeRepo.GetByID(ctx, cafeID)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	passEnv, err := ap.updateMeta(ctx, cafeID)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	structs.FillMap(newCustomer, passEnv)
-//
-//	cardID := -1
-//	if published {
-//		if !cafeObj.PublishedApplePassID.Valid {
-//			return nil, globalModels.ErrNoPublishedCard
-//		}
-//		cardID = int(cafeObj.PublishedApplePassID.Int64)
-//	} else {
-//		if !cafeObj.SavedApplePassID.Valid {
-//			return nil, globalModels.ErrNoPublishedCard
-//		}
-//		cardID = int(cafeObj.SavedApplePassID.Int64)
-//
-//		session := ctx.Value("session").(*sessions.Session)
-//		staffInterface, found := session.Values["userID"]
-//		staffID, ok := staffInterface.(int)
-//		if !found || !ok || staffID != cafeObj.StaffID {
-//			return nil, globalModels.ErrForbidden
-//		}
-//	}
-//
-//	publishedCardDB, err := ap.passKitRepo.GetPassByID(ctx, cardID)
-//	if err != nil {
-//		return nil, err
-//	}
-//	passBuffer, err := ap.passesGenerator.CreateNewPass(passDBtoPassResource(publishedCardDB, passEnv))
-//
-//	return passBuffer, err
-//}
+func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int, Type string,
+	published bool) (*bytes.Buffer, error) {
+
+	ctx, cancel := context.WithTimeout(c, ap.contextTimeout)
+	defer cancel()
+
+	newCustomer := customerModels.Customer{CafeID: cafeID}
+
+	newCustomer, err := ap.customerRepo.Add(ctx, newCustomer)
+	if err != nil {
+		return nil, err
+	}
+
+	cafeObj, err := ap.cafeRepo.GetByID(ctx, cafeID)
+	if err != nil {
+		return nil, err
+	}
+
+	passEnv, err := ap.updateMeta(ctx, cafeID)
+	if err != nil {
+		return nil, err
+	}
+
+	structs.FillMap(newCustomer, passEnv)
+
+	if !published {
+		session := ctx.Value("session").(*sessions.Session)
+		staffInterface, found := session.Values["userID"]
+		staffID, ok := staffInterface.(int)
+		if !found || !ok || staffID != cafeObj.StaffID {
+			return nil, globalModels.ErrForbidden
+		}
+	}
+
+	publishedCardDB, err := ap.passKitRepo.GetPassByCafeID(ctx, cafeID, Type, published)
+	if err != nil {
+		return nil, err
+	}
+
+	passBuffer, err := ap.passesGenerator.CreateNewPass(passDBtoPassResource(publishedCardDB, passEnv))
+
+	return passBuffer, err
+}
 
 func (ap *applePassKitUsecase) createQRs(cafeID int) error {
 	savedPassURL := fmt.Sprintf("%s/%s/cafe/%d/apple_pass/new_customer?published=false",

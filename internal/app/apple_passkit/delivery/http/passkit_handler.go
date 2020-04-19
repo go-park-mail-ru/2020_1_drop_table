@@ -31,8 +31,8 @@ func NewPassKitHandler(r *mux.Router, us apple_passkit.Usecase) {
 	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}/apple_pass/{loyalty_system_type}",
 		permissions.SetCSRF(permissions.CheckAuthenticated(handler.GetPassHandler))).Methods("GET")
 
-	//r.HandleFunc("/api/v1/cafe/{id:[0-9]+}/apple_pass/new_customer",
-	//	permissions.SetCSRF(handler.GenerateNewPass)).Methods("GET")
+	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}/apple_pass/{loyalty_system_type}/new_customer",
+		permissions.SetCSRF(handler.GenerateNewPass)).Methods("GET")
 
 	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}/apple_pass/{loyalty_system_type}/{image_name}",
 		permissions.CheckAuthenticated(handler.GetImageHandler)).Methods("GET")
@@ -198,31 +198,33 @@ func (ap *applePassKitHandler) GetImageHandler(w http.ResponseWriter, r *http.Re
 	return
 }
 
-//func (ap *applePassKitHandler) GenerateNewPass(w http.ResponseWriter, r *http.Request) {
-//	id, err := strconv.Atoi(mux.Vars(r)["id"])
-//	if err != nil {
-//		message := fmt.Sprintf("bad id: %s", mux.Vars(r)["id"])
-//		responses.SendSingleError(message, w)
-//		return
-//	}
-//
-//	published, err := extractBoolValue(r, "published")
-//	if err != nil {
-//		responses.SendSingleError(err.Error(), w)
-//		return
-//	}
-//
-//	pass, err := ap.passesUsecace.GeneratePassObject(r.Context(), id, published)
-//	if err != nil {
-//		responses.SendSingleError(err.Error(), w)
-//		return
-//	}
-//
-//	filename := "loyaltyCard.pkpass"
-//
-//	w.Header().Set("Content-Disposition", "attachment; filename="+filename)
-//	w.Header().Set("Content-Type", "application/vnd.apple.pkpass")
-//	http.ServeContent(w, r, filename, time.Time{}, bytes.NewReader(pass.Bytes()))
-//
-//	return
-//}
+func (ap *applePassKitHandler) GenerateNewPass(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(mux.Vars(r)["id"])
+	if err != nil {
+		message := fmt.Sprintf("bad id: %s", mux.Vars(r)["id"])
+		responses.SendSingleError(message, w)
+		return
+	}
+
+	published, err := extractBoolValue(r, "published")
+	if err != nil {
+		responses.SendSingleError(err.Error(), w)
+		return
+	}
+
+	Type := mux.Vars(r)["loyalty_system_type"]
+
+	pass, err := ap.passesUsecace.GeneratePassObject(r.Context(), id, Type, published)
+	if err != nil {
+		responses.SendSingleError(err.Error(), w)
+		return
+	}
+
+	filename := "loyaltyCard.pkpass"
+
+	w.Header().Set("Content-Disposition", "attachment; filename="+filename)
+	w.Header().Set("Content-Type", "application/vnd.apple.pkpass")
+	http.ServeContent(w, r, filename, time.Time{}, bytes.NewReader(pass.Bytes()))
+
+	return
+}
