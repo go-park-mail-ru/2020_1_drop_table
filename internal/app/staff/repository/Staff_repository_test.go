@@ -177,3 +177,13 @@ func TestAddCafeToList(t *testing.T) {
 	res := addCafeToList(staffList)
 	assert.Equal(t, expectedResult, res)
 }
+
+func TestUpdatePosition(t *testing.T) {
+	db, mock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+	con := sqlx.NewDb(db, "sqlmock")
+	query := `UPDATE staff SET position=$1 where staffid=$2`
+	mock.ExpectQuery(query).WithArgs("badPosition", 228).WillReturnError(nil)
+	rep := NewPostgresStaffRepository(con)
+	err := rep.UpdatePosition(context.TODO(), -1, "badPosition")
+	assert.NotNil(t, err)
+}

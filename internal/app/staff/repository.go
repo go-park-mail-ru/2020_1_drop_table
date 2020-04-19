@@ -16,4 +16,5 @@ type Repository interface {
 	GetCafeId(ctx context.Context, uuid string) (int, error)
 	GetStaffListByOwnerId(ctx context.Context, ownerId int) (map[string][]models.StaffByOwnerResponse, error)
 	DeleteStaff(ctx context.Context, staffId int) error
+	UpdatePosition(ctx context.Context, staffId int, newPosition string) error
 }

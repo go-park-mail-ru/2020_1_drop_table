@@ -35,6 +35,7 @@ func NewStaffHandler(r *mux.Router, us staff.Usecase) {
 	r.HandleFunc("/api/v1/add_staff", permissions.SetCSRF(handler.AddStaffHandler)).Methods("POST")
 	r.HandleFunc("/api/v1/staff/get_staff_list/{id:[0-9]+}", permissions.SetCSRF(handler.GetStaffListHandler)).Methods("GET")
 	r.HandleFunc("/api/v1/staff/delete_staff/{id:[0-9]+}", permissions.CheckCSRF(handler.DeleteStaff)).Methods("POST")
+	r.HandleFunc("/api/v1/staff/update_position/{id:[0-9]+}", permissions.CheckCSRF(handler.UpdatePosition)).Methods("POST") //TODO CHECK CSRF
 
 }
 
@@ -270,4 +271,33 @@ func (s *StaffHandler) DeleteStaff(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	responses.SendOKAnswer(nil, w)
+}
+
+func fetchPosition(r *http.Request) (string, error) {
+	err := r.ParseMultipartForm(32 << 20)
+	if err != nil {
+		return "", globalModels.ErrBadRequest
+	}
+
+	jsonData := r.FormValue("jsonData")
+	if jsonData == "" || jsonData == "null" {
+		return "", globalModels.ErrEmptyJSON
+	}
+
+	return jsonData, nil
+}
+func (s *StaffHandler) UpdatePosition(w http.ResponseWriter, r *http.Request) {
+	staffID, err := strconv.Atoi(mux.Vars(r)["id"])
+	newPosition, fetchErr := fetchPosition(r)
+	if err != nil || fetchErr != nil {
+		responses.SendSingleError(globalModels.ErrBadRequest.Error(), w)
+		return
+	}
+	err = s.SUsecase.UpdatePosition(r.Context(), staffID, newPosition)
+	if err != nil {
+		responses.SendSingleError(err.Error(), w)
+		return
+	}
+	responses.SendOKAnswer(newPosition, w)
+
 }

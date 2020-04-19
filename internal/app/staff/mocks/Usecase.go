@@ -274,3 +274,17 @@ func (_m *Usecase) Update(c context.Context, newStaff models.SafeStaff) (models.
 
 	return r0, r1
 }
+
+// UpdatePosition provides a mock function with given fields: ctx, id, position
+func (_m *Usecase) UpdatePosition(ctx context.Context, id int, position string) error {
+	ret := _m.Called(ctx, id, position)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, string) error); ok {
+		r0 = rf(ctx, id, position)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}

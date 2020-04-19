@@ -598,3 +598,107 @@ func TestStaffUsecase_DeleteStaffById(t *testing.T) {
 	}
 
 }
+
+func TestUpdatePosition(t *testing.T) {
+	type CheckStructInput struct {
+		Ctx         context.Context
+		StaffId     int
+		NewPosition string
+	}
+	type CheckStructOutput struct {
+		Err error
+	}
+	type testCaseStruct struct {
+		InputData  CheckStructInput
+		OutputData CheckStructOutput
+		RetGetById models.Staff
+	}
+
+	session := sessions.Session{Values: map[interface{}]interface{}{"userID": 228}}
+	c := context.WithValue(context.Background(), "session", &session)
+
+	session2 := sessions.Session{Values: map[interface{}]interface{}{"userID": 1}}
+	c2 := context.WithValue(context.Background(), "session", &session2)
+
+	testCases := []testCaseStruct{
+		{
+			InputData: CheckStructInput{
+				Ctx:         c,
+				NewPosition: "Дворник",
+				StaffId:     229,
+			},
+			OutputData: CheckStructOutput{
+				Err: nil,
+			},
+			RetGetById: models.Staff{
+				StaffID:  228,
+				Name:     "GoodStaffIn",
+				Email:    "",
+				EditedAt: time.Time{},
+				Photo:    "",
+				IsOwner:  true,
+				CafeId:   0,
+				Position: "",
+			},
+		},
+		{
+			InputData: CheckStructInput{
+				Ctx:         c2,
+				NewPosition: "Not valid RequestUser",
+				StaffId:     -1, //not in
+			},
+			OutputData: CheckStructOutput{
+				Err: globalModels.ErrForbidden,
+			},
+			RetGetById: models.Staff{
+				StaffID:  1,
+				Name:     "NotIn",
+				Email:    "",
+				EditedAt: time.Time{},
+				Photo:    "",
+				IsOwner:  true,
+				CafeId:   0,
+				Position: "",
+			},
+		},
+	}
+
+	timeout := time.Second * 4
+	srepo := mocks.Repository{}
+	cafeRepo := cafeMock.Repository{}
+	s := NewStaffUsecase(&srepo, &cafeRepo, timeout)
+
+	resMap := make(map[string][]models.StaffByOwnerResponse)
+	var staffId = testCases[0].InputData.StaffId
+	resMap["228"] = []models.StaffByOwnerResponse{
+		{
+			CafeId:   "",
+			CafeName: "",
+			StaffId:  &staffId,
+			Photo:    nil,
+			Name:     nil,
+			Position: nil,
+		},
+	}
+
+	srepo.On("GetStaffListByOwnerId", mock.AnythingOfType("*context.timerCtx"), 228).Return(resMap, nil)
+
+	emptMap := make(map[string][]models.StaffByOwnerResponse)
+	srepo.On("GetStaffListByOwnerId", mock.AnythingOfType("*context.timerCtx"), 1).Return(emptMap, nil)
+
+	srepo.On("DeleteStaff", mock.AnythingOfType("*context.timerCtx"), testCases[0].InputData.StaffId).Return(nil)
+
+	for _, testCase := range testCases {
+		srepo.On("GetByID",
+			mock.AnythingOfType("*context.cancelCtx"), testCase.RetGetById.StaffID).Return(
+			testCase.RetGetById, nil)
+		srepo.On("UpdatePosition",
+			mock.AnythingOfType("*context.timerCtx"), testCase.InputData.StaffId, testCase.InputData.NewPosition).Return(
+			nil)
+
+		errRes := s.UpdatePosition(testCase.InputData.Ctx, testCase.InputData.StaffId, testCase.InputData.NewPosition)
+		assert.Equal(t, testCase.OutputData.Err, errRes)
+
+	}
+
+}
