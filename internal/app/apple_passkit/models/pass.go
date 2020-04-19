@@ -2,8 +2,8 @@ package models
 
 type ApplePassDB struct {
 	ApplePassID int    `json:"-"`
-	CafeID      int    `json:"cafe_id"`
-	Type        string `json:"type"`
+	CafeID      int    `json:"cafe_id" validate:"required"`
+	Type        string `json:"type" validate:"required"`
 	LoyaltyInfo string `json:"loyalty_info" faker:"-"`
 	Published   bool   `json:"published"`
 	Design      string `json:"design" validate:"required"`

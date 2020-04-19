@@ -23,8 +23,7 @@ var (
 	ErrBadJSON   = errors.New("json parsing error")
 
 	//Apple pass errors
-	ErrNoPublishedCard = errors.New("no published card for this cafe")
-	ErrNoRequestedCard = errors.New("no card with requested params for this cafe")
+	ErrNoLoyaltyProgram = errors.New("no loyalty program with given name")
 
 	//Customer errors
 	ErrBadUuid     = errors.New("bad uuid")

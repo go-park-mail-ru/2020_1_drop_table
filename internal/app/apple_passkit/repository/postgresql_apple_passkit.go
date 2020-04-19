@@ -82,11 +82,12 @@ func (p *postgresApplePassRepository) Update(ctx context.Context, newApplePass m
 	Logo2x=NotEmpty($5, Logo2x),
 	Strip=NotEmpty($6, Strip),
 	Strip2x=NotEmpty($7, Strip2x)
-	WHERE ApplePassID=$8`
+	WHERE CafeID=$8 AND Type=$9 AND published=$10`
 
 	_, err := p.Conn.ExecContext(ctx, query, newApplePass.Design, newApplePass.Icon,
 		newApplePass.Icon2x, newApplePass.Logo, newApplePass.Logo2x,
-		newApplePass.Strip, newApplePass.Strip2x, newApplePass.ApplePassID)
+		newApplePass.Strip, newApplePass.Strip2x, newApplePass.CafeID,
+		newApplePass.Type, newApplePass.Published)
 
 	return err
 }
