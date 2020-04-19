@@ -93,6 +93,7 @@ func (s *StaffHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 func (s *StaffHandler) AddStaffHandler(w http.ResponseWriter, r *http.Request) {
 	staffObj, err := s.fetchStaff(r)
 	uuid := r.FormValue("uuid")
+	position := r.FormValue("position")
 	if err != nil && uuid != "" {
 		responses.SendSingleError(err.Error(), w)
 		return
@@ -104,15 +105,16 @@ func (s *StaffHandler) AddStaffHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	staffObj.IsOwner = false
 	staffObj.CafeId = CafeId
-	err = s.SUsecase.DeleteQrCodes(uuid)
-	if err != nil {
-		log.Error().Msgf("error when trying to delete QRCodes")
-		responses.SendSingleError(err.Error(), w)
-		return
-	}
+	staffObj.Position = position
 	safeStaff, err := s.SUsecase.Add(r.Context(), staffObj)
 
 	if err != nil {
+		responses.SendSingleError(err.Error(), w)
+		return
+	}
+	err = s.SUsecase.DeleteQrCodes(uuid)
+	if err != nil {
+		log.Error().Msgf("error when trying to delete QRCodes")
 		responses.SendSingleError(err.Error(), w)
 		return
 	}
@@ -232,12 +234,18 @@ func (s *StaffHandler) EditStaffHandler(w http.ResponseWriter, r *http.Request) 
 
 func (s *StaffHandler) GenerateQrHandler(w http.ResponseWriter, r *http.Request) {
 	CafeId, err := strconv.Atoi(mux.Vars(r)["id"])
+	position := r.FormValue("position")
 	if err != nil {
 		message := fmt.Sprintf("bad id: %s", mux.Vars(r)["id"])
 		responses.SendSingleError(message, w)
 		return
 	}
-	pathToQr, err := s.SUsecase.GetQrForStaff(r.Context(), CafeId)
+	if position == "" {
+		message := fmt.Sprintf("dont send position in GET params")
+		responses.SendSingleError(message, w)
+		return
+	}
+	pathToQr, err := s.SUsecase.GetQrForStaff(r.Context(), CafeId, position)
 	if err != nil {
 		responses.SendSingleError(err.Error(), w)
 		return

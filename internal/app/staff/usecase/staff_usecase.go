@@ -145,7 +145,7 @@ func (s *staffUsecase) GetFromSession(c context.Context) (models.SafeStaff, erro
 	return s.GetByID(ctx, staffID.(int))
 }
 
-func (s *staffUsecase) GetQrForStaff(ctx context.Context, idCafe int) (string, error) {
+func (s *staffUsecase) GetQrForStaff(ctx context.Context, idCafe int, position string) (string, error) {
 	ctx, cancel := context.WithTimeout(ctx, s.contextTimeout)
 	defer cancel()
 	staffId, err := s.GetStaffId(ctx)
@@ -177,9 +177,8 @@ func (s *staffUsecase) GetQrForStaff(ctx context.Context, idCafe int) (string, e
 			return "", err
 		}
 		uString := u.String()
-
 		err = s.staffRepo.AddUuid(ctx, uString, idCafe)
-		path, err := generateQRCode(uString)
+		path, err := generateQRCode(uString, position)
 		if err != nil {
 			return "", err
 		}
@@ -203,8 +202,8 @@ func (s *staffUsecase) DeleteQrCodes(uString string) error {
 
 }
 
-func generateQRCode(uString string) (string, error) {
-	link := fmt.Sprintf("%s/addStaff?uuid=%s", configs.FrontEndUrl, uString)
+func generateQRCode(uString string, position string) (string, error) {
+	link := fmt.Sprintf("%s/addStaff?uuid=%s&position=%s", configs.FrontEndUrl, uString, position)
 	pathToQr, err := qr.GenerateToFile(link, uString)
 	pathToQr = configs.ServerUrl + "/" + pathToQr
 	if err != nil {

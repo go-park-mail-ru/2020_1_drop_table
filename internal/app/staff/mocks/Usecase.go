@@ -168,20 +168,20 @@ func (_m *Usecase) GetFromSession(c context.Context) (models.SafeStaff, error) {
 	return r0, r1
 }
 
-// GetQrForStaff provides a mock function with given fields: ctx, idCafe
-func (_m *Usecase) GetQrForStaff(ctx context.Context, idCafe int) (string, error) {
-	ret := _m.Called(ctx, idCafe)
+// GetQrForStaff provides a mock function with given fields: ctx, idCafe, position
+func (_m *Usecase) GetQrForStaff(ctx context.Context, idCafe int, position string) (string, error) {
+	ret := _m.Called(ctx, idCafe, position)
 
 	var r0 string
-	if rf, ok := ret.Get(0).(func(context.Context, int) string); ok {
-		r0 = rf(ctx, idCafe)
+	if rf, ok := ret.Get(0).(func(context.Context, int, string) string); ok {
+		r0 = rf(ctx, idCafe, position)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
-		r1 = rf(ctx, idCafe)
+	if rf, ok := ret.Get(1).(func(context.Context, int, string) error); ok {
+		r1 = rf(ctx, idCafe, position)
 	} else {
 		r1 = ret.Error(1)
 	}

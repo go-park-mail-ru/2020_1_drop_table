@@ -286,7 +286,7 @@ func TestGenerateQr(t *testing.T) {
 		Photo:    "",
 		IsOwner:  true,
 		CafeId:   2,
-		Position: "",
+		Position: "kek",
 	}
 	timeout := time.Second * 4
 	srepo := mocks.Repository{}
@@ -314,7 +314,7 @@ func TestGenerateQr(t *testing.T) {
 	s := NewStaffUsecase(&srepo, &cafeRepo, timeout)
 	session := sessions.Session{Values: map[interface{}]interface{}{"userID": 228}}
 	c := context.WithValue(context.Background(), "session", &session)
-	_, err := s.GetQrForStaff(c, 2)
+	_, err := s.GetQrForStaff(c, user.CafeId, user.Position)
 	assert.Nil(t, err)
 
 }
