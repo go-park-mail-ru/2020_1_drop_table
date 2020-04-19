@@ -81,22 +81,22 @@ func (p *postgresCafeRepository) Update(ctx context.Context, newCafe models.Cafe
 	return CafeDB, err
 }
 
-func (p *postgresCafeRepository) UpdateSavedPass(ctx context.Context, newCafe models.Cafe) error {
-	query := `UPDATE Cafe SET 
-	SavedApplePassID=$1
-	WHERE CafeID=$2`
-
-	_, err := p.Conn.ExecContext(ctx, query, newCafe.SavedApplePassID, newCafe.CafeID)
-
-	return err
-}
-
-func (p *postgresCafeRepository) UpdatePublishedPass(ctx context.Context, newCafe models.Cafe) error {
-	query := `UPDATE Cafe SET 
-	PublishedApplePassID=$1
-	WHERE CafeID=$2`
-
-	_, err := p.Conn.ExecContext(ctx, query, newCafe.PublishedApplePassID, newCafe.CafeID)
-
-	return err
-}
+//func (p *postgresCafeRepository) UpdateSavedPass(ctx context.Context, newCafe models.Cafe) error {
+//	query := `UPDATE Cafe SET
+//	SavedApplePassID=$1
+//	WHERE CafeID=$2`
+//
+//	_, err := p.Conn.ExecContext(ctx, query, newCafe.SavedApplePassID, newCafe.CafeID)
+//
+//	return err
+//}
+//
+//func (p *postgresCafeRepository) UpdatePublishedPass(ctx context.Context, newCafe models.Cafe) error {
+//	query := `UPDATE Cafe SET
+//	PublishedApplePassID=$1
+//	WHERE CafeID=$2`
+//
+//	_, err := p.Conn.ExecContext(ctx, query, newCafe.PublishedApplePassID, newCafe.CafeID)
+//
+//	return err
+//}

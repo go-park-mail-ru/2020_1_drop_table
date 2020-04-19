@@ -8,6 +8,7 @@ import (
 type Repository interface {
 	Add(ctx context.Context, ap models.ApplePassDB) (models.ApplePassDB, error)
 	GetPassByID(ctx context.Context, id int) (models.ApplePassDB, error)
+	GetPassByCafeID(ctx context.Context, cafeID int, Type string, published bool) (models.ApplePassDB, error)
 	Update(ctx context.Context, newApplePass models.ApplePassDB) error
 	UpdateDesign(ctx context.Context, Design string, id int) error
 	Delete(ctx context.Context, id int) error
