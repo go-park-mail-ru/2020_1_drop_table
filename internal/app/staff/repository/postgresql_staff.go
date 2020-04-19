@@ -130,6 +130,12 @@ func (p *PostgresStaffRepository) DeleteStaff(ctx context.Context, staffId int) 
 	return err
 }
 
+func (p *PostgresStaffRepository) UpdatePosition(ctx context.Context, staffId int, newPosition string) error {
+	query := `UPDATE staff SET position=$1 where staffid=$2`
+	_, err := p.conn.ExecContext(ctx, query, newPosition, staffId)
+	return err
+}
+
 func addCafeToList(staffList []models.StaffByOwnerResponse) map[string][]models.StaffByOwnerResponse {
 	result := make(map[string][]models.StaffByOwnerResponse)
 	for _, staff := range staffList {

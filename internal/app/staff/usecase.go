@@ -19,4 +19,5 @@ type Usecase interface {
 	GetStaffListByOwnerId(ctx context.Context, ownerId int) (map[string][]models.StaffByOwnerResponse, error)
 	DeleteStaffById(ctx context.Context, staffId int) error
 	CheckIfStaffInOwnerCafes(ctx context.Context, requestUser models.SafeStaff, staffId int) (bool, error)
+	UpdatePosition(ctx context.Context, id int, position string) error
 }

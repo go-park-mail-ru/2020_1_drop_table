@@ -204,3 +204,17 @@ func (_m *Repository) Update(ctx context.Context, newStaff models.SafeStaff) (mo
 
 	return r0, r1
 }
+
+// UpdatePosition provides a mock function with given fields: ctx, staffId, newPosition
+func (_m *Repository) UpdatePosition(ctx context.Context, staffId int, newPosition string) error {
+	ret := _m.Called(ctx, staffId, newPosition)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, string) error); ok {
+		r0 = rf(ctx, staffId, newPosition)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}

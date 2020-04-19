@@ -97,8 +97,8 @@ func (s *staffUsecase) Update(c context.Context, newStaff models.SafeStaff) (mod
 		return models.SafeStaff{}, globalModels.ErrForbidden
 	}
 	newStaff.EditedAt = time.Now()
-	validation := validator.New()
 
+	validation := validator.New()
 	if err := validation.Struct(newStaff); err != nil {
 		return models.SafeStaff{}, err
 	}
@@ -279,5 +279,20 @@ func (s *staffUsecase) DeleteStaffById(ctx context.Context, staffId int) error {
 		return globalModels.ErrForbidden
 	}
 	err = s.staffRepo.DeleteStaff(ctx, staffId)
+	return err
+}
+
+func (s *staffUsecase) UpdatePosition(ctx context.Context, staffId int, newPosition string) error {
+	ctx, cancel := context.WithTimeout(ctx, s.contextTimeout)
+	defer cancel()
+	requestUser, err := s.GetFromSession(ctx)
+	if err != nil {
+		return globalModels.ErrForbidden
+	}
+	isIn, err := s.CheckIfStaffInOwnerCafes(ctx, requestUser, staffId)
+	if err != nil || !isIn {
+		return globalModels.ErrForbidden
+	}
+	err = s.staffRepo.UpdatePosition(ctx, staffId, newPosition)
 	return err
 }
