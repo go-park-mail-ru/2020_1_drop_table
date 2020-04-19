@@ -127,10 +127,10 @@ func TestGenerateQrHandler(t *testing.T) {
 		Data   string
 		Errors []responses.HttpError
 	}
-	const url = "/api/v1/staff/generateQr"
+	const url = "/api/v1/staff/generateQr/228?position=pos"
 
 	mockstaffUcase := new(mocks.Usecase)
-	mockstaffUcase.On("GetQrForStaff", mock.AnythingOfType("*context.valueCtx"), 228).Return("path", nil)
+	mockstaffUcase.On("GetQrForStaff", mock.AnythingOfType("*context.valueCtx"), 228, "pos").Return("path", nil)
 	handler := StaffHandler{SUsecase: mockstaffUcase}
 	buf, wr := createMultipartFormData(t, "")
 	req, err := http.NewRequest("GET", url, &buf)
