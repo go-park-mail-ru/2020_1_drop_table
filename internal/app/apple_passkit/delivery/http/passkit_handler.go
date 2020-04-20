@@ -53,8 +53,9 @@ func (ap *applePassKitHandler) fetchPass(r *http.Request) (models.ApplePassDB, e
 	}
 
 	jsonData := r.FormValue("jsonData")
+	loyaltyInfo := r.FormValue("loyalty_info")
 
-	PassObjDB := models.ApplePassDB{Design: jsonData}
+	PassObjDB := models.ApplePassDB{Design: jsonData, LoyaltyInfo: loyaltyInfo}
 
 	for key, value := range r.MultipartForm.File {
 		if len(value) > 1 {

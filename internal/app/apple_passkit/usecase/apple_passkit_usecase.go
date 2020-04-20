@@ -87,7 +87,7 @@ func (ap *applePassKitUsecase) UpdatePass(c context.Context, pass models.ApplePa
 
 	passDB, err := ap.passKitRepo.GetPassByCafeID(ctx, pass.CafeID, pass.Type, pass.Published)
 	if err == sql.ErrNoRows {
-		pass.LoyaltyInfo, err = loyaltySystem.UpdatingPass("", pass.LoyaltyInfo)
+		pass.LoyaltyInfo, err = loyaltySystem.UpdatingPass(pass.LoyaltyInfo, "")
 		if err != nil {
 			return models.UpdateResponse{}, err
 		}
@@ -242,9 +242,28 @@ func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int,
 	ctx, cancel := context.WithTimeout(c, ap.contextTimeout)
 	defer cancel()
 
-	newCustomer := customerModels.Customer{CafeID: cafeID}
+	loyaltySystem, ok := loyaltySystems.LoyaltySystems[Type]
+	if !ok {
+		return nil, globalModels.ErrNoLoyaltyProgram
+	}
 
-	newCustomer, err := ap.customerRepo.Add(ctx, newCustomer)
+	publishedCardDB, err := ap.passKitRepo.GetPassByCafeID(ctx, cafeID, Type, published)
+	if err != nil {
+		return nil, err
+	}
+
+	customerPoints, newLoyaltyInfo, err := loyaltySystem.CreatingCustomer(publishedCardDB.LoyaltyInfo)
+	if newLoyaltyInfo != publishedCardDB.LoyaltyInfo {
+		publishedCardDB.LoyaltyInfo = newLoyaltyInfo
+		err = ap.passKitRepo.Update(ctx, publishedCardDB)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	newCustomer := customerModels.Customer{CafeID: cafeID, Points: customerPoints, SurveyResult: "{}"}
+
+	newCustomer, err = ap.customerRepo.Add(ctx, newCustomer)
 	if err != nil {
 		return nil, err
 	}
@@ -268,11 +287,6 @@ func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int,
 		if !found || !ok || staffID != cafeObj.StaffID {
 			return nil, globalModels.ErrForbidden
 		}
-	}
-
-	publishedCardDB, err := ap.passKitRepo.GetPassByCafeID(ctx, cafeID, Type, published)
-	if err != nil {
-		return nil, err
 	}
 
 	passBuffer, err := ap.passesGenerator.CreateNewPass(passDBtoPassResource(publishedCardDB, passEnv))
