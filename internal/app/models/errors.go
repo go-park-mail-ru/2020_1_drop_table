@@ -31,4 +31,7 @@ var (
 
 	//Auth errors
 	ErrUnauthorized = errors.New("incorrect password or email")
+
+	//Cafe errors
+	ErrCafeIsNotExist = errors.New("cafe with this id is not exist")
 )
