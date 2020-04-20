@@ -35,7 +35,7 @@ func NewStaffHandler(r *mux.Router, us staff.Usecase) {
 	r.HandleFunc("/api/v1/add_staff", permissions.SetCSRF(handler.AddStaffHandler)).Methods("POST")
 	r.HandleFunc("/api/v1/staff/get_staff_list/{id:[0-9]+}", permissions.SetCSRF(handler.GetStaffListHandler)).Methods("GET")
 	r.HandleFunc("/api/v1/staff/delete_staff/{id:[0-9]+}", permissions.CheckCSRF(handler.DeleteStaff)).Methods("POST")
-	r.HandleFunc("/api/v1/staff/update_position/{id:[0-9]+}", permissions.CheckCSRF(handler.UpdatePosition)).Methods("POST") //TODO CHECK CSRF
+	r.HandleFunc("/api/v1/staff/update_position/{id:[0-9]+}", permissions.CheckCSRF(handler.UpdatePosition)).Methods("POST")
 
 }
 
