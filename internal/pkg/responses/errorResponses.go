@@ -18,6 +18,17 @@ func SendServerError(errorMessage string, w http.ResponseWriter) {
 }
 
 func SendSingleError(errorMessage string, w http.ResponseWriter) {
+	log.Error().Msgf(errorMessage)
+	errs := make([]HttpError, 1, 1)
+	errs[0] = HttpError{
+		Code:    400,
+		Message: errorMessage,
+	}
+	SendSeveralErrors(errs, w)
+}
+
+func SendSingleErrorWithMessage(errForLog error, errorMessage string, w http.ResponseWriter) {
+	log.Error().Msgf(errForLog.Error())
 	errs := make([]HttpError, 1, 1)
 	errs[0] = HttpError{
 		Code:    400,
