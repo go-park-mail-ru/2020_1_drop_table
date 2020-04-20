@@ -86,7 +86,7 @@ func (_m *Repository) IncrementSum(ctx context.Context, sum float32, uuid string
 }
 
 // SetLoyaltyPoints provides a mock function with given fields: ctx, points, customerID
-func (_m *Repository) SetLoyaltyPoints(ctx context.Context, points int, customerID string) (models.Customer, error) {
+func (_m *Repository) SetLoyaltyPoints(ctx context.Context, points string, customerID string) (models.Customer, error) {
 	ret := _m.Called(ctx, points, customerID)
 
 	var r0 models.Customer

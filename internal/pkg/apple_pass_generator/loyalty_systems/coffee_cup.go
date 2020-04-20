@@ -1,7 +1,10 @@
 package loyalty_systems
 
+import "fmt"
+
 type CoffeeCup struct {
-	VarName string
+	InfoVarName   string
+	PointsVarName string
 }
 
 func (c *CoffeeCup) UpdatingPass(reqLoyaltyInfo, dbLoyaltyInfo string) (newLoyaltyInfo string, err error) {
@@ -18,8 +21,8 @@ func (c *CoffeeCup) UpdatingPass(reqLoyaltyInfo, dbLoyaltyInfo string) (newLoyal
 		return "", err
 	}
 
-	_, reqOk := reqMap[c.VarName]
-	_, DBOk := DBMap[c.VarName]
+	_, reqOk := reqMap[c.InfoVarName]
+	_, DBOk := DBMap[c.InfoVarName]
 
 	if reqOk {
 		return reqLoyaltyInfo, nil
@@ -33,10 +36,24 @@ func (c *CoffeeCup) UpdatingPass(reqLoyaltyInfo, dbLoyaltyInfo string) (newLoyal
 func (c *CoffeeCup) CreatingCustomer(loyaltyInfo string) (customerPoints, newLoyaltyInfo string,
 	err error) {
 
-	return `{"coffee_cups": 0}`, loyaltyInfo, nil
+	return fmt.Sprintf(`{"%s": 0}`, c.PointsVarName), loyaltyInfo, nil
 }
 
-func (c *CoffeeCup) SettingPoints(loyaltyInfo, dbPoints, reqPoints string) (newPoints string, err error) {
+func (c *CoffeeCup) SettingPoints(_, dbPoints, reqPoints string) (newPoints string, err error) {
+	var reqMap map[string]int
 
-	return "", nil
+	err = UnmarshalEmptyString([]byte(reqPoints), &reqMap)
+	if err != nil {
+		return "", err
+	}
+
+	pointsReq, reqOk := reqMap[c.PointsVarName]
+	fmt.Println(reqOk, dbPoints)
+
+	if pointsReq < 0 {
+		return "", ErrValidationCoffeeCups
+	}
+
+	newPointsJson := fmt.Sprintf(`{"%s": %d}`, c.PointsVarName, pointsReq)
+	return newPointsJson, nil
 }

@@ -261,7 +261,12 @@ func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int,
 		}
 	}
 
-	newCustomer := customerModels.Customer{CafeID: cafeID, Points: customerPoints, SurveyResult: "{}"}
+	newCustomer := customerModels.Customer{
+		CafeID:       cafeID,
+		Type:         Type,
+		Points:       customerPoints,
+		SurveyResult: "{}",
+	}
 
 	newCustomer, err = ap.customerRepo.Add(ctx, newCustomer)
 	if err != nil {
