@@ -79,7 +79,7 @@ func main() {
 	customerUseCase := _customerUseCase.NewCustomerUsecase(customerRepo, staffUsecase, applePassKitRepo, timeoutContext)
 	_customerHttpDeliver.NewCustomerHandler(r, customerUseCase)
 
-	survRepo := surveyRepo.NewPostgresCafeRepository(conn)
+	survRepo := surveyRepo.NewPostgresSurveyRepository(conn)
 	surveyUcase := surveyUsecase.NewSurveyUsecase(cafeRepo, survRepo, staffUsecase, timeoutContext)
 	delivery.NewSurveyHandler(r, surveyUcase)
 

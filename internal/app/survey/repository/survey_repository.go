@@ -10,7 +10,7 @@ type postgresSurveyRepository struct {
 	Conn *sqlx.DB
 }
 
-func NewPostgresCafeRepository(conn *sqlx.DB) survey.Repository {
+func NewPostgresSurveyRepository(conn *sqlx.DB) survey.Repository {
 	return &postgresSurveyRepository{
 		Conn: conn,
 	}
@@ -31,5 +31,10 @@ func (p postgresSurveyRepository) GetSurveyTemplate(ctx context.Context, cafeId 
 func (p postgresSurveyRepository) SubmitSurvey(ctx context.Context, surv string, customerUUID string) error {
 	query := `UPDATE customer SET surveyresult=$1 where customerID=$2`
 	_, err := p.Conn.ExecContext(ctx, query, surv, customerUUID)
+	return err
+}
+func (p postgresSurveyRepository) UpdateSurveyTemplate(ctx context.Context, survey string, id int) error {
+	query := `UPDATE surveytemplate set surveytemplate=$1 where cafeid=$2`
+	_, err := p.Conn.ExecContext(ctx, query, survey, id)
 	return err
 }
