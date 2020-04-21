@@ -62,6 +62,9 @@ func (s SurveyUsecase) GetSurveyTemplate(ctx context.Context, id int) (string, e
 		return "", globalModels.ErrForbidden
 	}
 	survTemplate, err := s.surveyRepo.GetSurveyTemplate(ctx, id, requestUser.StaffID)
+	if err == sql.ErrNoRows {
+		return "", nil
+	}
 	return survTemplate, err
 }
 
