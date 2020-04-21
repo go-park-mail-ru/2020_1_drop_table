@@ -105,8 +105,7 @@ func TestAddHandler(t *testing.T) {
 		handler := applePassKitHandler{passesUsecace: mockPassUcase}
 
 		mockPassUcase.On("UpdatePass",
-			mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("models.ApplePassDB"),
-			mock.AnythingOfType("int"), mock.AnythingOfType("bool")).
+			mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("models.ApplePassDB")).
 			Return(testCase.data, testCase.err)
 
 		var buf bytes.Buffer
@@ -190,7 +189,7 @@ func TestGetPassHandler(t *testing.T) {
 
 		mockPassUcase.On("GetPass",
 			mock.AnythingOfType("*context.valueCtx"),
-			mock.AnythingOfType("int"), mock.AnythingOfType("bool")).
+			mock.AnythingOfType("int"), mock.AnythingOfType("string"), mock.AnythingOfType("bool")).
 			Return(testCase.data, testCase.err)
 
 		req, err := http.NewRequest(echo.GET, url, nil)
