@@ -295,16 +295,14 @@ func TestGenerateQr(t *testing.T) {
 		user, nil)
 	cafeRepo := cafeMock.Repository{}
 	returnedCafe := cafeModels.Cafe{
-		CafeID:               2,
-		CafeName:             "",
-		Address:              "",
-		Description:          "",
-		StaffID:              0,
-		OpenTime:             time.Time{},
-		CloseTime:            time.Time{},
-		Photo:                "",
-		PublishedApplePassID: sql.NullInt64{},
-		SavedApplePassID:     sql.NullInt64{},
+		CafeID:      2,
+		CafeName:    "",
+		Address:     "",
+		Description: "",
+		StaffID:     0,
+		OpenTime:    time.Time{},
+		CloseTime:   time.Time{},
+		Photo:       "",
 	}
 
 	cafeRepo.On("GetByID",
