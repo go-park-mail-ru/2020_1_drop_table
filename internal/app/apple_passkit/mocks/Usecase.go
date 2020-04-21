@@ -16,13 +16,13 @@ type Usecase struct {
 	mock.Mock
 }
 
-// GeneratePassObject provides a mock function with given fields: c, cafeID, published
-func (_m *Usecase) GeneratePassObject(c context.Context, cafeID int, published bool) (*bytes.Buffer, error) {
-	ret := _m.Called(c, cafeID, published)
+// GeneratePassObject provides a mock function with given fields: c, cafeID, Type, published
+func (_m *Usecase) GeneratePassObject(c context.Context, cafeID int, Type string, published bool) (*bytes.Buffer, error) {
+	ret := _m.Called(c, cafeID, Type, published)
 
 	var r0 *bytes.Buffer
-	if rf, ok := ret.Get(0).(func(context.Context, int, bool) *bytes.Buffer); ok {
-		r0 = rf(c, cafeID, published)
+	if rf, ok := ret.Get(0).(func(context.Context, int, string, bool) *bytes.Buffer); ok {
+		r0 = rf(c, cafeID, Type, published)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*bytes.Buffer)
@@ -30,8 +30,8 @@ func (_m *Usecase) GeneratePassObject(c context.Context, cafeID int, published b
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, int, bool) error); ok {
-		r1 = rf(c, cafeID, published)
+	if rf, ok := ret.Get(1).(func(context.Context, int, string, bool) error); ok {
+		r1 = rf(c, cafeID, Type, published)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -39,13 +39,13 @@ func (_m *Usecase) GeneratePassObject(c context.Context, cafeID int, published b
 	return r0, r1
 }
 
-// GetImage provides a mock function with given fields: c, imageName, cafeID, published
-func (_m *Usecase) GetImage(c context.Context, imageName string, cafeID int, published bool) ([]byte, error) {
-	ret := _m.Called(c, imageName, cafeID, published)
+// GetImage provides a mock function with given fields: c, imageName, cafeID, Type, published
+func (_m *Usecase) GetImage(c context.Context, imageName string, cafeID int, Type string, published bool) ([]byte, error) {
+	ret := _m.Called(c, imageName, cafeID, Type, published)
 
 	var r0 []byte
-	if rf, ok := ret.Get(0).(func(context.Context, string, int, bool) []byte); ok {
-		r0 = rf(c, imageName, cafeID, published)
+	if rf, ok := ret.Get(0).(func(context.Context, string, int, string, bool) []byte); ok {
+		r0 = rf(c, imageName, cafeID, Type, published)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]byte)
@@ -53,8 +53,8 @@ func (_m *Usecase) GetImage(c context.Context, imageName string, cafeID int, pub
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, string, int, bool) error); ok {
-		r1 = rf(c, imageName, cafeID, published)
+	if rf, ok := ret.Get(1).(func(context.Context, string, int, string, bool) error); ok {
+		r1 = rf(c, imageName, cafeID, Type, published)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -62,13 +62,13 @@ func (_m *Usecase) GetImage(c context.Context, imageName string, cafeID int, pub
 	return r0, r1
 }
 
-// GetPass provides a mock function with given fields: c, cafeID, published
-func (_m *Usecase) GetPass(c context.Context, cafeID int, published bool) (map[string]string, error) {
-	ret := _m.Called(c, cafeID, published)
+// GetPass provides a mock function with given fields: c, cafeID, Type, published
+func (_m *Usecase) GetPass(c context.Context, cafeID int, Type string, published bool) (map[string]string, error) {
+	ret := _m.Called(c, cafeID, Type, published)
 
 	var r0 map[string]string
-	if rf, ok := ret.Get(0).(func(context.Context, int, bool) map[string]string); ok {
-		r0 = rf(c, cafeID, published)
+	if rf, ok := ret.Get(0).(func(context.Context, int, string, bool) map[string]string); ok {
+		r0 = rf(c, cafeID, Type, published)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(map[string]string)
@@ -76,8 +76,8 @@ func (_m *Usecase) GetPass(c context.Context, cafeID int, published bool) (map[s
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, int, bool) error); ok {
-		r1 = rf(c, cafeID, published)
+	if rf, ok := ret.Get(1).(func(context.Context, int, string, bool) error); ok {
+		r1 = rf(c, cafeID, Type, published)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -85,20 +85,20 @@ func (_m *Usecase) GetPass(c context.Context, cafeID int, published bool) (map[s
 	return r0, r1
 }
 
-// UpdatePass provides a mock function with given fields: c, pass, cafeID, publish
-func (_m *Usecase) UpdatePass(c context.Context, pass models.ApplePassDB, cafeID int, publish bool) (models.UpdateResponse, error) {
-	ret := _m.Called(c, pass, cafeID, publish)
+// UpdatePass provides a mock function with given fields: c, pass
+func (_m *Usecase) UpdatePass(c context.Context, pass models.ApplePassDB) (models.UpdateResponse, error) {
+	ret := _m.Called(c, pass)
 
 	var r0 models.UpdateResponse
-	if rf, ok := ret.Get(0).(func(context.Context, models.ApplePassDB, int, bool) models.UpdateResponse); ok {
-		r0 = rf(c, pass, cafeID, publish)
+	if rf, ok := ret.Get(0).(func(context.Context, models.ApplePassDB) models.UpdateResponse); ok {
+		r0 = rf(c, pass)
 	} else {
 		r0 = ret.Get(0).(models.UpdateResponse)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, models.ApplePassDB, int, bool) error); ok {
-		r1 = rf(c, pass, cafeID, publish)
+	if rf, ok := ret.Get(1).(func(context.Context, models.ApplePassDB) error); ok {
+		r1 = rf(c, pass)
 	} else {
 		r1 = ret.Error(1)
 	}
