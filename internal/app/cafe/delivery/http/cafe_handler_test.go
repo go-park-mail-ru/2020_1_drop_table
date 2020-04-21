@@ -68,8 +68,6 @@ func TestAddCafeHandler(t *testing.T) {
 	err := faker.FakeData(&inputCafe)
 	assert.NoError(t, err)
 
-	inputCafe.PublishedApplePassID = sql.NullInt64{}
-	inputCafe.SavedApplePassID = sql.NullInt64{}
 	inputCafe.CloseTime = inputCafe.CloseTime.UTC()
 	inputCafe.OpenTime = inputCafe.OpenTime.UTC()
 
@@ -160,8 +158,6 @@ func TestEditCafeHandler(t *testing.T) {
 	err := faker.FakeData(&inputCafe)
 	assert.NoError(t, err)
 
-	inputCafe.PublishedApplePassID = sql.NullInt64{}
-	inputCafe.SavedApplePassID = sql.NullInt64{}
 	inputCafe.CloseTime = inputCafe.CloseTime.UTC()
 	inputCafe.OpenTime = inputCafe.OpenTime.UTC()
 
@@ -277,8 +273,6 @@ func TestGetByIDHandler(t *testing.T) {
 	err := faker.FakeData(&outputCafe)
 	assert.NoError(t, err)
 
-	outputCafe.PublishedApplePassID = sql.NullInt64{}
-	outputCafe.SavedApplePassID = sql.NullInt64{}
 	outputCafe.CloseTime = outputCafe.CloseTime.UTC()
 	outputCafe.OpenTime = outputCafe.OpenTime.UTC()
 	outputCafe.CafeID = cafeID
@@ -377,8 +371,6 @@ func TestGetByOwnerIDHandler(t *testing.T) {
 	assert.NoError(t, err)
 
 	for i := range outputCafes {
-		outputCafes[i].PublishedApplePassID = sql.NullInt64{}
-		outputCafes[i].SavedApplePassID = sql.NullInt64{}
 		outputCafes[i].CloseTime = outputCafes[i].CloseTime.UTC()
 		outputCafes[i].OpenTime = outputCafes[i].OpenTime.UTC()
 	}
