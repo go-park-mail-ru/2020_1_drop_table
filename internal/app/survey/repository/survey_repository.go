@@ -10,7 +10,7 @@ type postgresSurveyRepository struct {
 	Conn *sqlx.DB
 }
 
-func NewPostgresCafeRepository(conn *sqlx.DB) survey.Repository {
+func NewPostgresSurveyRepository(conn *sqlx.DB) survey.Repository {
 	return &postgresSurveyRepository{
 		Conn: conn,
 	}
