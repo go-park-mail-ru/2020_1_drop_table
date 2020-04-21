@@ -43,6 +43,12 @@ func (s SurveyUsecase) SetSurveyTemplate(ctx context.Context, survey string, id 
 		if err == sql.ErrNoRows {
 			return globalModels.ErrCafeIsNotExist
 		}
+		if err.Error() == `pq: duplicate key value violates unique constraint "surveytemplate_cafeid_key"` {
+			err := s.surveyRepo.UpdateSurveyTemplate(ctx, survey, id)
+			if err == nil {
+				return nil
+			}
+		}
 		return globalModels.ErrBadJSON
 	}
 	return err

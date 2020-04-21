@@ -33,3 +33,8 @@ func (p postgresSurveyRepository) SubmitSurvey(ctx context.Context, surv string,
 	_, err := p.Conn.ExecContext(ctx, query, surv, customerUUID)
 	return err
 }
+func (p postgresSurveyRepository) UpdateSurveyTemplate(ctx context.Context, survey string, id int) error {
+	query := `UPDATE surveytemplate set surveytemplate=$1 where cafeid=$2`
+	_, err := p.Conn.ExecContext(ctx, query, survey, id)
+	return err
+}
