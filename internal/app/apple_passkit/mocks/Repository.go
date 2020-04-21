@@ -70,6 +70,27 @@ func (_m *Repository) GetMeta(ctx context.Context, cafeID int) (models.ApplePass
 	return r0, r1
 }
 
+// GetPassByCafeID provides a mock function with given fields: ctx, cafeID, Type, published
+func (_m *Repository) GetPassByCafeID(ctx context.Context, cafeID int, Type string, published bool) (models.ApplePassDB, error) {
+	ret := _m.Called(ctx, cafeID, Type, published)
+
+	var r0 models.ApplePassDB
+	if rf, ok := ret.Get(0).(func(context.Context, int, string, bool) models.ApplePassDB); ok {
+		r0 = rf(ctx, cafeID, Type, published)
+	} else {
+		r0 = ret.Get(0).(models.ApplePassDB)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int, string, bool) error); ok {
+		r1 = rf(ctx, cafeID, Type, published)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetPassByID provides a mock function with given fields: ctx, id
 func (_m *Repository) GetPassByID(ctx context.Context, id int) (models.ApplePassDB, error) {
 	ret := _m.Called(ctx, id)

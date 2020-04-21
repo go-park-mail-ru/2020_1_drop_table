@@ -99,31 +99,3 @@ func (_m *Repository) Update(ctx context.Context, newCafe models.Cafe) (models.C
 
 	return r0, r1
 }
-
-// UpdatePublishedPass provides a mock function with given fields: ctx, newCafe
-func (_m *Repository) UpdatePublishedPass(ctx context.Context, newCafe models.Cafe) error {
-	ret := _m.Called(ctx, newCafe)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, models.Cafe) error); ok {
-		r0 = rf(ctx, newCafe)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// UpdateSavedPass provides a mock function with given fields: ctx, newCafe
-func (_m *Repository) UpdateSavedPass(ctx context.Context, newCafe models.Cafe) error {
-	ret := _m.Called(ctx, newCafe)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, models.Cafe) error); ok {
-		r0 = rf(ctx, newCafe)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}

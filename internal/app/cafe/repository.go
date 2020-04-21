@@ -10,6 +10,4 @@ type Repository interface {
 	GetByID(ctx context.Context, id int) (models.Cafe, error)
 	GetByOwnerID(ctx context.Context, staffID int) ([]models.Cafe, error)
 	Update(ctx context.Context, newCafe models.Cafe) (models.Cafe, error)
-	//UpdateSavedPass(ctx context.Context, newCafe models.Cafe) error
-	//UpdatePublishedPass(ctx context.Context, newCafe models.Cafe) error
 }

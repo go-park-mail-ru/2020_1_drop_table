@@ -56,7 +56,6 @@ func (ap *applePassKitUsecase) getOwnersCafe(ctx context.Context, cafeID int) (c
 
 	cafeObj, err := ap.cafeRepo.GetByID(ctx, cafeID)
 	if err != nil {
-		fmt.Println("here")
 		return cafeModels.Cafe{}, err
 	}
 
@@ -72,7 +71,9 @@ func (ap *applePassKitUsecase) UpdatePass(c context.Context, pass models.ApplePa
 	defer cancel()
 
 	cafeObj, err := ap.getOwnersCafe(ctx, pass.CafeID)
-	if err != nil {
+	if err == sql.ErrNoRows {
+		return models.UpdateResponse{}, globalModels.ErrForbidden
+	} else if err != nil {
 		return models.UpdateResponse{}, err
 	}
 
