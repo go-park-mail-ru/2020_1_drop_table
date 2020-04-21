@@ -4,6 +4,9 @@ var LoyaltySystems map[string]LoyaltySystem
 
 func init() {
 	LoyaltySystems = map[string]LoyaltySystem{
-		"coffee_cup": &CoffeeCup{},
+		"coffee_cup": &CoffeeCup{
+			InfoVarName:   "cups_count",
+			PointsVarName: "coffee_cups",
+		},
 	}
 }

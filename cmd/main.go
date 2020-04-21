@@ -76,7 +76,7 @@ func main() {
 
 	_appleHttpDeliver.NewPassKitHandler(r, applePassKitUcase)
 
-	customerUseCase := _customerUseCase.NewCustomerUsecase(customerRepo, staffUsecase, timeoutContext)
+	customerUseCase := _customerUseCase.NewCustomerUsecase(customerRepo, staffUsecase, applePassKitRepo, timeoutContext)
 	_customerHttpDeliver.NewCustomerHandler(r, customerUseCase)
 
 	survRepo := surveyRepo.NewPostgresCafeRepository(conn)
