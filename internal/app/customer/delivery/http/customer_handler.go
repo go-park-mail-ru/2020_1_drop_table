@@ -6,6 +6,7 @@ import (
 	"2020_1_drop_table/internal/pkg/permissions"
 	"2020_1_drop_table/internal/pkg/responses"
 	"github.com/gorilla/mux"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -44,12 +45,16 @@ func (h CustomerHandler) GetPoints(writer http.ResponseWriter, r *http.Request) 
 func (h CustomerHandler) SetPoints(writer http.ResponseWriter, r *http.Request) {
 	uuid := mux.Vars(r)["uuid"]
 
-	points := r.FormValue("points")
-
-	err := h.CUsecase.SetPoints(r.Context(), uuid, points)
+	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		responses.SendSingleError(err.Error(), writer)
 		return
 	}
-	responses.SendOKAnswer(points, writer)
+
+	err = h.CUsecase.SetPoints(r.Context(), uuid, string(body))
+	if err != nil {
+		responses.SendSingleError(err.Error(), writer)
+		return
+	}
+	responses.SendOKAnswer(string(body), writer)
 }
