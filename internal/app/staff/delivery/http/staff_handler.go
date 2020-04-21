@@ -282,21 +282,25 @@ func (s *StaffHandler) DeleteStaff(w http.ResponseWriter, r *http.Request) {
 }
 
 func fetchPosition(r *http.Request) (string, error) {
-	err := r.ParseMultipartForm(32 << 20)
+	type pos struct {
+		Position string
+	}
+	data, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	if err != nil || len(data) == 0 {
+		return "", err
+	}
+	var position pos
+	err = json.Unmarshal(data, &position)
 	if err != nil {
-		return "", globalModels.ErrBadRequest
+		return "", err
 	}
-
-	jsonData := r.FormValue("jsonData")
-	if jsonData == "" || jsonData == "null" {
-		return "", globalModels.ErrEmptyJSON
-	}
-
-	return jsonData, nil
+	return position.Position, nil
 }
 func (s *StaffHandler) UpdatePosition(w http.ResponseWriter, r *http.Request) {
 	staffID, err := strconv.Atoi(mux.Vars(r)["id"])
 	newPosition, fetchErr := fetchPosition(r)
+	fmt.Println(newPosition, fetchErr)
 	if err != nil || fetchErr != nil {
 		responses.SendSingleError(globalModels.ErrBadRequest.Error(), w)
 		return
