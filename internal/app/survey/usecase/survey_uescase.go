@@ -57,11 +57,7 @@ func (s SurveyUsecase) SetSurveyTemplate(ctx context.Context, survey string, id 
 func (s SurveyUsecase) GetSurveyTemplate(ctx context.Context, id int) (string, error) {
 	ctx, cancel := context.WithTimeout(ctx, s.contextTimeout)
 	defer cancel()
-	requestUser, err := s.staffUcase.GetFromSession(ctx)
-	if err != nil || !requestUser.IsOwner {
-		return "", globalModels.ErrForbidden
-	}
-	survTemplate, err := s.surveyRepo.GetSurveyTemplate(ctx, id, requestUser.StaffID)
+	survTemplate, err := s.surveyRepo.GetSurveyTemplate(ctx, id)
 	if err == sql.ErrNoRows {
 		return "", nil
 	}

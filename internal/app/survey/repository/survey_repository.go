@@ -21,10 +21,10 @@ func (p postgresSurveyRepository) SetSurveyTemplate(ctx context.Context, survey 
 	_, err := p.Conn.ExecContext(ctx, query, id, survey, cafeOwnerID)
 	return err
 }
-func (p postgresSurveyRepository) GetSurveyTemplate(ctx context.Context, cafeId int, cafeOwnerId int) (string, error) {
-	query := `SELECT surveytemplate from surveytemplate where cafeid=$1 and cafeownerid=$2`
+func (p postgresSurveyRepository) GetSurveyTemplate(ctx context.Context, cafeId int) (string, error) {
+	query := `SELECT surveytemplate from surveytemplate where cafeid=$1`
 	var survTemplate string
-	err := p.Conn.GetContext(ctx, &survTemplate, query, cafeId, cafeOwnerId)
+	err := p.Conn.GetContext(ctx, &survTemplate, query, cafeId)
 	return survTemplate, err
 }
 
