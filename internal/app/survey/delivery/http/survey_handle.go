@@ -1,4 +1,4 @@
-package delivery
+package http
 
 import (
 	globalModels "2020_1_drop_table/internal/app/models"

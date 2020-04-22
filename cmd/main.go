@@ -15,7 +15,7 @@ import (
 	_staffHttpDeliver "2020_1_drop_table/internal/app/staff/delivery/http"
 	_staffRepo "2020_1_drop_table/internal/app/staff/repository"
 	_staffUsecase "2020_1_drop_table/internal/app/staff/usecase"
-	"2020_1_drop_table/internal/app/survey/delivery"
+	http2 "2020_1_drop_table/internal/app/survey/delivery/http"
 	surveyRepo "2020_1_drop_table/internal/app/survey/repository"
 	surveyUsecase "2020_1_drop_table/internal/app/survey/usecase"
 	"2020_1_drop_table/internal/pkg/apple_pass_generator"
@@ -81,7 +81,7 @@ func main() {
 
 	survRepo := surveyRepo.NewPostgresSurveyRepository(conn)
 	surveyUcase := surveyUsecase.NewSurveyUsecase(cafeRepo, survRepo, staffUsecase, timeoutContext)
-	delivery.NewSurveyHandler(r, surveyUcase)
+	http2.NewSurveyHandler(r, surveyUcase)
 
 	//OPTIONS
 	middleware.AddOptionsRequest(r)

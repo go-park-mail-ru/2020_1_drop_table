@@ -1,4 +1,4 @@
-package test
+package repository
 
 // TODO тест валится с does not matches sql как и все сотальные тесты
 
