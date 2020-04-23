@@ -300,7 +300,7 @@ func fetchPosition(r *http.Request) (string, error) {
 func (s *StaffHandler) UpdatePosition(w http.ResponseWriter, r *http.Request) {
 	staffID, err := strconv.Atoi(mux.Vars(r)["id"])
 	newPosition, fetchErr := fetchPosition(r)
-	fmt.Println(newPosition, fetchErr)
+
 	if err != nil || fetchErr != nil {
 		responses.SendSingleError(globalModels.ErrBadRequest.Error(), w)
 		return

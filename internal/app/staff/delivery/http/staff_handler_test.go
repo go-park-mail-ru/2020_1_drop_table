@@ -320,14 +320,17 @@ func TestDeleteStaff(t *testing.T) {
 func TestUpdatePosition(t *testing.T) {
 	const url = "/api/v1/staff/update_position/228"
 	type DeleteStaffHttpResponse struct {
-		Data   error
+		Data   string
 		Errors []responses.HttpError
+	}
+	type pos struct {
+		Position string
 	}
 
 	type UpdateStaffTestCase struct {
 		StaffId     int
-		NewPosition string
-		errors      error
+		NewPosition *pos
+		ResultData  string
 		httpErrs    []responses.HttpError
 	}
 
@@ -335,11 +338,10 @@ func TestUpdatePosition(t *testing.T) {
 	handler := StaffHandler{SUsecase: mockstaffUcase}
 
 	testCases := []UpdateStaffTestCase{
-		//Test Not found in DB
 		{
 			StaffId:     228,
-			NewPosition: "testPosition",
-			errors:      nil,
+			NewPosition: &pos{Position: ""},
+			ResultData:  "",
 			httpErrs:    nil,
 		},
 	}
@@ -348,24 +350,27 @@ func TestUpdatePosition(t *testing.T) {
 		message := fmt.Sprintf("test case number: %d", i)
 		fmt.Println(message)
 		mockstaffUcase.On("UpdatePosition",
-			mock.AnythingOfType("*context.valueCtx"), testCase.StaffId, testCase.NewPosition).Return(testCase.errors)
+			mock.AnythingOfType("*context.valueCtx"), testCase.StaffId, testCase.NewPosition.Position).Return(nil)
 
-		buf, wr := createMultipartFormData(t, "testPosition")
-		req, err := http.NewRequest("GET", url, &buf)
+		body, _ := json.Marshal(testCase.NewPosition)
+		req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
 		req = mux.SetURLVars(req, map[string]string{
 			"id": "228",
 		})
-		assert.Nil(t, err)
-		req.Header.Set("Content-Type", wr.FormDataContentType())
+		var m map[string]interface{}
+		err = json.NewDecoder(req.Body).Decode(&m)
+		req.Header.Set("Content-Type", "application/json")
+		fmt.Println(err, m)
 		respWriter := httptest.NewRecorder()
 		handler.UpdatePosition(respWriter, req)
+
 		resp := respWriter.Result()
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err = ioutil.ReadAll(resp.Body)
 		assert.NoError(t, err)
 		var responseStruct DeleteStaffHttpResponse
 		err = json.Unmarshal(body, &responseStruct)
-		//assert.NoError(t, err)
-		assert.Equal(t, responseStruct.Data, testCase.errors)
+		assert.NoError(t, err)
+		assert.Equal(t, responseStruct.Data, testCase.ResultData)
 		assert.Equal(t, responseStruct.Errors, testCase.httpErrs)
 	}
 
