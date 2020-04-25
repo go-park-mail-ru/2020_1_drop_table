@@ -34,13 +34,6 @@ func (u customerUsecase) GetCustomer(ctx context.Context, uuid string) (models.C
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
 
-	requestStaff, err := u.staffUsecase.GetFromSession(ctx)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return models.Customer{}, globalModels.ErrNotFound
-		}
-		return models.Customer{}, err
-	}
 	targetCustomer, err := u.customerRepo.GetByID(ctx, uuid)
 
 	if err != nil {
@@ -48,10 +41,6 @@ func (u customerUsecase) GetCustomer(ctx context.Context, uuid string) (models.C
 			return models.Customer{}, globalModels.ErrNotFound
 		}
 		return models.Customer{}, err
-	}
-
-	if requestStaff.CafeId != targetCustomer.CafeID {
-		return models.Customer{}, globalModels.ErrForbidden
 	}
 
 	return targetCustomer, err
