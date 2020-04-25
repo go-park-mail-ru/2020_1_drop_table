@@ -33,7 +33,7 @@ func NewCustomerUsecase(c customer.Repository, s staff.Usecase, p apple_passkit.
 func (u customerUsecase) GetCustomer(ctx context.Context, uuid string) (models.Customer, error) {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
-
+	//ToDo make permission only for staff after adding statistics
 	targetCustomer, err := u.customerRepo.GetByID(ctx, uuid)
 
 	if err != nil {
