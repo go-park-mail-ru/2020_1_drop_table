@@ -37,7 +37,7 @@ func (u customerUsecase) GetCustomer(ctx context.Context, uuid string) (models.C
 	requestStaff, err := u.staffUsecase.GetFromSession(ctx)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return models.Customer{}, globalModels.ErrForbidden
+			return models.Customer{}, globalModels.ErrNotFound
 		}
 		return models.Customer{}, err
 	}
