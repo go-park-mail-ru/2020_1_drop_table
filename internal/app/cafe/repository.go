@@ -10,4 +10,5 @@ type Repository interface {
 	GetByID(ctx context.Context, id int) (models.Cafe, error)
 	GetByOwnerID(ctx context.Context, staffID int) ([]models.Cafe, error)
 	Update(ctx context.Context, newCafe models.Cafe) (models.Cafe, error)
+	GetAllCafes(ctx context.Context, since int, limit int) ([]models.Cafe, error)
 }

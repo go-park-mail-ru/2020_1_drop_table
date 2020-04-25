@@ -10,4 +10,5 @@ type Usecase interface {
 	GetByOwnerID(c context.Context) ([]models.Cafe, error)
 	GetByID(c context.Context, id int) (models.Cafe, error)
 	Update(c context.Context, newCafe models.Cafe) (models.Cafe, error)
+	GetAllCafes(ctx context.Context, since int, limit int) ([]models.Cafe, error)
 }

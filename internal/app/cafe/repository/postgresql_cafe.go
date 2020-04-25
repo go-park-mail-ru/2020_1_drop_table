@@ -79,3 +79,10 @@ func (p *postgresCafeRepository) Update(ctx context.Context, newCafe models.Cafe
 
 	return CafeDB, err
 }
+
+func (p *postgresCafeRepository) GetAllCafes(ctx context.Context, since int, limit int) ([]models.Cafe, error) {
+	query := `SELECT * from cafe OFFSET $1 LIMIT $2`
+	var CafesList []models.Cafe
+	err := p.Conn.SelectContext(ctx, &CafesList, query, since, limit)
+	return CafesList, err
+}
