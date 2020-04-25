@@ -121,3 +121,11 @@ func (cu *cafeUsecase) Update(c context.Context, newCafe models.Cafe) (models.Ca
 
 	return cu.cafeRepo.Update(ctx, newCafe)
 }
+
+func (cu *cafeUsecase) GetAllCafes(ctx context.Context, since int, limit int) ([]models.Cafe, error) {
+	ctx, cancel := context.WithTimeout(ctx, cu.contextTimeout)
+	defer cancel()
+
+	cafes, err := cu.cafeRepo.GetAllCafes(ctx, since, limit)
+	return cafes, err
+}
