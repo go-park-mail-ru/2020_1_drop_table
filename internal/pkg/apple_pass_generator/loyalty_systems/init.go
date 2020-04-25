@@ -8,5 +8,9 @@ func init() {
 			InfoVarName:   "cups_count",
 			PointsVarName: "coffee_cups",
 		},
+		"cashback": &CashBack{
+			InfoVarName:   "cashback",
+			PointsVarName: "points_count",
+		},
 	}
 }
