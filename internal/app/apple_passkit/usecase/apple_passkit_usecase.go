@@ -151,6 +151,7 @@ func (ap *applePassKitUsecase) getImageUrls(passObj models.ApplePassDB, cafeID i
 	serverStartUrl := fmt.Sprintf("%s/%s/cafe/%d/apple_pass", configs.ServerUrl, configs.ApiVersion, cafeID)
 	return map[string]string{
 		"design":  passObj.Design,
+		"type":    passObj.Type,
 		"icon":    fmt.Sprintf("%s/icon", serverStartUrl),
 		"icon2x":  fmt.Sprintf("%s/icon2x", serverStartUrl),
 		"logo":    fmt.Sprintf("%s/logo", serverStartUrl),
