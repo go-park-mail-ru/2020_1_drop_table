@@ -42,22 +42,19 @@ func (u customerUsecase) GetCustomer(ctx context.Context, uuid string) (models.C
 		return models.Customer{}, err
 	}
 	targetCustomer, err := u.customerRepo.GetByID(ctx, uuid)
+
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return models.Customer{}, globalModels.ErrNotFound
 		}
 		return models.Customer{}, err
 	}
+
 	if requestStaff.CafeId != targetCustomer.CafeID {
 		return models.Customer{}, globalModels.ErrForbidden
 	}
 
-	cust, err := u.customerRepo.GetByID(ctx, uuid)
-	if err != nil {
-		return models.Customer{}, err
-	}
-
-	return cust, err
+	return targetCustomer, err
 }
 
 func (u customerUsecase) GetPoints(ctx context.Context, uuid string) (string, error) {
