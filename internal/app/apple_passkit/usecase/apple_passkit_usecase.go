@@ -150,14 +150,15 @@ func (ap *applePassKitUsecase) UpdatePass(c context.Context, pass models.ApplePa
 func (ap *applePassKitUsecase) getImageUrls(passObj models.ApplePassDB, cafeID int) map[string]string {
 	serverStartUrl := fmt.Sprintf("%s/%s/cafe/%d/apple_pass", configs.ServerUrl, configs.ApiVersion, cafeID)
 	return map[string]string{
-		"design":  passObj.Design,
-		"type":    passObj.Type,
-		"icon":    fmt.Sprintf("%s/icon", serverStartUrl),
-		"icon2x":  fmt.Sprintf("%s/icon2x", serverStartUrl),
-		"logo":    fmt.Sprintf("%s/logo", serverStartUrl),
-		"logo2x":  fmt.Sprintf("%s/logo2x", serverStartUrl),
-		"strip":   fmt.Sprintf("%s/strip", serverStartUrl),
-		"strip2x": fmt.Sprintf("%s/strip2x", serverStartUrl),
+		"design":       passObj.Design,
+		"type":         passObj.Type,
+		"loyalty_info": passObj.LoyaltyInfo,
+		"icon":         fmt.Sprintf("%s/icon", serverStartUrl),
+		"icon2x":       fmt.Sprintf("%s/icon2x", serverStartUrl),
+		"logo":         fmt.Sprintf("%s/logo", serverStartUrl),
+		"logo2x":       fmt.Sprintf("%s/logo2x", serverStartUrl),
+		"strip":        fmt.Sprintf("%s/strip", serverStartUrl),
+		"strip2x":      fmt.Sprintf("%s/strip2x", serverStartUrl),
 	}
 }
 
