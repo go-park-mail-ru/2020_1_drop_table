@@ -96,6 +96,10 @@ func (ap *applePassKitUsecase) UpdatePass(c context.Context, pass models.ApplePa
 		if err != nil {
 			return models.UpdateResponse{}, err
 		}
+		err = ap.createQRs(pass.CafeID, pass.Type)
+		if err != nil {
+			return models.UpdateResponse{}, err
+		}
 	} else if err != nil {
 		return models.UpdateResponse{}, err
 	}
@@ -120,8 +124,8 @@ func (ap *applePassKitUsecase) UpdatePass(c context.Context, pass models.ApplePa
 
 		savedPassURL := fmt.Sprintf("%s/%s/cafe/%d/apple_pass/%s/new_customer?published=false",
 			configs.ServerUrl, configs.ApiVersion, pass.CafeID, pass.Type)
-		QrUrl := fmt.Sprintf("%s/media/qr/%d_saved.png",
-			configs.ServerUrl, pass.CafeID)
+		QrUrl := fmt.Sprintf("%s/media/qr/%d_%s_saved.png",
+			configs.ServerUrl, pass.CafeID, pass.Type)
 
 		response := models.UpdateResponse{
 			URL: savedPassURL,
@@ -137,8 +141,8 @@ func (ap *applePassKitUsecase) UpdatePass(c context.Context, pass models.ApplePa
 
 	publishedPassURL := fmt.Sprintf("%s/%s/cafe/%d/apple_pass/%s/new_customer?published=true",
 		configs.ServerUrl, configs.ApiVersion, pass.CafeID, pass.Type)
-	QrUrl := fmt.Sprintf("%s/media/qr/%d_published.png",
-		configs.ServerUrl, pass.CafeID)
+	QrUrl := fmt.Sprintf("%s/media/qr/%d_%s_published.png",
+		configs.ServerUrl, pass.CafeID, pass.Type)
 	response := models.UpdateResponse{
 		URL: publishedPassURL,
 		QR:  QrUrl,
@@ -302,13 +306,13 @@ func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int,
 	return passBuffer, err
 }
 
-func (ap *applePassKitUsecase) createQRs(cafeID int) error {
-	savedPassURL := fmt.Sprintf("%s/%s/cafe/%d/apple_pass/new_customer?published=false",
-		configs.ServerUrl, configs.ApiVersion, cafeID)
-	savedPassPath := fmt.Sprintf("%d_saved", cafeID)
-	publishedPassURL := fmt.Sprintf("%s/%s/cafe/%d/apple_pass/new_customer?published=true",
-		configs.ServerUrl, configs.ApiVersion, cafeID)
-	publishedPassPath := fmt.Sprintf("%d_published", cafeID)
+func (ap *applePassKitUsecase) createQRs(cafeID int, applePassType string) error {
+	savedPassURL := fmt.Sprintf("%s/%s/cafe/%d/apple_pass/%s/new_customer?published=false",
+		configs.ServerUrl, configs.ApiVersion, cafeID, applePassType)
+	savedPassPath := fmt.Sprintf("%d_%s_saved", cafeID, applePassType)
+	publishedPassURL := fmt.Sprintf("%s/%s/cafe/%d/apple_pass/%s/new_customer?published=true",
+		configs.ServerUrl, configs.ApiVersion, cafeID, applePassType)
+	publishedPassPath := fmt.Sprintf("%d_%s_published", cafeID, applePassType)
 
 	_, err := qr.GenerateToFile(savedPassURL, savedPassPath)
 	if err != nil {
