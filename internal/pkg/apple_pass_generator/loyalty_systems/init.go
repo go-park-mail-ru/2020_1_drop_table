@@ -12,5 +12,10 @@ func init() {
 			InfoVarName:   "cashback",
 			PointsVarName: "points_count",
 		},
+		"percents": &Percents{
+			purchasesSumVarName: "purchases_sum",
+			discountVarName:     "discount",
+			newPurchasesVarName: "new_purchases",
+		},
 	}
 }
