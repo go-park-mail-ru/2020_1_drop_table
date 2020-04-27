@@ -42,7 +42,7 @@ func (c *CoffeeCup) CreatingCustomer(loyaltyInfo string) (customerPoints, newLoy
 		return "", "", err
 	}
 
-	return fmt.Sprintf(`{"%s": 0, %s: %d}`, c.PointsVarName, c.InfoVarName, DBMap[c.InfoVarName]), loyaltyInfo, nil
+	return fmt.Sprintf(`{"%s": 0, "%s": %d}`, c.PointsVarName, c.InfoVarName, DBMap[c.InfoVarName]), loyaltyInfo, nil
 }
 
 func (c *CoffeeCup) SettingPoints(_, _, reqPoints string) (newPoints string, err error) {
