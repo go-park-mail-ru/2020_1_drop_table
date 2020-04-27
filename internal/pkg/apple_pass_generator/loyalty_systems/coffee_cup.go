@@ -35,8 +35,14 @@ func (c *CoffeeCup) UpdatingPass(reqLoyaltyInfo, dbLoyaltyInfo string) (newLoyal
 
 func (c *CoffeeCup) CreatingCustomer(loyaltyInfo string) (customerPoints, newLoyaltyInfo string,
 	err error) {
+	var DBMap map[string]int
 
-	return fmt.Sprintf(`{"%s": 0}`, c.PointsVarName), loyaltyInfo, nil
+	err = UnmarshalEmptyString([]byte(loyaltyInfo), &DBMap)
+	if err != nil {
+		return "", "", err
+	}
+
+	return fmt.Sprintf(`{"%s": 0, %s: %d}`, c.PointsVarName, c.InfoVarName, DBMap[c.InfoVarName]), loyaltyInfo, nil
 }
 
 func (c *CoffeeCup) SettingPoints(_, _, reqPoints string) (newPoints string, err error) {
