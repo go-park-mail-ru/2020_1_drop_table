@@ -152,7 +152,9 @@ func (ap *applePassKitUsecase) UpdatePass(c context.Context, pass models.ApplePa
 }
 
 func (ap *applePassKitUsecase) getImageUrls(passObj models.ApplePassDB, cafeID int) map[string]string {
-	serverStartUrl := fmt.Sprintf("%s/%s/cafe/%d/apple_pass", configs.ServerUrl, configs.ApiVersion, cafeID)
+	serverStartUrl := fmt.Sprintf("%s/%s/cafe/%d/apple_pass/%s", configs.ServerUrl, configs.ApiVersion,
+		cafeID, passObj.Type)
+
 	return map[string]string{
 		"design":       passObj.Design,
 		"type":         passObj.Type,
