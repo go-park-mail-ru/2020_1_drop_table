@@ -182,8 +182,12 @@ func (ap *applePassKitUsecase) GetImage(c context.Context, imageName string, caf
 	published bool) ([]byte, error) {
 	passObj, err := ap.passKitRepo.GetPassByCafeID(c, cafeID, Type, true)
 	if err != nil {
+		passObj, err = ap.passKitRepo.GetPassByCafeID(c, cafeID, Type, true)
+	}
+	if err != nil {
 		return nil, err
 	}
+
 	var image []byte
 	switch imageName {
 	case "icon":
