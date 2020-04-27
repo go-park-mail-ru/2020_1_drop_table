@@ -5,7 +5,6 @@ import (
 	passKitModels "2020_1_drop_table/internal/app/apple_passkit/models"
 	customerMocks "2020_1_drop_table/internal/app/customer/mocks"
 	customerModels "2020_1_drop_table/internal/app/customer/models"
-	globalModels "2020_1_drop_table/internal/app/models"
 	staffMocks "2020_1_drop_table/internal/app/staff/mocks"
 	staffModels "2020_1_drop_table/internal/app/staff/models"
 	"context"
@@ -47,7 +46,7 @@ func TestCustomerUsecase_GetCustomer(t *testing.T) {
 		{
 			customer: customer,
 			staff:    staffForbidden,
-			err:      globalModels.ErrForbidden,
+			err:      nil,
 		},
 	}
 
