@@ -7,11 +7,13 @@ import (
 	"context"
 	"fmt"
 	google_protobuf "github.com/golang/protobuf/ptypes/timestamp"
+	"github.com/gorilla/sessions"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 	"net"
+	"strconv"
 )
 
 type server struct {
@@ -27,7 +29,7 @@ func NewArticleServerGrpc(gserver *grpc.Server, staffUCase staff2.Usecase) {
 }
 
 func StartGrpcServer(staffUCase staff2.Usecase) {
-	list, err := net.Listen("tcp", ":8082")
+	list, err := net.Listen("tcp", ":8083")
 	if err != nil {
 		log.Err(err)
 	}
@@ -37,10 +39,14 @@ func StartGrpcServer(staffUCase staff2.Usecase) {
 }
 
 func (s *server) GetFromSession(ctx context.Context, in *proto.Empty) (*proto.SafeStaff, error) {
-
-	md, ok := metadata.FromIncomingContext(ctx)
-	fmt.Println(md, ok)
+	md, _ := metadata.FromIncomingContext(ctx)
+	userid, _ := md["userid"]
+	intUserId, _ := strconv.Atoi(userid[0])
+	fmt.Println(intUserId + 3)
+	session := sessions.Session{Values: map[interface{}]interface{}{"userID": intUserId}}
+	ctx = context.WithValue(context.Background(), "session", &session)
 	safeStaff, err := s.staffUseCase.GetFromSession(ctx)
+	fmt.Println(safeStaff, err)
 	return transformIntoRPC(&safeStaff), err
 
 }

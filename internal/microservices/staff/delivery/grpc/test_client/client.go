@@ -7,33 +7,46 @@ import (
 	"github.com/gorilla/sessions"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+	"strconv"
 )
 
-func main() {
-	conn, err := grpc.Dial("localhost:8082", grpc.WithInsecure())
+type StaffClient struct {
+	client proto.StaffGRPCHandlerClient
+}
 
-	if err != nil {
-		fmt.Println("Unexpected Error", err)
-	}
-
-	defer conn.Close()
-	// CALL the NewArticleHandlerClient from generated File
+func NewStaffClient(conn *grpc.ClientConn) *StaffClient {
 	c := proto.NewStaffGRPCHandlerClient(conn)
-	// SingleRequest is a generated Struct from proto file
+	return &StaffClient{
+		client: c,
+	}
+}
+
+func (s StaffClient) GetFromSession(ctx context.Context) {
+	ctx = s.AddSessionInMetadata(ctx)
 	empt := proto.Empty{}
-	session := sessions.Session{Values: map[interface{}]interface{}{"userID": 2}}
-	ctx := context.WithValue(context.Background(), "session", &session)
-	md, ok := metadata.FromOutgoingContext(ctx)
-	fmt.Println(md, ok)
-	ctx = metadata.NewOutgoingContext(
-		ctx,
-		metadata.Pairs("key1", "val1", "key2", "val2"),
-	)
-	md, ok = metadata.FromOutgoingContext(ctx)
-	fmt.Println(md, ok)
-	r, err := c.GetFromSession(ctx, &empt, grpc.EmptyCallOption{})
+	r, err := s.client.GetFromSession(ctx, &empt, grpc.EmptyCallOption{})
 	if err != nil {
 		fmt.Println("Unexpected Error", err)
 	}
 	fmt.Println("Article : ", r)
+}
+
+func (s StaffClient) AddSessionInMetadata(ctx context.Context) context.Context {
+	value := ctx.Value("session").(*sessions.Session)
+	el := value.Values["userID"].(int)
+	fmt.Println(el)
+	return metadata.AppendToOutgoingContext(ctx, "userID", strconv.Itoa(el))
+}
+
+func main() {
+	conn, err := grpc.Dial("localhost:8083", grpc.WithInsecure())
+	defer conn.Close()
+	if err != nil {
+		fmt.Println("Unexpected Error", err)
+	}
+	client := NewStaffClient(conn)
+	session := sessions.Session{Values: map[interface{}]interface{}{"userID": 41}}
+	ctx := context.WithValue(context.Background(), "session", &session)
+	client.GetFromSession(ctx)
+
 }
