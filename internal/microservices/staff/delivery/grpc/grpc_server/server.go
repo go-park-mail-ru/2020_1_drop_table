@@ -1,6 +1,7 @@
 package staff
 
 import (
+	"2020_1_drop_table/configs"
 	staff2 "2020_1_drop_table/internal/microservices/staff"
 	proto "2020_1_drop_table/internal/microservices/staff/delivery/grpc/protobuff"
 	"2020_1_drop_table/internal/microservices/staff/models"
@@ -29,7 +30,8 @@ func NewArticleServerGrpc(gserver *grpc.Server, staffUCase staff2.Usecase) {
 }
 
 func StartGrpcServer(staffUCase staff2.Usecase) {
-	list, err := net.Listen("tcp", ":8083")
+	//TODO вернуть :8083 вместо  GRPCSTAFFURL
+	list, err := net.Listen("tcp", configs.GRPCStaffUrl)
 	if err != nil {
 		log.Err(err)
 	}
@@ -51,6 +53,10 @@ func (s *server) GetFromSession(ctx context.Context, in *proto.Empty) (*proto.Sa
 	return transformIntoRPC(&safeStaff), err
 }
 
+func (s *server) GetById(ctx context.Context, id *proto.Id) (*proto.SafeStaff, error) {
+	safeStaff, err := s.staffUseCase.GetByID(ctx, int(id.GetId()))
+	return transformIntoRPC(&safeStaff), err
+}
 func transformIntoRPC(staff *models.SafeStaff) *proto.SafeStaff {
 	if staff == nil {
 		return nil

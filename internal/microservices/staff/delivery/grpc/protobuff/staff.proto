@@ -7,10 +7,15 @@ option go_package = ".;staff";
 
 service StaffGRPCHandler{
   rpc GetFromSession(Empty) returns (SafeStaff);
+  rpc GetById(Id) returns (SafeStaff);
 }
 
 message Empty{
 
+}
+
+message Id{
+  int64 Id = 1;
 }
 
 message SafeStaff{
@@ -23,4 +28,3 @@ message SafeStaff{
   int64 CafeId = 7;
   string Position = 8;
 }
-
