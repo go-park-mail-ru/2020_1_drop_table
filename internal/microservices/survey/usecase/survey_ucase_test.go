@@ -6,7 +6,7 @@ import (
 	globalModels "2020_1_drop_table/internal/app/models"
 	staffMock "2020_1_drop_table/internal/app/staff/mocks"
 	"2020_1_drop_table/internal/app/staff/models"
-	"2020_1_drop_table/internal/app/survey/mocks"
+	"2020_1_drop_table/internal/microservices/survey/mocks"
 	"context"
 	"database/sql"
 	"errors"

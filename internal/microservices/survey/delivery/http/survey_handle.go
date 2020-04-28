@@ -2,7 +2,7 @@ package http
 
 import (
 	globalModels "2020_1_drop_table/internal/app/models"
-	"2020_1_drop_table/internal/app/survey"
+	"2020_1_drop_table/internal/microservices/survey"
 	"2020_1_drop_table/internal/pkg/permissions"
 	"2020_1_drop_table/internal/pkg/responses"
 	"fmt"

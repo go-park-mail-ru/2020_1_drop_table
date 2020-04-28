@@ -2,8 +2,8 @@ package http
 
 import (
 	globalModels "2020_1_drop_table/internal/app/models"
-	http2 "2020_1_drop_table/internal/app/survey/delivery/http"
-	"2020_1_drop_table/internal/app/survey/mocks"
+	http2 "2020_1_drop_table/internal/microservices/survey/delivery/http"
+	"2020_1_drop_table/internal/microservices/survey/mocks"
 	"2020_1_drop_table/internal/pkg/responses"
 	"bytes"
 	"encoding/json"

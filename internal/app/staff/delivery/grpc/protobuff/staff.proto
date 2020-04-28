@@ -1,0 +1,26 @@
+//protoc --go_out=plugins=grpc:. *.proto
+syntax = "proto3";
+package staff;
+import "google/protobuf/timestamp.proto";
+option go_package = ".;staff";
+
+
+service StaffGRPCHandler{
+  rpc GetFromSession(Empty) returns (SafeStaff);
+}
+
+message Empty{
+
+}
+
+message SafeStaff{
+  int64 StaffID = 1;
+  string Name = 2;
+  string Email = 3;
+  google.protobuf.Timestamp EditedAt = 4;
+  string Photo = 5;
+  bool IsOwner = 6;
+  int64 CafeId = 7;
+  string Position = 8;
+}
+

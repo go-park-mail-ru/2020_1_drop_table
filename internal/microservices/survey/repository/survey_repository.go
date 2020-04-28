@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"2020_1_drop_table/internal/app/survey"
+	"2020_1_drop_table/internal/microservices/survey"
 	"context"
 	"github.com/jmoiron/sqlx"
 )

@@ -3,8 +3,7 @@ package usecase
 import (
 	"2020_1_drop_table/internal/app/cafe"
 	globalModels "2020_1_drop_table/internal/app/models"
-	"2020_1_drop_table/internal/app/staff"
-	"2020_1_drop_table/internal/app/survey"
+	"2020_1_drop_table/internal/microservices/survey"
 	"context"
 	"database/sql"
 	"fmt"
@@ -14,14 +13,12 @@ import (
 type SurveyUsecase struct {
 	cafeRepo       cafe.Repository
 	surveyRepo     survey.Repository
-	staffUcase     staff.Usecase
 	contextTimeout time.Duration
 }
 
-func NewSurveyUsecase(c cafe.Repository, surveyRepo survey.Repository, s staff.Usecase, timeout time.Duration) survey.Usecase {
+func NewSurveyUsecase(c cafe.Repository, surveyRepo survey.Repository, timeout time.Duration) survey.Usecase {
 	return &SurveyUsecase{
 		cafeRepo:       c,
-		staffUcase:     s,
 		surveyRepo:     surveyRepo,
 		contextTimeout: timeout,
 	}

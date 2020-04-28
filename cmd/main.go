@@ -15,9 +15,8 @@ import (
 	_staffHttpDeliver "2020_1_drop_table/internal/app/staff/delivery/http"
 	_staffRepo "2020_1_drop_table/internal/app/staff/repository"
 	_staffUsecase "2020_1_drop_table/internal/app/staff/usecase"
-	http2 "2020_1_drop_table/internal/app/survey/delivery/http"
-	surveyRepo "2020_1_drop_table/internal/app/survey/repository"
-	surveyUsecase "2020_1_drop_table/internal/app/survey/usecase"
+	http2 "2020_1_drop_table/internal/microservices/survey/delivery/http"
+
 	"2020_1_drop_table/internal/pkg/apple_pass_generator"
 	"2020_1_drop_table/internal/pkg/apple_pass_generator/meta"
 	"fmt"
