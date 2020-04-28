@@ -96,3 +96,10 @@ func (u customerUsecase) SetPoints(ctx context.Context, uuid string, points stri
 	_, err = u.customerRepo.SetLoyaltyPoints(ctx, newPoints, uuid)
 	return err
 }
+
+func (u customerUsecase) Add(ctx context.Context, newCustomer models.Customer) (models.Customer, error) {
+	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
+	defer cancel()
+
+	return u.Add(ctx, newCustomer)
+}
