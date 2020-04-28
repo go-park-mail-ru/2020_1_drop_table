@@ -5,7 +5,7 @@ import (
 	"2020_1_drop_table/internal/app/customer"
 	"2020_1_drop_table/internal/app/customer/models"
 	globalModels "2020_1_drop_table/internal/app/models"
-	"2020_1_drop_table/internal/app/staff"
+	"2020_1_drop_table/internal/microservices/staff"
 	loyaltySystems "2020_1_drop_table/internal/pkg/apple_pass_generator/loyalty_systems"
 	"context"
 	"database/sql"

@@ -2,7 +2,7 @@ package app
 
 import (
 	"2020_1_drop_table/configs"
-	staffModels "2020_1_drop_table/internal/app/staff/models"
+	staffModels "2020_1_drop_table/internal/microservices/staff/models"
 	"errors"
 	"fmt"
 	uuid "github.com/nu7hatch/gouuid"

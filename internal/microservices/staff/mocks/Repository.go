@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	models "2020_1_drop_table/internal/app/staff/models"
+	models "2020_1_drop_table/internal/microservices/staff/models"
 	context "context"
 
 	mock "github.com/stretchr/testify/mock"

@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"2020_1_drop_table/internal/app/staff/models"
+	"2020_1_drop_table/internal/microservices/staff/models"
 	"2020_1_drop_table/internal/pkg/hasher"
 	"context"
 	"database/sql"

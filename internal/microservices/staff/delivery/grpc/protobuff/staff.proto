@@ -1,7 +1,7 @@
 //protoc --go_out=plugins=grpc:. *.proto
 syntax = "proto3";
-package staff;
 import "google/protobuf/timestamp.proto";
+package staff;
 option go_package = ".;staff";
 
 

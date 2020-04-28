@@ -12,9 +12,9 @@ import (
 	_customerRepo "2020_1_drop_table/internal/app/customer/repository"
 	_customerUseCase "2020_1_drop_table/internal/app/customer/usecase"
 	"2020_1_drop_table/internal/app/middleware"
-	_staffHttpDeliver "2020_1_drop_table/internal/app/staff/delivery/http"
-	_staffRepo "2020_1_drop_table/internal/app/staff/repository"
-	_staffUsecase "2020_1_drop_table/internal/app/staff/usecase"
+	_staffHttpDeliver "2020_1_drop_table/internal/microservices/staff/delivery/http"
+	_staffRepo "2020_1_drop_table/internal/microservices/staff/repository"
+	_staffUsecase "2020_1_drop_table/internal/microservices/staff/usecase"
 	http2 "2020_1_drop_table/internal/microservices/survey/delivery/http"
 
 	"2020_1_drop_table/internal/pkg/apple_pass_generator"
