@@ -2,7 +2,7 @@ package usecase
 
 import (
 	globalModels "2020_1_drop_table/internal/app/models"
-	staffClient "2020_1_drop_table/internal/microservices/staff/delivery/grpc/test_client"
+	staffClient "2020_1_drop_table/internal/microservices/staff/delivery/grpc/client"
 	"2020_1_drop_table/internal/microservices/survey"
 	"context"
 	"database/sql"
@@ -33,6 +33,7 @@ func (s SurveyUsecase) SetSurveyTemplate(ctx context.Context, survey string, id 
 	if err != nil || !requestUser.IsOwner {
 		return globalModels.ErrForbidden
 	}
+	//TODO uncomment when Dima add getById
 	//caf, err := s.cafeRepo.GetByID(ctx, id)
 	//if err != nil || caf.StaffID != requestUser.StaffID {
 	//	return globalModels.ErrForbidden

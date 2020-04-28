@@ -48,6 +48,12 @@ func (s StaffClient) GetFromSession(ctx context.Context) (models.SafeStaff, erro
 	return transformStaffFromRPC(r), err
 }
 
+func (s StaffClient) GetById(ctx context.Context, id int) (models.SafeStaff, error) {
+	idGrpc := proto.Id{Id: int64(id)}
+	safeStaff, err := s.client.GetById(ctx, &idGrpc, grpc.EmptyCallOption{})
+	return transformStaffFromRPC(safeStaff), err
+}
+
 func (s StaffClient) AddSessionInMetadata(ctx context.Context) context.Context {
 	value := ctx.Value("session").(*sessions.Session)
 	el := value.Values["userID"].(int)

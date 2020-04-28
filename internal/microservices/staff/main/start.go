@@ -2,7 +2,6 @@ package main
 
 import (
 	"2020_1_drop_table/configs"
-	_cafeRepo "2020_1_drop_table/internal/app/cafe/repository"
 	"2020_1_drop_table/internal/app/middleware"
 	grpcServer "2020_1_drop_table/internal/microservices/staff/delivery/grpc/grpc_server"
 	_staffRepo "2020_1_drop_table/internal/microservices/staff/repository"
@@ -38,7 +37,6 @@ func main() {
 		return
 	}
 	staffRepo := _staffRepo.NewPostgresStaffRepository(conn)
-	cafeRepo := _cafeRepo.NewPostgresCafeRepository(conn)
-	staffUsecase := _staffUsecase.NewStaffUsecase(&staffRepo, cafeRepo, timeoutContext)
+	staffUsecase := _staffUsecase.NewStaffUsecase(&staffRepo, timeoutContext)
 	grpcServer.StartGrpcServer(staffUsecase)
 }

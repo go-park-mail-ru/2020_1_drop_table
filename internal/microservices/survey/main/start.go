@@ -3,7 +3,7 @@ package main
 import (
 	"2020_1_drop_table/configs"
 	"2020_1_drop_table/internal/app/middleware"
-	staffClient "2020_1_drop_table/internal/microservices/staff/delivery/grpc/test_client"
+	staffClient "2020_1_drop_table/internal/microservices/staff/delivery/grpc/client"
 	http2 "2020_1_drop_table/internal/microservices/survey/delivery/http"
 	surveyRepo "2020_1_drop_table/internal/microservices/survey/repository"
 	surveyUsecase "2020_1_drop_table/internal/microservices/survey/usecase"
@@ -43,7 +43,7 @@ func main() {
 
 	survRepo := surveyRepo.NewPostgresSurveyRepository(conn)
 
-	grpcConn, err := grpc.Dial("localhost:8083", grpc.WithInsecure())
+	grpcConn, err := grpc.Dial(configs.GRPCStaffUrl, grpc.WithInsecure())
 	grpcStaffClient := staffClient.NewStaffClient(grpcConn)
 	surveyUcase := surveyUsecase.NewSurveyUsecase(survRepo, grpcStaffClient, timeoutContext)
 	http2.NewSurveyHandler(r, surveyUcase)
@@ -54,7 +54,7 @@ func main() {
 	http.Handle("/", r)
 	srv := &http.Server{
 		Handler:      r,
-		Addr:         "127.0.0.1:8085",
+		Addr:         configs.HTTPSurveyUrl,
 		WriteTimeout: configs.Timeouts.WriteTimeout,
 		ReadTimeout:  configs.Timeouts.ReadTimeout,
 	}
