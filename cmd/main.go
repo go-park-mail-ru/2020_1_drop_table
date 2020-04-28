@@ -15,8 +15,6 @@ import (
 	_staffHttpDeliver "2020_1_drop_table/internal/microservices/staff/delivery/http"
 	_staffRepo "2020_1_drop_table/internal/microservices/staff/repository"
 	_staffUsecase "2020_1_drop_table/internal/microservices/staff/usecase"
-	http2 "2020_1_drop_table/internal/microservices/survey/delivery/http"
-
 	"2020_1_drop_table/internal/pkg/apple_pass_generator"
 	"2020_1_drop_table/internal/pkg/apple_pass_generator/meta"
 	"fmt"
@@ -77,10 +75,6 @@ func main() {
 
 	customerUseCase := _customerUseCase.NewCustomerUsecase(customerRepo, staffUsecase, applePassKitRepo, timeoutContext)
 	_customerHttpDeliver.NewCustomerHandler(r, customerUseCase)
-
-	survRepo := surveyRepo.NewPostgresSurveyRepository(conn)
-	surveyUcase := surveyUsecase.NewSurveyUsecase(cafeRepo, survRepo, staffUsecase, timeoutContext)
-	http2.NewSurveyHandler(r, surveyUcase)
 
 	//OPTIONS
 	middleware.AddOptionsRequest(r)

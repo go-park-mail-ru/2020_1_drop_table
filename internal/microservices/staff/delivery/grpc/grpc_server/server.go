@@ -40,15 +40,15 @@ func StartGrpcServer(staffUCase staff2.Usecase) {
 
 func (s *server) GetFromSession(ctx context.Context, in *proto.Empty) (*proto.SafeStaff, error) {
 	md, _ := metadata.FromIncomingContext(ctx)
+	fmt.Println(md)
 	userid, _ := md["userid"]
 	intUserId, _ := strconv.Atoi(userid[0])
-	fmt.Println(intUserId + 3)
+
 	session := sessions.Session{Values: map[interface{}]interface{}{"userID": intUserId}}
 	ctx = context.WithValue(context.Background(), "session", &session)
 	safeStaff, err := s.staffUseCase.GetFromSession(ctx)
 	fmt.Println(safeStaff, err)
 	return transformIntoRPC(&safeStaff), err
-
 }
 
 func transformIntoRPC(staff *models.SafeStaff) *proto.SafeStaff {

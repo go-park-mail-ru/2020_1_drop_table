@@ -2,6 +2,7 @@ package usecase
 
 import (
 	globalModels "2020_1_drop_table/internal/app/models"
+	staffClient "2020_1_drop_table/internal/microservices/staff/delivery/grpc/test_client"
 	"2020_1_drop_table/internal/microservices/survey"
 	"context"
 	"database/sql"
@@ -11,20 +12,24 @@ import (
 
 type SurveyUsecase struct {
 	surveyRepo     survey.Repository
+	staffClient    *staffClient.StaffClient
 	contextTimeout time.Duration
 }
 
-func NewSurveyUsecase(surveyRepo survey.Repository, timeout time.Duration) survey.Usecase {
+func NewSurveyUsecase(surveyRepo survey.Repository, staffClient *staffClient.StaffClient, timeout time.Duration) survey.Usecase {
 	return &SurveyUsecase{
 		surveyRepo:     surveyRepo,
 		contextTimeout: timeout,
+		staffClient:    staffClient,
 	}
 }
 
 func (s SurveyUsecase) SetSurveyTemplate(ctx context.Context, survey string, id int) error {
 	ctx, cancel := context.WithTimeout(ctx, s.contextTimeout)
 	defer cancel()
-	requestUser, err := s.staffUcase.GetFromSession(ctx)
+	requestUser, err := s.staffClient.GetFromSession(ctx)
+	fmt.Println(requestUser)
+
 	if err != nil || !requestUser.IsOwner {
 		return globalModels.ErrForbidden
 	}

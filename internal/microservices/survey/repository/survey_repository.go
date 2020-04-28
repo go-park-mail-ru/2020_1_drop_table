@@ -4,6 +4,7 @@ import (
 	"2020_1_drop_table/internal/microservices/survey"
 	"context"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 )
 
 type postgresSurveyRepository struct {
