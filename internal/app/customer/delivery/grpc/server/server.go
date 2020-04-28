@@ -22,11 +22,11 @@ func NewCustomerServerGRPC(gServer *grpc.Server, customerUCase customer.Usecase)
 }
 
 func (s *server) Add(ctx context.Context, customer *proto.Customer) (*proto.Customer, error) {
-	modelCustomer, err := s.customerUseCase.Add(ctx, customerProtoToModel(customer))
-	return customerModelToProto(modelCustomer), err
+	modelCustomer, err := s.customerUseCase.Add(ctx, CustomerProtoToModel(customer))
+	return CustomerModelToProto(modelCustomer), err
 }
 
-func customerProtoToModel(protoCustomer *proto.Customer) models.Customer {
+func CustomerProtoToModel(protoCustomer *proto.Customer) models.Customer {
 	return models.Customer{
 		CustomerID:   protoCustomer.CustomerID,
 		CafeID:       int(protoCustomer.CafeID),
@@ -36,7 +36,7 @@ func customerProtoToModel(protoCustomer *proto.Customer) models.Customer {
 	}
 }
 
-func customerModelToProto(modelCustomer models.Customer) *proto.Customer {
+func CustomerModelToProto(modelCustomer models.Customer) *proto.Customer {
 	return &proto.Customer{
 		CustomerID:   modelCustomer.CustomerID,
 		CafeID:       int64(modelCustomer.CafeID),

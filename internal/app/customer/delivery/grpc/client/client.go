@@ -2,6 +2,8 @@ package main
 
 import (
 	proto "2020_1_drop_table/internal/app/customer/delivery/grpc/protobuff"
+	"2020_1_drop_table/internal/app/customer/delivery/grpc/server"
+	"2020_1_drop_table/internal/app/customer/models"
 	"context"
 	"google.golang.org/grpc"
 )
@@ -17,6 +19,8 @@ func NewCustomerClient(conn *grpc.ClientConn) *CustomerGRPC {
 	}
 }
 
-func (s *CustomerGRPC) Add(ctx context.Context, newCustomer *proto.Customer) (*proto.Customer, error) {
-	return s.client.Add(ctx, newCustomer)
+func (s *CustomerGRPC) Add(ctx context.Context, newCustomer models.Customer) (models.Customer, error) {
+	customerProto := server.CustomerModelToProto(newCustomer)
+	customerProto, err := s.client.Add(ctx, customerProto)
+	return server.CustomerProtoToModel(customerProto), err
 }
