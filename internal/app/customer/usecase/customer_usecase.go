@@ -101,5 +101,5 @@ func (u customerUsecase) Add(ctx context.Context, newCustomer models.Customer) (
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
 
-	return u.Add(ctx, newCustomer)
+	return u.customerRepo.Add(ctx, newCustomer)
 }
