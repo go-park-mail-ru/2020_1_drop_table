@@ -1,0 +1,16 @@
+syntax = "proto3";
+package customer;
+option go_package = ".;customer";
+
+
+service CustomerGRPCHandler{
+  rpc Add(Customer) returns (Customer);
+}
+
+message Customer{
+  string CustomerID = 1;
+  int64  CafeID = 2;
+  string Type = 3;
+  string Points = 4;
+  string SurveyResult = 5;
+}
