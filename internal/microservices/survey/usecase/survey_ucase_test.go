@@ -4,17 +4,16 @@ import (
 	cafeMock "2020_1_drop_table/internal/app/cafe/mocks"
 	models2 "2020_1_drop_table/internal/app/cafe/models"
 	globalModels "2020_1_drop_table/internal/app/models"
-	staffMock "2020_1_drop_table/internal/app/staff/mocks"
-	"2020_1_drop_table/internal/app/staff/models"
+	staffMock "2020_1_drop_table/internal/microservices/staff/mocks"
+	"2020_1_drop_table/internal/microservices/staff/models"
 	"2020_1_drop_table/internal/microservices/survey/mocks"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/stretchr/testify/mock"
-
 	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"testing"
 	"time"
 )
@@ -125,7 +124,7 @@ func TestSetTemplate(t *testing.T) {
 	surveyRepo := mocks.Repository{}
 	cafeRepo := cafeMock.Repository{}
 	staffUsecase := staffMock.Usecase{}
-	s := NewSurveyUsecase(&cafeRepo, &surveyRepo, &staffUsecase, timeout)
+	s := NewSurveyUsecase(&surveyRepo, timeout)
 
 	for _, testCase := range testCases {
 		staffUsecase.On("GetFromSession", mock.AnythingOfType("*context.timerCtx")).Return(testCase.RetGetFromContext, nil)

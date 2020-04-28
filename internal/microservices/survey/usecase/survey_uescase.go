@@ -1,7 +1,6 @@
 package usecase
 
 import (
-	"2020_1_drop_table/internal/app/cafe"
 	globalModels "2020_1_drop_table/internal/app/models"
 	"2020_1_drop_table/internal/microservices/survey"
 	"context"
@@ -11,14 +10,12 @@ import (
 )
 
 type SurveyUsecase struct {
-	cafeRepo       cafe.Repository
 	surveyRepo     survey.Repository
 	contextTimeout time.Duration
 }
 
-func NewSurveyUsecase(c cafe.Repository, surveyRepo survey.Repository, timeout time.Duration) survey.Usecase {
+func NewSurveyUsecase(surveyRepo survey.Repository, timeout time.Duration) survey.Usecase {
 	return &SurveyUsecase{
-		cafeRepo:       c,
 		surveyRepo:     surveyRepo,
 		contextTimeout: timeout,
 	}
@@ -31,10 +28,10 @@ func (s SurveyUsecase) SetSurveyTemplate(ctx context.Context, survey string, id 
 	if err != nil || !requestUser.IsOwner {
 		return globalModels.ErrForbidden
 	}
-	caf, err := s.cafeRepo.GetByID(ctx, id)
-	if err != nil || caf.StaffID != requestUser.StaffID {
-		return globalModels.ErrForbidden
-	}
+	//caf, err := s.cafeRepo.GetByID(ctx, id)
+	//if err != nil || caf.StaffID != requestUser.StaffID {
+	//	return globalModels.ErrForbidden
+	//}
 	err = s.surveyRepo.SetSurveyTemplate(ctx, survey, id, requestUser.StaffID)
 	if err != nil {
 		if err == sql.ErrNoRows {

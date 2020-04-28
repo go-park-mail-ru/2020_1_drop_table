@@ -4,7 +4,7 @@ import (
 	"2020_1_drop_table/internal/app/cafe"
 	"2020_1_drop_table/internal/app/cafe/models"
 	globalModels "2020_1_drop_table/internal/app/models"
-	"2020_1_drop_table/internal/app/staff"
+	"2020_1_drop_table/internal/microservices/staff"
 	"context"
 	"github.com/gorilla/sessions"
 	"gopkg.in/go-playground/validator.v9"

@@ -2,9 +2,8 @@ package http
 
 import (
 	"2020_1_drop_table/internal/app"
-	"2020_1_drop_table/internal/app/staff/mocks"
-	"2020_1_drop_table/internal/app/staff/models"
-	staffModels "2020_1_drop_table/internal/app/staff/models"
+	"2020_1_drop_table/internal/microservices/staff/mocks"
+	staffModels "2020_1_drop_table/internal/microservices/staff/models"
 	"2020_1_drop_table/internal/pkg/responses"
 	"bytes"
 	"context"
@@ -50,7 +49,7 @@ func createMultipartFormData(t *testing.T, data string) (bytes.Buffer, *multipar
 
 func TestGetById(t *testing.T) {
 
-	returnStaff := models.SafeStaff{
+	returnStaff := staffModels.SafeStaff{
 		StaffID:  228,
 		Name:     "",
 		Email:    "",
@@ -85,7 +84,7 @@ func TestGetById(t *testing.T) {
 }
 
 type staffHttpResponse struct {
-	Data   models.SafeStaff
+	Data   staffModels.SafeStaff
 	Errors []responses.HttpError
 }
 
@@ -93,7 +92,7 @@ func TestGetCurrStaff(t *testing.T) {
 
 	const url = "/api/v1/staff"
 	mockstaffUcase := new(mocks.Usecase)
-	returnStaff := models.SafeStaff{
+	returnStaff := staffModels.SafeStaff{
 		StaffID:  228,
 		Name:     "",
 		Email:    "",
@@ -153,7 +152,7 @@ func TestGenerateQrHandler(t *testing.T) {
 
 func TestEditStaff(t *testing.T) {
 
-	returnStaff := models.SafeStaff{
+	returnStaff := staffModels.SafeStaff{
 		StaffID:  228,
 		Name:     "",
 		Email:    "",

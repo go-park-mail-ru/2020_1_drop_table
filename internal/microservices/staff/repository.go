@@ -1,7 +1,7 @@
 package staff
 
 import (
-	"2020_1_drop_table/internal/app/staff/models"
+	"2020_1_drop_table/internal/microservices/staff/models"
 	"context"
 )
 
