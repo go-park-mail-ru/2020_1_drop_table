@@ -18,6 +18,7 @@ import (
 	staffClient "2020_1_drop_table/internal/microservices/staff/delivery/grpc/client"
 	"2020_1_drop_table/internal/pkg/apple_pass_generator"
 	"2020_1_drop_table/internal/pkg/apple_pass_generator/meta"
+	"2020_1_drop_table/internal/pkg/metrics"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
@@ -31,6 +32,9 @@ import (
 func main() {
 	r := mux.NewRouter()
 
+	//PromMetrics server
+	metricsProm := metrics.RegisterMetrics(r)
+
 	//Middleware
 	var CookieStore, err = redisStore.NewRediStore(
 		configs.RedisPreferences.Size,
@@ -39,7 +43,7 @@ func main() {
 		configs.RedisPreferences.Password,
 		configs.RedisPreferences.SecretKey)
 
-	middleware.NewMiddleware(r, CookieStore)
+	middleware.NewMiddleware(r, CookieStore, metricsProm)
 
 	timeoutContext := configs.Timeouts.ContextTimeout
 

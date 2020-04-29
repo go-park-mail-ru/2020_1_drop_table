@@ -8,6 +8,7 @@ import (
 	staffHandler "2020_1_drop_table/internal/microservices/staff/delivery/http"
 	_staffRepo "2020_1_drop_table/internal/microservices/staff/repository"
 	_staffUsecase "2020_1_drop_table/internal/microservices/staff/usecase"
+	"2020_1_drop_table/internal/pkg/metrics"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
@@ -19,7 +20,10 @@ import (
 
 func main() {
 	r := mux.NewRouter()
-	timeoutContext := configs.Timeouts.ContextTimeout
+
+	//PromMetrics server
+	metricsProm := metrics.RegisterMetrics(r)
+
 	//Middleware
 	var CookieStore, err = redisStore.NewRediStore(
 		configs.RedisPreferences.Size,
@@ -28,7 +32,9 @@ func main() {
 		configs.RedisPreferences.Password,
 		configs.RedisPreferences.SecretKey)
 
-	middleware.NewMiddleware(r, CookieStore)
+	middleware.NewMiddleware(r, CookieStore, metricsProm)
+
+	timeoutContext := configs.Timeouts.ContextTimeout
 
 	connStr := fmt.Sprintf("user=%s password=%s dbname=postgres sslmode=disable port=%s",
 		configs.PostgresPreferences.User,
