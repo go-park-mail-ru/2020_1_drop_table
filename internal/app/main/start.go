@@ -76,7 +76,7 @@ func main() {
 
 	_appleHttpDeliver.NewPassKitHandler(r, applePassKitUcase)
 
-	customerUseCase := _customerUseCase.NewCustomerUsecase(customerRepo, applePassKitRepo, timeoutContext)
+	customerUseCase := _customerUseCase.NewCustomerUsecase(customerRepo, applePassKitRepo, grpcStaffClient, timeoutContext)
 	_customerHttpDeliver.NewCustomerHandler(r, customerUseCase)
 
 	go server.StartCafeGrpcServer(cafeUsecase)

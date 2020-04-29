@@ -52,7 +52,7 @@ func TestGet(t *testing.T) {
 	returncustomer := models.Customer{
 		CustomerID: "",
 		CafeID:     0,
-		Points:     228,
+		Points:     "228",
 	}
 	mockcustomerUcase.On("GetPoints", mock.AnythingOfType("*context.valueCtx"), "asd").Return(returncustomer.Points, nil)
 	handler := http3.CustomerHandler{CUsecase: mockcustomerUcase}
@@ -83,7 +83,7 @@ func TestSet(t *testing.T) {
 	returncustomer := models.Customer{
 		CustomerID: "asd",
 		CafeID:     0,
-		Points:     228,
+		Points:     "228",
 	}
 	mockcustomerUcase.On("SetPoints", mock.AnythingOfType("*context.valueCtx"), "asd", 228).Return(nil)
 	handler := http3.CustomerHandler{CUsecase: mockcustomerUcase}

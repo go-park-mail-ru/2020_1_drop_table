@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	cafeClientMock "2020_1_drop_table/internal/app/cafe/delivery/grpc/client/mocks"
 	cafeMock "2020_1_drop_table/internal/app/cafe/mocks"
 	cafeModels "2020_1_drop_table/internal/app/cafe/models"
 	globalModels "2020_1_drop_table/internal/app/models"
@@ -105,8 +106,8 @@ func TestAdd(t *testing.T) {
 
 	srepo := new(mocks.Repository)
 	emptyContext := context.TODO()
-	cafeRepo := cafeMock.Repository{}
-	s := NewStaffUsecase(srepo, &cafeRepo, timeout)
+	cafeRepo := new(cafeClientMock.CafeGRPCClientInterface)
+	s := NewStaffUsecase(srepo, cafeRepo, timeout)
 
 	for _, testCase := range testCases {
 		emailMatchesWithStaff := func(staff models.Staff) bool {
@@ -154,9 +155,9 @@ func TestGeById(t *testing.T) {
 	}
 	timeout := time.Second * 4
 
-	srepo := mocks.Repository{}
-	cafeRepo := cafeMock.Repository{}
-	s := NewStaffUsecase(&srepo, &cafeRepo, timeout)
+	srepo := new(mocks.Repository)
+	cafeRepo := new(cafeClientMock.CafeGRPCClientInterface)
+	s := NewStaffUsecase(srepo, cafeRepo, timeout)
 
 	for _, testCase := range testCases {
 		srepo.On("GetByID",
@@ -199,9 +200,9 @@ func TestUpdate(t *testing.T) {
 	//
 	timeout := time.Second * 4
 
-	srepo := mocks.Repository{}
-	cafeRepo := cafeMock.Repository{}
-	s := NewStaffUsecase(&srepo, &cafeRepo, timeout)
+	srepo := new(mocks.Repository)
+	cafeRepo := new(cafeClientMock.CafeGRPCClientInterface)
+	s := NewStaffUsecase(srepo, cafeRepo, timeout)
 
 	for _, testCase := range testCases {
 
@@ -257,9 +258,9 @@ func TestGet(t *testing.T) {
 		},
 	}
 	timeout := time.Second * 4
-	srepo := mocks.Repository{}
-	cafeRepo := cafeMock.Repository{}
-	s := NewStaffUsecase(&srepo, &cafeRepo, timeout)
+	srepo := new(mocks.Repository)
+	cafeRepo := new(cafeClientMock.CafeGRPCClientInterface)
+	s := NewStaffUsecase(srepo, cafeRepo, timeout)
 
 	for _, testCase := range testCases {
 		testCase.form.Password, _ = hasher.HashAndSalt(nil, testCase.form.Password)
@@ -319,16 +320,16 @@ func TestGenerateQr(t *testing.T) {
 
 func TestDelQr(t *testing.T) {
 	timeout := time.Second * 4
-	srepo := mocks.Repository{}
-	cafeRepo := cafeMock.Repository{}
-	s := NewStaffUsecase(&srepo, &cafeRepo, timeout)
+	srepo := new(mocks.Repository)
+	cafeRepo := new(cafeClientMock.CafeGRPCClientInterface)
+	s := NewStaffUsecase(srepo, cafeRepo, timeout)
 	err := s.DeleteQrCodes("not exist")
 	assert.Equal(t, err.Error(), "remove media/qr/not exist.png: no such file or directory")
 }
 
 func TestGetStaffList(t *testing.T) {
 	timeout := time.Second * 4
-	srepo := mocks.Repository{}
+	srepo := new(mocks.Repository)
 	user := models.Staff{
 		StaffID:  2,
 		Name:     "",
@@ -346,8 +347,9 @@ func TestGetStaffList(t *testing.T) {
 	resMap := make(map[string][]models.StaffByOwnerResponse)
 
 	srepo.On("GetStaffListByOwnerId", mock.AnythingOfType("*context.valueCtx"), 2).Return(resMap, nil)
-	cafeRepo := cafeMock.Repository{}
-	s := NewStaffUsecase(&srepo, &cafeRepo, timeout)
+
+	cafeRepo := new(cafeClientMock.CafeGRPCClientInterface)
+	s := NewStaffUsecase(srepo, cafeRepo, timeout)
 	session := sessions.Session{Values: map[interface{}]interface{}{"userID": 2}}
 	c := context.WithValue(context.Background(), "session", &session)
 	res, err := s.GetStaffListByOwnerId(c, 2)

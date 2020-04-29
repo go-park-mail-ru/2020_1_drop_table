@@ -13,12 +13,12 @@ import (
 
 type SurveyUsecase struct {
 	surveyRepo     survey.Repository
-	staffClient    *staffClient.StaffClient
-	cafeClient     *cafeClient.CafeGRPC
+	staffClient    staffClient.StaffClientInterface
+	cafeClient     cafeClient.CafeGRPCClientInterface
 	contextTimeout time.Duration
 }
 
-func NewSurveyUsecase(surveyRepo survey.Repository, staffClient *staffClient.StaffClient, cafeClient *cafeClient.CafeGRPC, timeout time.Duration) survey.Usecase {
+func NewSurveyUsecase(surveyRepo survey.Repository, staffClient staffClient.StaffClientInterface, cafeClient cafeClient.CafeGRPCClientInterface, timeout time.Duration) survey.Usecase {
 	return &SurveyUsecase{
 		surveyRepo:     surveyRepo,
 		contextTimeout: timeout,
@@ -31,7 +31,6 @@ func (s SurveyUsecase) SetSurveyTemplate(ctx context.Context, survey string, id 
 	ctx, cancel := context.WithTimeout(ctx, s.contextTimeout)
 	defer cancel()
 	requestUser, err := s.staffClient.GetFromSession(ctx)
-	fmt.Println(requestUser)
 
 	if err != nil || !requestUser.IsOwner {
 		return globalModels.ErrForbidden

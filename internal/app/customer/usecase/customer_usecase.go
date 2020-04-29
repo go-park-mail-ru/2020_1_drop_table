@@ -15,17 +15,18 @@ import (
 type customerUsecase struct {
 	customerRepo   customer.Repository
 	passKitRepo    apple_passkit.Repository
-	staffClient    staffClient.StaffClient
+	staffClient    staffClient.StaffClientInterface
 	contextTimeout time.Duration
 }
 
-func NewCustomerUsecase(c customer.Repository, p apple_passkit.Repository,
+func NewCustomerUsecase(c customer.Repository, p apple_passkit.Repository, clientInterface staffClient.StaffClientInterface,
 	timeout time.Duration) customer.Usecase {
 
 	return &customerUsecase{
 		contextTimeout: timeout,
 		passKitRepo:    p,
 		customerRepo:   c,
+		staffClient:    clientInterface,
 	}
 }
 

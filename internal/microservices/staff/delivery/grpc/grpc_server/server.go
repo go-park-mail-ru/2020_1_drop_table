@@ -6,7 +6,6 @@ import (
 	proto "2020_1_drop_table/internal/microservices/staff/delivery/grpc/protobuff"
 	"2020_1_drop_table/internal/microservices/staff/models"
 	"context"
-	"fmt"
 	google_protobuf "github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/gorilla/sessions"
 	"github.com/rs/zerolog/log"
@@ -47,7 +46,7 @@ func StartStaffGrpcServer(staffUCase staff2.Usecase) {
 
 func makeContextFromMetaDataInContext(ctx context.Context) context.Context {
 	md, _ := metadata.FromIncomingContext(ctx)
-	fmt.Println(md)
+
 	userid, _ := md["userid"]
 	intUserId, _ := strconv.Atoi(userid[0])
 
@@ -58,7 +57,7 @@ func makeContextFromMetaDataInContext(ctx context.Context) context.Context {
 func (s *server) GetFromSession(ctx context.Context, in *proto.Empty) (*proto.SafeStaff, error) {
 	ctx = makeContextFromMetaDataInContext(ctx)
 	safeStaff, err := s.staffUseCase.GetFromSession(ctx)
-	fmt.Println(safeStaff, err)
+
 	return transformIntoRPC(&safeStaff), err
 }
 
