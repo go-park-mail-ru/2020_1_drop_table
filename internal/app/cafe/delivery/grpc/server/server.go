@@ -1,17 +1,30 @@
 package server
 
 import (
+	"2020_1_drop_table/configs"
 	"2020_1_drop_table/internal/app/cafe"
 	proto "2020_1_drop_table/internal/app/cafe/delivery/grpc/protobuff"
 	"2020_1_drop_table/internal/app/cafe/models"
 	"context"
 	googleProtobuf "github.com/golang/protobuf/ptypes/timestamp"
+	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	"net"
 )
 
 type server struct {
 	cafeUseCase cafe.Usecase
+}
+
+func StartCafeGrpcServer(cafeUseCase cafe.Usecase) {
+	list, err := net.Listen("tcp", configs.GRPCCafeUrl)
+	if err != nil {
+		log.Err(err)
+	}
+	server := grpc.NewServer()
+	NewCafeServerGRPC(server, cafeUseCase)
+	server.Serve(list)
 }
 
 func NewCafeServerGRPC(gServer *grpc.Server, cafeUCase cafe.Usecase) {

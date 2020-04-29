@@ -3,6 +3,7 @@ package usecase
 import (
 	"2020_1_drop_table/configs"
 	"2020_1_drop_table/internal/app"
+	cafeClient "2020_1_drop_table/internal/app/cafe/delivery/grpc/client"
 	globalModels "2020_1_drop_table/internal/app/models"
 	"2020_1_drop_table/internal/microservices/staff"
 	"2020_1_drop_table/internal/microservices/staff/models"
@@ -13,6 +14,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gorilla/sessions"
+	uuid "github.com/nu7hatch/gouuid"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/go-playground/validator.v9"
 	"os"
@@ -21,13 +23,15 @@ import (
 
 type staffUsecase struct {
 	staffRepo      staff.Repository
+	cafeClient     *cafeClient.CafeGRPC
 	contextTimeout time.Duration
 }
 
-func NewStaffUsecase(s staff.Repository, timeout time.Duration) staff.Usecase {
+func NewStaffUsecase(s staff.Repository, cafeClient *cafeClient.CafeGRPC, timeout time.Duration) staff.Usecase {
 	return &staffUsecase{
 		staffRepo:      s,
 		contextTimeout: timeout,
+		cafeClient:     cafeClient,
 	}
 }
 
@@ -142,45 +146,44 @@ func (s *staffUsecase) GetFromSession(c context.Context) (models.SafeStaff, erro
 }
 
 func (s *staffUsecase) GetQrForStaff(ctx context.Context, idCafe int, position string) (string, error) {
-	//TODO uncomment all this comment only for test
-	//ctx, cancel := context.WithTimeout(ctx, s.contextTimeout)
-	//defer cancel()
-	//staffId, err := s.GetStaffId(ctx)
-	//if err != nil {
-	//	message := fmt.Sprintf("Cant find stuff in GET Params of -> %s", err)
-	//	log.Error().Msgf(message)
-	//	return "", errors.New(message)
-	//}
-	//owner, err := s.GetByID(ctx, staffId)
-	//if err != nil {
-	//	message := fmt.Sprintf("Cant find Staff in SessionStorage because of -> %s", err)
-	//	log.Error().Msgf(message)
-	//	return "", errors.New(message)
-	//}
-	////TODO fix when get BY Id done
-	//ownerCafe, err := s.cafeRepo.GetByID(ctx, idCafe)
-	//if err != nil {
-	//	message := fmt.Sprintf("Cant find cafe with this owner because of -> %s", err)
-	//	if err == sql.ErrNoRows {
-	//		message = fmt.Sprintf("User is not owner of cafe")
-	//	}
-	//	log.Error().Msgf(message)
-	//	return "", errors.New(message)
-	//}
-	//if owner.IsOwner && ownerCafe.StaffID == owner.StaffID {
-	//
-	//	u, err := uuid.NewV4()
-	//	if err != nil {
-	//		return "", err
-	//	}
-	//	uString := u.String()
-	//	err = s.staffRepo.AddUuid(ctx, uString, idCafe)
-	//	path, err := generateQRCode(uString, position)
-	//	if err != nil {
-	//		return "", err
-	//	}
-	//	return path, nil
-	//}
+
+	ctx, cancel := context.WithTimeout(ctx, s.contextTimeout)
+	defer cancel()
+	staffId, err := s.GetStaffId(ctx)
+	if err != nil {
+		message := fmt.Sprintf("Cant find stuff in GET Params of -> %s", err)
+		log.Error().Msgf(message)
+		return "", errors.New(message)
+	}
+	owner, err := s.GetByID(ctx, staffId)
+	if err != nil {
+		message := fmt.Sprintf("Cant find Staff in SessionStorage because of -> %s", err)
+		log.Error().Msgf(message)
+		return "", errors.New(message)
+	}
+	ownerCafe, err := s.cafeClient.GetByID(ctx, idCafe)
+	if err != nil {
+		message := fmt.Sprintf("Cant find cafe with this owner because of -> %s", err)
+		if err == sql.ErrNoRows {
+			message = fmt.Sprintf("User is not owner of cafe")
+		}
+		log.Error().Msgf(message)
+		return "", errors.New(message)
+	}
+	if owner.IsOwner && ownerCafe.StaffID == owner.StaffID {
+
+		u, err := uuid.NewV4()
+		if err != nil {
+			return "", err
+		}
+		uString := u.String()
+		err = s.staffRepo.AddUuid(ctx, uString, idCafe)
+		path, err := generateQRCode(uString, position)
+		if err != nil {
+			return "", err
+		}
+		return path, nil
+	}
 	message := fmt.Sprintf("User is not owner of this cafe")
 	log.Error().Msgf(message)
 	return "", errors.New(message)

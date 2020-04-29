@@ -2,6 +2,7 @@ package main
 
 import (
 	"2020_1_drop_table/configs"
+	cafeClient "2020_1_drop_table/internal/app/cafe/delivery/grpc/client"
 	"2020_1_drop_table/internal/app/middleware"
 	staffClient "2020_1_drop_table/internal/microservices/staff/delivery/grpc/client"
 	http2 "2020_1_drop_table/internal/microservices/survey/delivery/http"
@@ -45,7 +46,11 @@ func main() {
 
 	grpcConn, err := grpc.Dial(configs.GRPCStaffUrl, grpc.WithInsecure())
 	grpcStaffClient := staffClient.NewStaffClient(grpcConn)
-	surveyUcase := surveyUsecase.NewSurveyUsecase(survRepo, grpcStaffClient, timeoutContext)
+
+	grpcCafeConn, err := grpc.Dial(configs.GRPCCafeUrl, grpc.WithInsecure())
+	grpcCafeClient := cafeClient.NewCafeClient(grpcCafeConn)
+
+	surveyUcase := surveyUsecase.NewSurveyUsecase(survRepo, grpcStaffClient, grpcCafeClient, timeoutContext)
 	http2.NewSurveyHandler(r, surveyUcase)
 
 	//OPTIONS
