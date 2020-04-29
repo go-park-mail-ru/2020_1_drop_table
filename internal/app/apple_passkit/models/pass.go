@@ -15,6 +15,7 @@ type ApplePassDB struct {
 	Strip2x     []byte `json:"strip2x"`
 }
 
+//easyjson:json
 type ApplePassMeta struct {
 	CafeID int                    `structs:"-"`
 	Meta   map[string]interface{} `structs:"Meta"`

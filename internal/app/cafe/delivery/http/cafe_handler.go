@@ -8,7 +8,6 @@ import (
 	globalModels "2020_1_drop_table/internal/app/models"
 	"2020_1_drop_table/internal/pkg/permissions"
 	"2020_1_drop_table/internal/pkg/responses"
-	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -43,8 +42,8 @@ func (c *CafeHandler) fetchCafe(r *http.Request) (models.Cafe, error) {
 	}
 
 	cafeObj := models.Cafe{}
-
-	if err := json.Unmarshal([]byte(jsonData), &cafeObj); err != nil {
+	err = cafeObj.UnmarshalJSON([]byte(jsonData))
+	if err != nil {
 		return models.Cafe{}, globalModels.ErrBadJSON
 	}
 	if file, handler, err := r.FormFile("photo"); err == nil {

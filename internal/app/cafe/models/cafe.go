@@ -4,6 +4,7 @@ import (
 	"time"
 )
 
+//easyjson:json
 type Cafe struct {
 	CafeID      int       `json:"id"`
 	CafeName    string    `json:"name" validate:"required,min=2,max=100"`

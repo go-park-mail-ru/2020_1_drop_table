@@ -24,6 +24,9 @@ func NewStaffClient(conn *grpc.ClientConn) *StaffClient {
 }
 
 func transformStaffFromRPC(staff *proto.SafeStaff) models.SafeStaff {
+	if staff == nil {
+		return models.SafeStaff{}
+	}
 	edited_at := time.Unix(staff.GetEditedAt().GetSeconds(), 0).UTC()
 	res := models.SafeStaff{
 		StaffID:  int(staff.StaffID),
@@ -44,13 +47,19 @@ func (s StaffClient) GetFromSession(ctx context.Context) (models.SafeStaff, erro
 	r, err := s.client.GetFromSession(ctx, &empt, grpc.EmptyCallOption{})
 	if err != nil {
 		fmt.Println("Unexpected Error", err)
+		return models.SafeStaff{}, err
 	}
 	return transformStaffFromRPC(r), err
 }
 
 func (s StaffClient) GetById(ctx context.Context, id int) (models.SafeStaff, error) {
+	ctx = s.AddSessionInMetadata(ctx)
 	idGrpc := proto.Id{Id: int64(id)}
 	safeStaff, err := s.client.GetById(ctx, &idGrpc, grpc.EmptyCallOption{})
+	if err != nil {
+		fmt.Println("Unexpected Error", err)
+		return models.SafeStaff{}, err
+	}
 	return transformStaffFromRPC(safeStaff), err
 }
 

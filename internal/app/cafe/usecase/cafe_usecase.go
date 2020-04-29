@@ -6,6 +6,7 @@ import (
 	globalModels "2020_1_drop_table/internal/app/models"
 	staffClient "2020_1_drop_table/internal/microservices/staff/delivery/grpc/client"
 	"context"
+	"fmt"
 	"github.com/gorilla/sessions"
 	"gopkg.in/go-playground/validator.v9"
 	"time"
@@ -27,6 +28,7 @@ func NewCafeUsecase(c cafe.Repository, stClient *staffClient.StaffClient, timeou
 
 func (cu *cafeUsecase) checkIsOwnerById(c context.Context, staffID int) (bool, error) {
 	staffObj, err := cu.staffGrpcClient.GetById(c, staffID)
+	fmt.Println("staffOBj:", staffObj)
 
 	if err != nil {
 		return false, err
