@@ -67,6 +67,7 @@ func (s *StaffHandler) fetchStaff(r *http.Request) (models.Staff, error) {
 
 func (s *StaffHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	staffObj, err := s.fetchStaff(r)
+	fmt.Println(staffObj, err)
 
 	if err != nil {
 		responses.SendSingleError(err.Error(), w)
@@ -147,7 +148,7 @@ func (s *StaffHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var form models.LoginForm
-	err = json.Unmarshal(data, &form)
+	err = form.UnmarshalJSON(data)
 	if err != nil {
 		message := fmt.Sprintf("HttpResponse while serializing: %s", err.Error())
 		responses.SendServerError(message, w)
