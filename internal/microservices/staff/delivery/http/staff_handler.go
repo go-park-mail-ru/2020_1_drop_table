@@ -67,7 +67,6 @@ func (s *StaffHandler) fetchStaff(r *http.Request) (models.Staff, error) {
 
 func (s *StaffHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	staffObj, err := s.fetchStaff(r)
-	fmt.Println(staffObj, err)
 
 	if err != nil {
 		responses.SendSingleError(err.Error(), w)

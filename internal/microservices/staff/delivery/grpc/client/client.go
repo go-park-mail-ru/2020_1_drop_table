@@ -66,7 +66,7 @@ func (s StaffClient) GetById(ctx context.Context, id int) (models.SafeStaff, err
 func (s StaffClient) AddSessionInMetadata(ctx context.Context) context.Context {
 	value := ctx.Value("session").(*sessions.Session)
 	el := value.Values["userID"].(int)
-	fmt.Println(el)
+
 	return metadata.AppendToOutgoingContext(ctx, "userID", strconv.Itoa(el))
 }
 

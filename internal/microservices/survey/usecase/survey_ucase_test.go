@@ -1,10 +1,10 @@
 package usecase
 
 import (
-	cafeMock "2020_1_drop_table/internal/app/cafe/mocks"
+	cafeClientGRPCMock "2020_1_drop_table/internal/app/cafe/delivery/grpc/client/mocks"
 	models2 "2020_1_drop_table/internal/app/cafe/models"
 	globalModels "2020_1_drop_table/internal/app/models"
-	staffMock "2020_1_drop_table/internal/microservices/staff/mocks"
+	staffClientGRPCMock "2020_1_drop_table/internal/microservices/staff/delivery/grpc/client/mocks"
 	"2020_1_drop_table/internal/microservices/staff/models"
 	"2020_1_drop_table/internal/microservices/survey/mocks"
 	"context"
@@ -122,9 +122,9 @@ func TestSetTemplate(t *testing.T) {
 
 	timeout := time.Second * 4
 	surveyRepo := mocks.Repository{}
-	cafeRepo := cafeMock.Repository{}
-	staffUsecase := staffMock.Usecase{}
-	s := NewSurveyUsecase(&surveyRepo, timeout)
+	cafeRepo := new(cafeClientGRPCMock.CafeGRPCClientInterface)
+	staffUsecase := new(staffClientGRPCMock.StaffClientInterface)
+	s := NewSurveyUsecase(&surveyRepo, staffUsecase, cafeRepo, timeout)
 
 	for _, testCase := range testCases {
 		staffUsecase.On("GetFromSession", mock.AnythingOfType("*context.timerCtx")).Return(testCase.RetGetFromContext, nil)
@@ -185,9 +185,9 @@ func TestGetSurvey(t *testing.T) {
 
 	timeout := time.Second * 4
 	surveyRepo := mocks.Repository{}
-	cafeRepo := cafeMock.Repository{}
-	staffUsecase := staffMock.Usecase{}
-	s := NewSurveyUsecase(&cafeRepo, &surveyRepo, &staffUsecase, timeout)
+	cafeRepo := new(cafeClientGRPCMock.CafeGRPCClientInterface)
+	staffUsecase := new(staffClientGRPCMock.StaffClientInterface)
+	s := NewSurveyUsecase(&surveyRepo, staffUsecase, cafeRepo, timeout)
 
 	for _, testCase := range testCases {
 		surveyRepo.On("GetSurveyTemplate", mock.AnythingOfType("*context.timerCtx"), testCase.InputData.CafeID).Return(testCase.OutputData.Survey, testCase.GetSurveyErr)
@@ -245,9 +245,9 @@ func TestSubmitSurvey(t *testing.T) {
 
 	timeout := time.Second * 4
 	surveyRepo := mocks.Repository{}
-	cafeRepo := cafeMock.Repository{}
-	staffUsecase := staffMock.Usecase{}
-	s := NewSurveyUsecase(&cafeRepo, &surveyRepo, &staffUsecase, timeout)
+	cafeRepo := new(cafeClientGRPCMock.CafeGRPCClientInterface)
+	staffUsecase := new(staffClientGRPCMock.StaffClientInterface)
+	s := NewSurveyUsecase(&surveyRepo, staffUsecase, cafeRepo, timeout)
 
 	for _, testCase := range testCases {
 		surveyRepo.On("SubmitSurvey", mock.AnythingOfType("*context.timerCtx"), testCase.InputData.Survey, testCase.InputData.CustomerUUID).Return(testCase.SubmitSurveyErr)
