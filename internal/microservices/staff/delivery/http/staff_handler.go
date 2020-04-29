@@ -51,8 +51,8 @@ func (s *StaffHandler) fetchStaff(r *http.Request) (models.Staff, error) {
 	}
 
 	var staffObj models.Staff
-
-	if err := json.Unmarshal([]byte(jsonData), &staffObj); err != nil {
+	err = staffObj.UnmarshalJSON([]byte(jsonData))
+	if err != nil {
 		return models.Staff{}, globalModels.ErrBadJSON
 	}
 	if file, handler, err := r.FormFile("photo"); err == nil {
@@ -149,6 +149,7 @@ func (s *StaffHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	var form models.LoginForm
 	err = form.UnmarshalJSON(data)
+
 	if err != nil {
 		message := fmt.Sprintf("HttpResponse while serializing: %s", err.Error())
 		responses.SendServerError(message, w)

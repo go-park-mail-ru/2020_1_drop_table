@@ -9,8 +9,10 @@ import (
 	googleProtobuf "github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/reflection"
 	"net"
+	"time"
 )
 
 type server struct {
@@ -22,7 +24,11 @@ func StartCafeGrpcServer(cafeUseCase cafe.Usecase) {
 	if err != nil {
 		log.Err(err)
 	}
-	server := grpc.NewServer()
+	server := grpc.NewServer(
+		grpc.KeepaliveParams(keepalive.ServerParameters{
+			MaxConnectionIdle: 5 * time.Minute,
+		}),
+	)
 	NewCafeServerGRPC(server, cafeUseCase)
 	server.Serve(list)
 }

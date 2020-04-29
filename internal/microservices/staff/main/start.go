@@ -49,6 +49,12 @@ func main() {
 
 	go grpcServer.StartStaffGrpcServer(staffUsecase)
 	staffHandler.NewStaffHandler(r, staffUsecase)
+
+	//static server
+	r.PathPrefix(fmt.Sprintf("/%s/", configs.MediaFolder)).Handler(
+		http.StripPrefix(fmt.Sprintf("/%s/", configs.MediaFolder),
+			http.FileServer(http.Dir(configs.MediaFolder))))
+
 	http.Handle("/", r)
 	srv := &http.Server{
 		Handler:      r,

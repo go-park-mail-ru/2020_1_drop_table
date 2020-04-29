@@ -2,7 +2,6 @@ package responses
 
 import (
 	globalModels "2020_1_drop_table/internal/app/models"
-	"encoding/json"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"net/http"
@@ -39,7 +38,7 @@ func SendSingleErrorWithMessage(errForLog error, errorMessage string, w http.Res
 
 func SendSeveralErrors(errors []HttpError, w http.ResponseWriter) {
 	httpResponse := HttpResponse{Errors: errors}
-	serializedError, err := json.Marshal(httpResponse)
+	serializedError, err := httpResponse.MarshalJSON()
 	if err != nil {
 		message := fmt.Sprintf("HttpResponse is json serializing: %s", err.Error())
 		SendServerError(message, w)

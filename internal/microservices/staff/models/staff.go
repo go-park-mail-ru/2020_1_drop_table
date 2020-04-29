@@ -2,6 +2,7 @@ package models
 
 import "time"
 
+//easyjson:json
 type Staff struct {
 	StaffID  int       `json:"id"`
 	Name     string    `json:"name" validate:"required,min=4,max=100"`
@@ -14,6 +15,7 @@ type Staff struct {
 	Position string    `json:"Position"`
 }
 
+//easyjson:json
 type SafeStaff struct {
 	StaffID  int       `json:"id"`
 	Name     string    `json:"name" validate:"required,min=4,max=100"`

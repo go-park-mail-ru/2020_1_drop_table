@@ -11,10 +11,12 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 	"net"
 	"strconv"
+	"time"
 )
 
 type server struct {
@@ -34,25 +36,34 @@ func StartStaffGrpcServer(staffUCase staff2.Usecase) {
 	if err != nil {
 		log.Err(err)
 	}
-	server := grpc.NewServer()
+	server := grpc.NewServer(
+		grpc.KeepaliveParams(keepalive.ServerParameters{
+			MaxConnectionIdle: 5 * time.Minute,
+		}),
+	)
 	NewStaffServerGRPC(server, staffUCase)
 	server.Serve(list)
 }
 
-func (s *server) GetFromSession(ctx context.Context, in *proto.Empty) (*proto.SafeStaff, error) {
+func makeContextFromMetaDataInContext(ctx context.Context) context.Context {
 	md, _ := metadata.FromIncomingContext(ctx)
 	fmt.Println(md)
 	userid, _ := md["userid"]
 	intUserId, _ := strconv.Atoi(userid[0])
 
 	session := sessions.Session{Values: map[interface{}]interface{}{"userID": intUserId}}
-	ctx = context.WithValue(context.Background(), "session", &session)
+	return context.WithValue(context.Background(), "session", &session)
+}
+
+func (s *server) GetFromSession(ctx context.Context, in *proto.Empty) (*proto.SafeStaff, error) {
+	ctx = makeContextFromMetaDataInContext(ctx)
 	safeStaff, err := s.staffUseCase.GetFromSession(ctx)
 	fmt.Println(safeStaff, err)
 	return transformIntoRPC(&safeStaff), err
 }
 
 func (s *server) GetById(ctx context.Context, id *proto.Id) (*proto.SafeStaff, error) {
+	ctx = makeContextFromMetaDataInContext(ctx)
 	safeStaff, err := s.staffUseCase.GetByID(ctx, int(id.GetId()))
 	return transformIntoRPC(&safeStaff), err
 }
