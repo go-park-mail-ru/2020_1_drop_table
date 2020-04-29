@@ -5,7 +5,7 @@ import (
 	"2020_1_drop_table/internal/app/customer"
 	"2020_1_drop_table/internal/app/customer/models"
 	globalModels "2020_1_drop_table/internal/app/models"
-	"2020_1_drop_table/internal/microservices/staff"
+	staffClient "2020_1_drop_table/internal/microservices/staff/delivery/grpc/client"
 	loyaltySystems "2020_1_drop_table/internal/pkg/apple_pass_generator/loyalty_systems"
 	"context"
 	"database/sql"
@@ -15,18 +15,17 @@ import (
 type customerUsecase struct {
 	customerRepo   customer.Repository
 	passKitRepo    apple_passkit.Repository
-	staffUsecase   staff.Usecase
+	staffClient    staffClient.StaffClient
 	contextTimeout time.Duration
 }
 
-func NewCustomerUsecase(c customer.Repository, s staff.Usecase, p apple_passkit.Repository,
+func NewCustomerUsecase(c customer.Repository, p apple_passkit.Repository,
 	timeout time.Duration) customer.Usecase {
 
 	return &customerUsecase{
 		contextTimeout: timeout,
 		passKitRepo:    p,
 		customerRepo:   c,
-		staffUsecase:   s,
 	}
 }
 
@@ -60,7 +59,7 @@ func (u customerUsecase) SetPoints(ctx context.Context, uuid string, points stri
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
 
-	requestStaff, err := u.staffUsecase.GetFromSession(ctx)
+	requestStaff, err := u.staffClient.GetFromSession(ctx)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return globalModels.ErrForbidden

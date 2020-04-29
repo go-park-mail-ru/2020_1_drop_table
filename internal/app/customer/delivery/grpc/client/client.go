@@ -1,4 +1,4 @@
-package main
+package customer
 
 import (
 	proto "2020_1_drop_table/internal/app/customer/delivery/grpc/protobuff"

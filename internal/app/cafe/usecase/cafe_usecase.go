@@ -13,11 +13,11 @@ import (
 
 type cafeUsecase struct {
 	cafeRepo        cafe.Repository
-	staffGrpcClient staffClient.StaffClient
+	staffGrpcClient *staffClient.StaffClient
 	contextTimeout  time.Duration
 }
 
-func NewCafeUsecase(c cafe.Repository, stClient staffClient.StaffClient, timeout time.Duration) cafe.Usecase {
+func NewCafeUsecase(c cafe.Repository, stClient *staffClient.StaffClient, timeout time.Duration) cafe.Usecase {
 	return &cafeUsecase{
 		cafeRepo:        c,
 		contextTimeout:  timeout,

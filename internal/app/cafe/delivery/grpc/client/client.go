@@ -34,8 +34,8 @@ func cafeProtoToModel(cafe *proto.Cafe) models.Cafe {
 		Address:     cafe.Address,
 		Description: cafe.Description,
 		StaffID:     int(cafe.StaffID),
-		OpenTime:    time.Unix(cafe.OpenTime.GetSeconds(), 0).UTC(),
-		CloseTime:   time.Unix(cafe.CloseTime.GetSeconds(), 0).UTC(),
+		OpenTime:    time.Unix(cafe.GetOpenTime().GetSeconds(), 0).UTC(),
+		CloseTime:   time.Unix(cafe.GetCloseTime().GetSeconds(), 0).UTC(),
 		Photo:       cafe.Photo,
 	}
 }

@@ -5,16 +5,17 @@ import (
 	_appleHttpDeliver "2020_1_drop_table/internal/app/apple_passkit/delivery/http"
 	_appleRepo "2020_1_drop_table/internal/app/apple_passkit/repository"
 	_appleUsecase "2020_1_drop_table/internal/app/apple_passkit/usecase"
+	"2020_1_drop_table/internal/app/cafe/delivery/grpc/server"
 	_cafeHttpDeliver "2020_1_drop_table/internal/app/cafe/delivery/http"
 	_cafeRepo "2020_1_drop_table/internal/app/cafe/repository"
 	_cafeUsecase "2020_1_drop_table/internal/app/cafe/usecase"
+	customer "2020_1_drop_table/internal/app/customer/delivery/grpc/client"
+	server2 "2020_1_drop_table/internal/app/customer/delivery/grpc/server"
 	_customerHttpDeliver "2020_1_drop_table/internal/app/customer/delivery/http"
 	_customerRepo "2020_1_drop_table/internal/app/customer/repository"
 	_customerUseCase "2020_1_drop_table/internal/app/customer/usecase"
 	"2020_1_drop_table/internal/app/middleware"
-	_staffHttpDeliver "2020_1_drop_table/internal/microservices/staff/delivery/http"
-	_staffRepo "2020_1_drop_table/internal/microservices/staff/repository"
-	_staffUsecase "2020_1_drop_table/internal/microservices/staff/usecase"
+	staffClient "2020_1_drop_table/internal/microservices/staff/delivery/grpc/client"
 	"2020_1_drop_table/internal/pkg/apple_pass_generator"
 	"2020_1_drop_table/internal/pkg/apple_pass_generator/meta"
 	"fmt"
@@ -22,6 +23,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/grpc"
 	redisStore "gopkg.in/boj/redistore.v1"
 	"net/http"
 )
@@ -52,13 +54,14 @@ func main() {
 		return
 	}
 
-	staffRepo := _staffRepo.NewPostgresStaffRepository(conn)
-
 	cafeRepo := _cafeRepo.NewPostgresCafeRepository(conn)
-	staffUsecase := _staffUsecase.NewStaffUsecase(&staffRepo, cafeRepo, timeoutContext)
-	_staffHttpDeliver.NewStaffHandler(r, staffUsecase)
+	grpcConn, err := grpc.Dial(configs.GRPCStaffUrl, grpc.WithInsecure())
+	grpcStaffClient := staffClient.NewStaffClient(grpcConn)
 
-	cafeUsecase := _cafeUsecase.NewCafeUsecase(cafeRepo, staffUsecase, timeoutContext)
+	grpcCustomerConn, err := grpc.Dial(configs.GRPCCustomerUrl, grpc.WithInsecure())
+	grpcCustomerClient := customer.NewCustomerClient(grpcCustomerConn)
+
+	cafeUsecase := _cafeUsecase.NewCafeUsecase(cafeRepo, grpcStaffClient, timeoutContext)
 	_cafeHttpDeliver.NewCafeHandler(r, cafeUsecase)
 
 	applePassGenerator := apple_pass_generator.NewGenerator(
@@ -68,13 +71,16 @@ func main() {
 
 	applePassKitRepo := _appleRepo.NewPostgresApplePassRepository(conn)
 
-	applePassKitUcase := _appleUsecase.NewApplePassKitUsecase(applePassKitRepo, cafeRepo, customerRepo,
+	applePassKitUcase := _appleUsecase.NewApplePassKitUsecase(applePassKitRepo, cafeRepo, grpcCustomerClient,
 		&applePassGenerator, timeoutContext, &meta.Meta{})
 
 	_appleHttpDeliver.NewPassKitHandler(r, applePassKitUcase)
 
-	customerUseCase := _customerUseCase.NewCustomerUsecase(customerRepo, staffUsecase, applePassKitRepo, timeoutContext)
+	customerUseCase := _customerUseCase.NewCustomerUsecase(customerRepo, applePassKitRepo, timeoutContext)
 	_customerHttpDeliver.NewCustomerHandler(r, customerUseCase)
+
+	go server.StartCafeGrpcServer(cafeUsecase)
+	go server2.StartCustomerGrpcServer(customerUseCase)
 
 	//OPTIONS
 	middleware.AddOptionsRequest(r)

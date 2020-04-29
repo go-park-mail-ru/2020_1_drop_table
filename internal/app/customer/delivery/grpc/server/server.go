@@ -1,16 +1,31 @@
 package server
 
 import (
+	"2020_1_drop_table/configs"
 	"2020_1_drop_table/internal/app/customer"
 	proto "2020_1_drop_table/internal/app/customer/delivery/grpc/protobuff"
 	"2020_1_drop_table/internal/app/customer/models"
 	"context"
+	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	"net"
 )
 
 type server struct {
 	customerUseCase customer.Usecase
+}
+
+//TODO добавить функцию StartGRPCserver и впилить ее в стартах где используется customer
+
+func StartCustomerGrpcServer(customerUseCase customer.Usecase) {
+	list, err := net.Listen("tcp", configs.GRPCCustomerUrl)
+	if err != nil {
+		log.Err(err)
+	}
+	server := grpc.NewServer()
+	NewCustomerServerGRPC(server, customerUseCase)
+	server.Serve(list)
 }
 
 func NewCustomerServerGRPC(gServer *grpc.Server, customerUCase customer.Usecase) {

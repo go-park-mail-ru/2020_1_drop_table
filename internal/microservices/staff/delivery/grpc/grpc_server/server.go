@@ -21,7 +21,7 @@ type server struct {
 	staffUseCase staff2.Usecase
 }
 
-func NewArticleServerGrpc(gserver *grpc.Server, staffUCase staff2.Usecase) {
+func NewStaffServerGRPC(gserver *grpc.Server, staffUCase staff2.Usecase) {
 	articleServer := &server{
 		staffUseCase: staffUCase,
 	}
@@ -29,14 +29,13 @@ func NewArticleServerGrpc(gserver *grpc.Server, staffUCase staff2.Usecase) {
 	reflection.Register(gserver)
 }
 
-func StartGrpcServer(staffUCase staff2.Usecase) {
-	//TODO вернуть :8083 вместо  GRPCSTAFFURL
+func StartStaffGrpcServer(staffUCase staff2.Usecase) {
 	list, err := net.Listen("tcp", configs.GRPCStaffUrl)
 	if err != nil {
 		log.Err(err)
 	}
 	server := grpc.NewServer()
-	NewArticleServerGrpc(server, staffUCase)
+	NewStaffServerGRPC(server, staffUCase)
 	server.Serve(list)
 }
 

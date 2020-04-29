@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	cafeClient "2020_1_drop_table/internal/app/cafe/delivery/grpc/client"
 	globalModels "2020_1_drop_table/internal/app/models"
 	staffClient "2020_1_drop_table/internal/microservices/staff/delivery/grpc/client"
 	"2020_1_drop_table/internal/microservices/survey"
@@ -13,14 +14,16 @@ import (
 type SurveyUsecase struct {
 	surveyRepo     survey.Repository
 	staffClient    *staffClient.StaffClient
+	cafeClient     *cafeClient.CafeGRPC
 	contextTimeout time.Duration
 }
 
-func NewSurveyUsecase(surveyRepo survey.Repository, staffClient *staffClient.StaffClient, timeout time.Duration) survey.Usecase {
+func NewSurveyUsecase(surveyRepo survey.Repository, staffClient *staffClient.StaffClient, cafeClient *cafeClient.CafeGRPC, timeout time.Duration) survey.Usecase {
 	return &SurveyUsecase{
 		surveyRepo:     surveyRepo,
 		contextTimeout: timeout,
 		staffClient:    staffClient,
+		cafeClient:     cafeClient,
 	}
 }
 
@@ -33,11 +36,10 @@ func (s SurveyUsecase) SetSurveyTemplate(ctx context.Context, survey string, id 
 	if err != nil || !requestUser.IsOwner {
 		return globalModels.ErrForbidden
 	}
-	//TODO uncomment when Dima add getById
-	//caf, err := s.cafeRepo.GetByID(ctx, id)
-	//if err != nil || caf.StaffID != requestUser.StaffID {
-	//	return globalModels.ErrForbidden
-	//}
+	caf, err := s.cafeClient.GetByID(ctx, id)
+	if err != nil || caf.StaffID != requestUser.StaffID {
+		return globalModels.ErrForbidden
+	}
 	err = s.surveyRepo.SetSurveyTemplate(ctx, survey, id, requestUser.StaffID)
 	if err != nil {
 		if err == sql.ErrNoRows {
