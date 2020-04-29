@@ -16,8 +16,6 @@ type server struct {
 	customerUseCase customer.Usecase
 }
 
-//TODO добавить функцию StartGRPCserver и впилить ее в стартах где используется customer
-
 func StartCustomerGrpcServer(customerUseCase customer.Usecase) {
 	list, err := net.Listen("tcp", configs.GRPCCustomerUrl)
 	if err != nil {

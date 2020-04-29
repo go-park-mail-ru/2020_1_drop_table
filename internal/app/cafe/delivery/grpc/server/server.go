@@ -17,8 +17,6 @@ type server struct {
 	cafeUseCase cafe.Usecase
 }
 
-//TODO добавить функцию StartGRPCserver и впилить ее в main app
-
 func StartCafeGrpcServer(cafeUseCase cafe.Usecase) {
 	list, err := net.Listen("tcp", configs.GRPCCafeUrl)
 	if err != nil {
