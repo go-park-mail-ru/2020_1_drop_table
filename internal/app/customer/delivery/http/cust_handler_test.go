@@ -1,7 +1,6 @@
-package delivery
+package http
 
 import (
-	http3 "2020_1_drop_table/internal/app/customer/delivery/http"
 	"2020_1_drop_table/internal/app/customer/mocks"
 	"2020_1_drop_table/internal/app/customer/models"
 	"2020_1_drop_table/internal/pkg/responses"
@@ -55,7 +54,7 @@ func TestGet(t *testing.T) {
 		Points:     "228",
 	}
 	mockcustomerUcase.On("GetPoints", mock.AnythingOfType("*context.valueCtx"), "asd").Return(returncustomer.Points, nil)
-	handler := http3.CustomerHandler{CUsecase: mockcustomerUcase}
+	handler := CustomerHandler{CUsecase: mockcustomerUcase}
 	buf, wr := createMultipartFormData(t, "")
 
 	req, err := http.NewRequest("GET", url, &buf)
@@ -86,7 +85,7 @@ func TestSet(t *testing.T) {
 		Points:     "228",
 	}
 	mockcustomerUcase.On("SetPoints", mock.AnythingOfType("*context.valueCtx"), "asd", "228").Return(nil)
-	handler := http3.CustomerHandler{CUsecase: mockcustomerUcase}
+	handler := CustomerHandler{CUsecase: mockcustomerUcase}
 	buf, _ := json.Marshal(228)
 
 	req, err := http.NewRequest("PUT", url, bytes.NewReader(buf))

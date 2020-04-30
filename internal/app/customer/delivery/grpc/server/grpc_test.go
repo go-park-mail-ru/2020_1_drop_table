@@ -1,4 +1,4 @@
-package test_test
+package server_test
 
 import (
 	"2020_1_drop_table/configs"
@@ -58,6 +58,7 @@ func TestAdd(t *testing.T) {
 	}
 
 	customerMockUsecase := new(customerMocks.Usecase)
+
 	go server.StartCustomerGrpcServer(customerMockUsecase)
 	grpcConn, err := grpc.Dial(configs.GRPCCustomerUrl, grpc.WithInsecure())
 	assert.Nil(t, err, "no error when start grpc conn")
