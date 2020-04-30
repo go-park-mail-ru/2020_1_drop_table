@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestCoffeeCup_UpdatingPass(t *testing.T) {
+func TestCashBack_UpdatingPass(t *testing.T) {
 	type testCase struct {
 		reqMap map[string]int
 		DBMap  map[string]int
@@ -16,9 +16,9 @@ func TestCoffeeCup_UpdatingPass(t *testing.T) {
 		err    error
 	}
 
-	c := CoffeeCup{
-		InfoVarName:   "cups_count",
-		PointsVarName: "coffee_cups",
+	c := CashBack{
+		InfoVarName:   "cashback",
+		PointsVarName: "points_count",
 	}
 
 	var reqInt int
@@ -60,27 +60,26 @@ func TestCoffeeCup_UpdatingPass(t *testing.T) {
 
 			assert.Equal(t, string(resultMapString), result)
 		}
-
 	}
 }
 
-func TestCoffeeCup_CreatingCustomer(t *testing.T) {
+func TestCashBack_CreatingCustomer(t *testing.T) {
 	type testCase struct {
 		loyaltyInfo    string
 		customerPoints string
 		err            error
 	}
 
-	c := CoffeeCup{
-		InfoVarName:   "cups_count",
-		PointsVarName: "coffee_cups",
+	c := CashBack{
+		InfoVarName:   "cashback",
+		PointsVarName: "points_count",
 	}
 
 	testCases := []testCase{
 		//Test OK
 		{
 			loyaltyInfo:    "",
-			customerPoints: fmt.Sprintf(`{"%s": 0, "%s": %d}`, c.PointsVarName, c.InfoVarName, 0),
+			customerPoints: fmt.Sprintf(`{"%s": 0}`, c.PointsVarName),
 			err:            nil,
 		},
 	}
@@ -98,16 +97,16 @@ func TestCoffeeCup_CreatingCustomer(t *testing.T) {
 	}
 }
 
-func TestCoffeeCup_SettingPoints(t *testing.T) {
+func TestCashBack_SettingPoints(t *testing.T) {
 	type testCase struct {
 		reqPoints string
 		newPoints string
 		err       error
 	}
 
-	c := CoffeeCup{
-		InfoVarName:   "cups_count",
-		PointsVarName: "coffee_cups",
+	c := CashBack{
+		InfoVarName:   "cashback",
+		PointsVarName: "points_count",
 	}
 
 	testCases := []testCase{
