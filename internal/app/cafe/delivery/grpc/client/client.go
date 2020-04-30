@@ -28,6 +28,9 @@ func (c *CafeGRPC) GetByID(ctx context.Context, id int) (models.Cafe, error) {
 }
 
 func cafeProtoToModel(cafe *proto.Cafe) models.Cafe {
+	if cafe == nil {
+		return models.Cafe{}
+	}
 	return models.Cafe{
 		CafeID:      int(cafe.CafeID),
 		CafeName:    cafe.CafeName,
