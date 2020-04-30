@@ -18,7 +18,6 @@ func (p *Percents) UpdatingPass(reqLoyaltyInfo, dbLoyaltyInfo string) (newLoyalt
 	if err == nil {
 		return reqLoyaltyInfo, nil
 	}
-
 	err = UnmarshalEmptyString([]byte(dbLoyaltyInfo), &DBMap)
 	if err != nil {
 		return "", ErrBadLoyaltyInfo

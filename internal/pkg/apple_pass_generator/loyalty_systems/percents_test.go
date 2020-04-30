@@ -8,17 +8,18 @@ import (
 	"testing"
 )
 
-func TestCoffeeCup_UpdatingPass(t *testing.T) {
+func TestPercents_UpdatingPass(t *testing.T) {
 	type testCase struct {
 		reqMap map[string]int
-		DBMap  map[string]int
-		result map[string]int
+		DBMap  map[int]int
+		result map[int]int
 		err    error
 	}
 
-	c := CoffeeCup{
-		InfoVarName:   "cups_count",
-		PointsVarName: "coffee_cups",
+	p := Percents{
+		purchasesSumVarName: "purchases_sum",
+		discountVarName:     "discount",
+		newPurchasesVarName: "new_purchases",
 	}
 
 	var reqInt int
@@ -32,9 +33,9 @@ func TestCoffeeCup_UpdatingPass(t *testing.T) {
 	testCases := []testCase{
 		//Test OK
 		{
-			reqMap: map[string]int{c.InfoVarName: reqInt},
-			DBMap:  map[string]int{c.InfoVarName: DBInt},
-			result: map[string]int{c.InfoVarName: reqInt},
+			reqMap: map[string]int{"not int": 4},
+			DBMap:  map[int]int{20: 3},
+			result: map[int]int{20: 3},
 			err:    nil,
 		},
 	}
@@ -50,7 +51,7 @@ func TestCoffeeCup_UpdatingPass(t *testing.T) {
 		DBMapString, err = json.Marshal(test.DBMap)
 		assert.NoError(t, err, message)
 
-		result, err := c.UpdatingPass(string(reqMapString), string(DBMapString))
+		result, err := p.UpdatingPass(string(reqMapString), string(DBMapString))
 		assert.Equal(t, test.err, err, message)
 
 		if test.err == nil {
@@ -60,27 +61,27 @@ func TestCoffeeCup_UpdatingPass(t *testing.T) {
 
 			assert.Equal(t, string(resultMapString), result)
 		}
-
 	}
 }
 
-func TestCoffeeCup_CreatingCustomer(t *testing.T) {
+func TestPercents_CreatingCustomer(t *testing.T) {
 	type testCase struct {
 		loyaltyInfo    string
 		customerPoints string
 		err            error
 	}
 
-	c := CoffeeCup{
-		InfoVarName:   "cups_count",
-		PointsVarName: "coffee_cups",
+	p := Percents{
+		purchasesSumVarName: "purchases_sum",
+		discountVarName:     "discount",
+		newPurchasesVarName: "new_purchases",
 	}
 
 	testCases := []testCase{
 		//Test OK
 		{
 			loyaltyInfo:    "",
-			customerPoints: fmt.Sprintf(`{"%s": 0, "%s": %d}`, c.PointsVarName, c.InfoVarName, 0),
+			customerPoints: fmt.Sprintf(`{"%s": 0, "%s": 0}`, p.purchasesSumVarName, p.discountVarName),
 			err:            nil,
 		},
 	}
@@ -88,7 +89,7 @@ func TestCoffeeCup_CreatingCustomer(t *testing.T) {
 	for i, test := range testCases {
 		message := fmt.Sprintf("test case number: %d", i)
 
-		customerPoints, newLotaltyInfo, err := c.CreatingCustomer(test.loyaltyInfo)
+		customerPoints, newLotaltyInfo, err := p.CreatingCustomer(test.loyaltyInfo)
 		assert.Equal(t, test.err, err, message)
 
 		if test.err == nil {
@@ -98,31 +99,36 @@ func TestCoffeeCup_CreatingCustomer(t *testing.T) {
 	}
 }
 
-func TestCoffeeCup_SettingPoints(t *testing.T) {
+func TestPercents_SettingPoints(t *testing.T) {
 	type testCase struct {
-		reqPoints string
-		newPoints string
-		err       error
+		reqPoints   string
+		dbPoints    string
+		loyaltyInfo string
+		newPoints   string
+		err         error
 	}
 
-	c := CoffeeCup{
-		InfoVarName:   "cups_count",
-		PointsVarName: "coffee_cups",
+	p := Percents{
+		purchasesSumVarName: "purchases_sum",
+		discountVarName:     "discount",
+		newPurchasesVarName: "new_purchases",
 	}
 
 	testCases := []testCase{
 		//Test OK
 		{
-			reqPoints: fmt.Sprintf(`{"%s": 10}`, c.PointsVarName),
-			newPoints: fmt.Sprintf(`{"%s": 10}`, c.PointsVarName),
-			err:       nil,
+			loyaltyInfo: `{"100": 10, "5000": 20}`,
+			dbPoints:    `{"discount": 10, "purchases_sum": 3000}`,
+			reqPoints:   `{"new_purchases": 5000}`,
+			newPoints:   `{"discount":20,"purchases_sum":8000}`,
+			err:         nil,
 		},
 	}
 
 	for i, test := range testCases {
 		message := fmt.Sprintf("test case number: %d", i)
 
-		newPoints, err := c.SettingPoints("", "", test.reqPoints)
+		newPoints, err := p.SettingPoints(test.loyaltyInfo, test.dbPoints, test.reqPoints)
 		assert.Equal(t, test.err, err, message)
 
 		if test.err == nil {

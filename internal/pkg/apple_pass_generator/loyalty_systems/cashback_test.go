@@ -47,7 +47,7 @@ func TestCashBack_UpdatingPass(t *testing.T) {
 		assert.NoError(t, err, message)
 
 		var DBMapString []byte
-		DBMapString, err = json.Marshal(test.reqMap)
+		DBMapString, err = json.Marshal(test.DBMap)
 		assert.NoError(t, err, message)
 
 		result, err := c.UpdatingPass(string(reqMapString), string(DBMapString))
