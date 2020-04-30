@@ -19,8 +19,10 @@ func NewPanicMiddleware(metrics *metrics.PromMetrics) mux.MiddlewareFunc {
 					respTime := time.Since(reqTime)
 					metrics.Hits.WithLabelValues(
 						strconv.Itoa(http.StatusInternalServerError), r.URL.Path, r.Method).Inc()
+
 					metrics.Timings.WithLabelValues(
-						strconv.Itoa(http.StatusOK), r.URL.String(), r.Method).Observe(respTime.Seconds())
+						strconv.Itoa(http.StatusInternalServerError), r.URL.String(),
+						r.Method).Observe(respTime.Seconds())
 
 					log.Error().Msgf(fmt.Sprintf("panic catched: %s", err))
 					http.Error(w, "Internal server error", http.StatusInternalServerError)
