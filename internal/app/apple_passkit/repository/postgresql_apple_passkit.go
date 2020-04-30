@@ -162,8 +162,7 @@ func (p *postgresApplePassRepository) GetMeta(ctx context.Context,
 	}
 
 	applePassMeta.CafeID = cafeID
-	//TODO can be bug with EasyJSOn not tested
-	err = applePassMeta.UnmarshalJSON(metaJson)
+	err = json.Unmarshal(metaJson, &applePassMeta.Meta)
 	if err != nil {
 		return models.ApplePassMeta{}, err
 	}
