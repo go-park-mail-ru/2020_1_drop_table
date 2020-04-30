@@ -5,8 +5,9 @@ import (
 	passKitModels "2020_1_drop_table/internal/app/apple_passkit/models"
 	customerMocks "2020_1_drop_table/internal/app/customer/mocks"
 	customerModels "2020_1_drop_table/internal/app/customer/models"
-	staffMocks "2020_1_drop_table/internal/app/staff/mocks"
-	staffModels "2020_1_drop_table/internal/app/staff/models"
+	staffClientGRPCMOCK "2020_1_drop_table/internal/microservices/staff/delivery/grpc/client/mocks"
+	staffMocks "2020_1_drop_table/internal/microservices/staff/mocks"
+	staffModels "2020_1_drop_table/internal/microservices/staff/models"
 	"context"
 	"fmt"
 	"github.com/bxcodec/faker"
@@ -69,8 +70,8 @@ func TestCustomerUsecase_GetCustomer(t *testing.T) {
 			mock.AnythingOfType("*context.timerCtx"), mock.MatchedBy(customerIdMatches)).Return(
 			testCase.customer, nil)
 
-		cafeUsecase := NewCustomerUsecase(mockCustomerRepo, mockStaffUcase,
-			mockPassKitRepo, time.Second*2)
+		staffClient := new(staffClientGRPCMOCK.StaffClientInterface)
+		cafeUsecase := NewCustomerUsecase(mockCustomerRepo, mockPassKitRepo, staffClient, time.Second*2)
 
 		customer, err := cafeUsecase.GetCustomer(context.Background(), testCase.customer.CustomerID)
 
@@ -105,7 +106,6 @@ func TestCustomerUsecase_GetPoints(t *testing.T) {
 
 		mockPassKitRepo := new(passMocks.Repository)
 		mockCustomerRepo := new(customerMocks.Repository)
-		mockStaffUcase := new(staffMocks.Usecase)
 
 		customerIdMatches := func(id string) bool {
 			assert.Equal(t, testCase.customer.CustomerID, id, message)
@@ -115,8 +115,8 @@ func TestCustomerUsecase_GetPoints(t *testing.T) {
 			mock.AnythingOfType("*context.timerCtx"), mock.MatchedBy(customerIdMatches)).Return(
 			testCase.customer, nil)
 
-		cafeUsecase := NewCustomerUsecase(mockCustomerRepo, mockStaffUcase,
-			mockPassKitRepo, time.Second*2)
+		staffClient := new(staffClientGRPCMOCK.StaffClientInterface)
+		cafeUsecase := NewCustomerUsecase(mockCustomerRepo, mockPassKitRepo, staffClient, time.Second*2)
 
 		customerPoints, err := cafeUsecase.GetPoints(context.Background(), testCase.customer.CustomerID)
 
@@ -170,15 +170,14 @@ func TestCustomerUsecase_SetPoints(t *testing.T) {
 			err:         nil,
 		},
 	}
-
+	staffClient := new(staffClientGRPCMOCK.StaffClientInterface)
 	for i, testCase := range testCases {
 		message := fmt.Sprintf("test case number: %d", i)
 
 		mockPassKitRepo := new(passMocks.Repository)
 		mockCustomerRepo := new(customerMocks.Repository)
-		mockStaffUcase := new(staffMocks.Usecase)
 
-		mockStaffUcase.On("GetFromSession",
+		staffClient.On("GetFromSession",
 			mock.AnythingOfType("*context.timerCtx")).Return(
 			testCase.staff, nil)
 
@@ -222,8 +221,7 @@ func TestCustomerUsecase_SetPoints(t *testing.T) {
 			mock.MatchedBy(newPointsMatches), mock.MatchedBy(newCustomerIdMatches)).Return(
 			testCase.newCustomer, nil)
 
-		cafeUsecase := NewCustomerUsecase(mockCustomerRepo, mockStaffUcase,
-			mockPassKitRepo, time.Second*2)
+		cafeUsecase := NewCustomerUsecase(mockCustomerRepo, mockPassKitRepo, staffClient, time.Second*2)
 
 		err = cafeUsecase.SetPoints(context.Background(), testCase.newCustomer.CustomerID, testCase.newCustomer.Points)
 

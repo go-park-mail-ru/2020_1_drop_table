@@ -47,7 +47,7 @@ func TestCoffeeCup_UpdatingPass(t *testing.T) {
 		assert.NoError(t, err, message)
 
 		var DBMapString []byte
-		DBMapString, err = json.Marshal(test.reqMap)
+		DBMapString, err = json.Marshal(test.DBMap)
 		assert.NoError(t, err, message)
 
 		result, err := c.UpdatingPass(string(reqMapString), string(DBMapString))
@@ -80,7 +80,7 @@ func TestCoffeeCup_CreatingCustomer(t *testing.T) {
 		//Test OK
 		{
 			loyaltyInfo:    "",
-			customerPoints: fmt.Sprintf(`{"%s": 0}`, c.PointsVarName),
+			customerPoints: fmt.Sprintf(`{"%s": 0, "%s": %d}`, c.PointsVarName, c.InfoVarName, 0),
 			err:            nil,
 		},
 	}

@@ -162,7 +162,8 @@ func (p *postgresApplePassRepository) GetMeta(ctx context.Context,
 	}
 
 	applePassMeta.CafeID = cafeID
-	if err := json.Unmarshal(metaJson, &applePassMeta.Meta); err != nil {
+	err = json.Unmarshal(metaJson, &applePassMeta.Meta)
+	if err != nil {
 		return models.ApplePassMeta{}, err
 	}
 

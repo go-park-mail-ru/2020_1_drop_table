@@ -18,7 +18,6 @@ func (p *Percents) UpdatingPass(reqLoyaltyInfo, dbLoyaltyInfo string) (newLoyalt
 	if err == nil {
 		return reqLoyaltyInfo, nil
 	}
-
 	err = UnmarshalEmptyString([]byte(dbLoyaltyInfo), &DBMap)
 	if err != nil {
 		return "", ErrBadLoyaltyInfo
@@ -69,7 +68,7 @@ func (p *Percents) SettingPoints(loyaltyInfo, dbPoints, reqPoints string) (newPo
 
 	finalDiscount := 0
 	for purchasesSumForDiscount := range loyaltyMap {
-		if purchasesSum > purchasesSumForDiscount {
+		if purchasesSum > purchasesSumForDiscount && finalDiscount < loyaltyMap[purchasesSumForDiscount] {
 			finalDiscount = loyaltyMap[purchasesSumForDiscount]
 		}
 	}
