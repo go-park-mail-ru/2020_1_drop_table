@@ -61,6 +61,8 @@ func main() {
 		http.StripPrefix(fmt.Sprintf("/%s/", configs.MediaFolder),
 			http.FileServer(http.Dir(configs.MediaFolder))))
 
+	middleware.AddOptionsRequest(r)
+
 	http.Handle("/", r)
 	srv := &http.Server{
 		Handler:      r,
