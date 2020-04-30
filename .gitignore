@@ -17,3 +17,4 @@
 
 # Config files
 configs/apple_config_files
+/configs/configs.env
