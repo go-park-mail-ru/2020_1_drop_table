@@ -296,8 +296,9 @@ func TestUpdate(t *testing.T) {
 	Logo=NotEmpty($4, Logo),
 	Logo2x=NotEmpty($5, Logo2x),
 	Strip=NotEmpty($6, Strip),
-	Strip2x=NotEmpty($7, Strip2x)
-	WHERE CafeID=$8 AND Type=$9 AND published=$10`
+	Strip2x=NotEmpty($7, Strip2x),
+    LoyaltyInfo=NotEmpty($8, LoyaltyInfo)
+	WHERE CafeID=$9 AND Type=$10 AND published=$11`
 
 	testCases := []addTestCase{
 		//Test OK
@@ -305,19 +306,14 @@ func TestUpdate(t *testing.T) {
 			inputPass: inputPass,
 			err:       nil,
 		},
-		//Test not found
-		//{
-		//	inputPass: passKitModels.ApplePassDB{},
-		//	err:       sql.ErrNoRows,
-		//},
 	}
 	for i, testCase := range testCases {
 		message := fmt.Sprintf("test case number: %d", i)
 
 		args := []driver.Value{testCase.inputPass.Design, testCase.inputPass.Icon,
 			testCase.inputPass.Icon2x, testCase.inputPass.Logo, testCase.inputPass.Logo2x,
-			testCase.inputPass.Strip, testCase.inputPass.Strip2x, testCase.inputPass.CafeID,
-			testCase.inputPass.Type, testCase.inputPass.Published}
+			testCase.inputPass.Strip, testCase.inputPass.Strip2x, testCase.inputPass.LoyaltyInfo,
+			testCase.inputPass.CafeID, testCase.inputPass.Type, testCase.inputPass.Published}
 
 		req := mock.ExpectExec(query).WithArgs(args...)
 		if testCase.err == nil {
@@ -332,6 +328,7 @@ func TestUpdate(t *testing.T) {
 
 		err := rep.Update(context.Background(), testCase.inputPass)
 		assert.Equal(t, testCase.err, err, message)
+		fmt.Println(err)
 		if err := mock.ExpectationsWereMet(); err != nil {
 			t.Errorf("there were unfulfilled expectations: %s", err)
 		}

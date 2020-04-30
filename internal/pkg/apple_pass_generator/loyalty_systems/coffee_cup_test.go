@@ -80,7 +80,7 @@ func TestCoffeeCup_CreatingCustomer(t *testing.T) {
 		//Test OK
 		{
 			loyaltyInfo:    "",
-			customerPoints: fmt.Sprintf(`{"%s": 0}`, c.PointsVarName),
+			customerPoints: fmt.Sprintf(`{"%s": 0, "%s": %d}`, c.PointsVarName, c.InfoVarName, 0),
 			err:            nil,
 		},
 	}
