@@ -17,8 +17,8 @@ type ApplePassDB struct {
 
 //easyjson:json
 type ApplePassMeta struct {
-	CafeID int                    `structs:"-"`
-	Meta   map[string]interface{} `structs:"Meta"`
+	CafeID int                    `json:"cafeid" structs:"-"`
+	Meta   map[string]interface{} `json:"meta" structs:"Meta"`
 }
 
 type UpdateResponse struct {

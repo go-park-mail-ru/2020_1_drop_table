@@ -109,9 +109,9 @@ func easyjsonF3b256a3Decode20201DropTableInternalAppApplePasskitModels1(in *jlex
 			continue
 		}
 		switch key {
-		case "CafeID":
+		case "cafeid":
 			out.CafeID = int(in.Int())
-		case "Meta":
+		case "meta":
 			if in.IsNull() {
 				in.Skip()
 			} else {
@@ -148,12 +148,12 @@ func easyjsonF3b256a3Encode20201DropTableInternalAppApplePasskitModels1(out *jwr
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"CafeID\":"
+		const prefix string = ",\"cafeid\":"
 		out.RawString(prefix[1:])
 		out.Int(int(in.CafeID))
 	}
 	{
-		const prefix string = ",\"Meta\":"
+		const prefix string = ",\"meta\":"
 		out.RawString(prefix)
 		if in.Meta == nil && (out.Flags&jwriter.NilMapAsEmpty) == 0 {
 			out.RawString(`null`)

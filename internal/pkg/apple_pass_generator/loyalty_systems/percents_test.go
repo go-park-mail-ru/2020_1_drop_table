@@ -132,7 +132,6 @@ func TestPercents_SettingPoints(t *testing.T) {
 		assert.Equal(t, test.err, err, message)
 
 		if test.err == nil {
-
 			assert.Equal(t, test.newPoints, newPoints)
 		}
 	}

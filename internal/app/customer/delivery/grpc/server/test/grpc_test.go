@@ -1,4 +1,4 @@
-package test
+package test_test
 
 import (
 	"2020_1_drop_table/configs"
@@ -36,7 +36,7 @@ func TestAdd(t *testing.T) {
 	emptContext := context.Background()
 
 	test1Cust := models2.Customer{
-		CustomerID:   "228",
+		CustomerID:   "0",
 		CafeID:       0,
 		Type:         "",
 		Points:       "",
