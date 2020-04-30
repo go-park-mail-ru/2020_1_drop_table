@@ -42,12 +42,12 @@ func createMultipartFormData(t *testing.T, data string) (bytes.Buffer, *multipar
 }
 
 type custHttpResponse struct {
-	Data   int
+	Data   string
 	Errors []responses.HttpError
 }
 
 func TestGet(t *testing.T) {
-	const url = "/api/v1/customers/points-system/asd/points/"
+	const url = "/api/v1/customers/asd/points/"
 	mockcustomerUcase := new(mocks.Usecase)
 	returncustomer := models.Customer{
 		CustomerID: "",
@@ -78,25 +78,24 @@ func TestGet(t *testing.T) {
 
 func TestSet(t *testing.T) {
 
-	const url = "/api/v1/customers/points-system/asd/points/228"
+	const url = "/api/v1/customers/asd/"
 	mockcustomerUcase := new(mocks.Usecase)
 	returncustomer := models.Customer{
 		CustomerID: "asd",
 		CafeID:     0,
 		Points:     "228",
 	}
-	mockcustomerUcase.On("SetPoints", mock.AnythingOfType("*context.valueCtx"), "asd", 228).Return(nil)
+	mockcustomerUcase.On("SetPoints", mock.AnythingOfType("*context.valueCtx"), "asd", "228").Return(nil)
 	handler := http3.CustomerHandler{CUsecase: mockcustomerUcase}
-	buf, wr := createMultipartFormData(t, "")
+	buf, _ := json.Marshal(228)
 
-	req, err := http.NewRequest("PUT", url, &buf)
+	req, err := http.NewRequest("PUT", url, bytes.NewReader(buf))
 	req = mux.SetURLVars(req, map[string]string{
-		"points": "228",
-		"uuid":   "asd",
+		"uuid": "asd",
 	})
 
 	assert.Nil(t, err)
-	req.Header.Set("Content-Type", wr.FormDataContentType())
+	req.Header.Set("Content-Type", "application/json")
 	respWriter := httptest.NewRecorder()
 
 	handler.SetPoints(respWriter, req)
