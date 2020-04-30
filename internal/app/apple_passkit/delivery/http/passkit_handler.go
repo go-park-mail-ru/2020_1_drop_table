@@ -24,16 +24,17 @@ func NewPassKitHandler(r *mux.Router, us apple_passkit.Usecase) {
 	handler := applePassKitHandler{
 		passesUsecace: us,
 	}
-	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}/apple_pass",
-		permissions.CheckCSRF(permissions.CheckAuthenticated(handler.UpdatePassHandler))).Methods("PUT")
 
-	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}/apple_pass",
+	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}/apple_pass/{loyalty_system_type}",
+		permissions.SetCSRF(permissions.CheckAuthenticated(handler.UpdatePassHandler))).Methods("PUT")
+
+	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}/apple_pass/{loyalty_system_type}",
 		permissions.SetCSRF(permissions.CheckAuthenticated(handler.GetPassHandler))).Methods("GET")
 
-	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}/apple_pass/new_customer",
+	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}/apple_pass/{loyalty_system_type}/new_customer",
 		permissions.SetCSRF(handler.GenerateNewPass)).Methods("GET")
 
-	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}/apple_pass/{image_name}",
+	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}/apple_pass/{loyalty_system_type}/{image_name}",
 		permissions.CheckAuthenticated(handler.GetImageHandler)).Methods("GET")
 }
 
@@ -52,8 +53,9 @@ func (ap *applePassKitHandler) fetchPass(r *http.Request) (models.ApplePassDB, e
 	}
 
 	jsonData := r.FormValue("jsonData")
+	loyaltyInfo := r.FormValue("loyalty_info")
 
-	PassObjDB := models.ApplePassDB{Design: jsonData}
+	PassObjDB := models.ApplePassDB{Design: jsonData, LoyaltyInfo: loyaltyInfo}
 
 	for key, value := range r.MultipartForm.File {
 		if len(value) > 1 {
@@ -87,18 +89,16 @@ func (ap *applePassKitHandler) fetchPass(r *http.Request) (models.ApplePassDB, e
 
 func extractBoolValue(r *http.Request, valueName string) (bool, error) {
 	ValueStr, ok := r.URL.Query()[valueName]
-	var value bool
-	var err error
 
 	if !ok {
-		value = false
-	} else {
-		value, err = strconv.ParseBool(ValueStr[0])
-		if err != nil {
-			return false, err
-		} else if len(ValueStr) > 1 {
-			return false, err
-		}
+		return false, nil
+	}
+
+	value, err := strconv.ParseBool(ValueStr[0])
+	if err != nil {
+		return false, err
+	} else if len(ValueStr) > 1 {
+		return false, err
 	}
 
 	return value, nil
@@ -118,13 +118,19 @@ func (ap *applePassKitHandler) UpdatePassHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
+	Type := mux.Vars(r)["loyalty_system_type"]
+
 	publish, err := extractBoolValue(r, "publish")
 	if err != nil {
 		responses.SendSingleError(err.Error(), w)
 		return
 	}
 
-	response, err := ap.passesUsecace.UpdatePass(r.Context(), applePassObj, id, publish)
+	applePassObj.CafeID = id
+	applePassObj.Published = publish
+	applePassObj.Type = Type
+
+	response, err := ap.passesUsecace.UpdatePass(r.Context(), applePassObj)
 	if err != nil {
 		responses.SendSingleError(err.Error(), w)
 		return
@@ -142,13 +148,15 @@ func (ap *applePassKitHandler) GetPassHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	Type := mux.Vars(r)["loyalty_system_type"]
+
 	published, err := extractBoolValue(r, "published")
 	if err != nil {
 		responses.SendSingleError(err.Error(), w)
 		return
 	}
 
-	applePassObj, err := ap.passesUsecace.GetPass(r.Context(), CafeID, published)
+	applePassObj, err := ap.passesUsecace.GetPass(r.Context(), CafeID, Type, published)
 
 	responses.SendOKAnswer(applePassObj, w)
 	return
@@ -168,13 +176,15 @@ func (ap *applePassKitHandler) GetImageHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	Type := mux.Vars(r)["loyalty_system_type"]
+
 	published, err := extractBoolValue(r, "published")
 	if err != nil {
 		responses.SendSingleError(err.Error(), w)
 		return
 	}
 
-	image, err := ap.passesUsecace.GetImage(r.Context(), imageName, cafeID, published)
+	image, err := ap.passesUsecace.GetImage(r.Context(), imageName, cafeID, Type, published)
 	if err != nil {
 		responses.SendSingleError(err.Error(), w)
 		return
@@ -203,7 +213,9 @@ func (ap *applePassKitHandler) GenerateNewPass(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	pass, err := ap.passesUsecace.GeneratePassObject(r.Context(), id, published)
+	Type := mux.Vars(r)["loyalty_system_type"]
+
+	pass, err := ap.passesUsecace.GeneratePassObject(r.Context(), id, Type, published)
 	if err != nil {
 		responses.SendSingleError(err.Error(), w)
 		return

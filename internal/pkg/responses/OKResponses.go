@@ -1,14 +1,13 @@
 package responses
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"net/http"
 )
 
 func SendOKAnswer(data interface{}, w http.ResponseWriter) {
-	serializedData, err := json.Marshal(HttpResponse{Data: data})
+	serializedData, err := HttpResponse{Data: data}.MarshalJSON()
 	if err != nil {
 		log.Error().Msgf(err.Error())
 		SendServerError("Server JSON encoding error", w)
@@ -19,5 +18,4 @@ func SendOKAnswer(data interface{}, w http.ResponseWriter) {
 		SendServerError(message, w)
 		return
 	}
-	log.Info().Msgf("OK message sent")
 }

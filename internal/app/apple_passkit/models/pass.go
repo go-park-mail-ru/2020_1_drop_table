@@ -2,7 +2,11 @@ package models
 
 type ApplePassDB struct {
 	ApplePassID int    `json:"-"`
-	Design      string `json:"design" validate:"required" faker:"url"`
+	CafeID      int    `json:"cafe_id" validate:"required"`
+	Type        string `json:"type" validate:"required"`
+	LoyaltyInfo string `json:"loyalty_info" faker:"-"`
+	Published   bool   `json:"published"`
+	Design      string `json:"design" validate:"required"`
 	Icon        []byte `json:"icon" validate:"required"`
 	Icon2x      []byte `json:"icon2x" validate:"required"`
 	Logo        []byte `json:"logo" validate:"required"`
@@ -11,10 +15,10 @@ type ApplePassDB struct {
 	Strip2x     []byte `json:"strip2x"`
 }
 
+//easyjson:json
 type ApplePassMeta struct {
-	ApplePassMetaID string `structs:"-"`
-	CafeID          string `structs:"-"`
-	PassesCount     string `structs:"PassesCount"`
+	CafeID int                    `json:"cafeid" structs:"-"`
+	Meta   map[string]interface{} `json:"meta" structs:"Meta"`
 }
 
 type UpdateResponse struct {

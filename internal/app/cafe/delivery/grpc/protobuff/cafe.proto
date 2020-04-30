@@ -1,0 +1,23 @@
+syntax = "proto3";
+import "google/protobuf/timestamp.proto";
+package customer;
+option go_package = ".;cafe";
+
+service CafeGRPCHandler{
+  rpc GetByID(ID) returns (Cafe);
+}
+
+message ID{
+  int64 id = 1;
+}
+
+message Cafe{
+  int64 CafeID = 1;
+  string CafeName = 2;
+  string Address = 3;
+  string Description = 4;
+  int64 StaffID = 5;
+  google.protobuf.Timestamp OpenTime = 6;
+  google.protobuf.Timestamp CloseTime = 7;
+  string Photo = 8;
+}

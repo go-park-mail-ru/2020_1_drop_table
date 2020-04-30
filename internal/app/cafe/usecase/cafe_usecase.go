@@ -4,7 +4,7 @@ import (
 	"2020_1_drop_table/internal/app/cafe"
 	"2020_1_drop_table/internal/app/cafe/models"
 	globalModels "2020_1_drop_table/internal/app/models"
-	"2020_1_drop_table/internal/app/staff"
+	staffClient "2020_1_drop_table/internal/microservices/staff/delivery/grpc/client"
 	"context"
 	"github.com/gorilla/sessions"
 	"gopkg.in/go-playground/validator.v9"
@@ -12,21 +12,21 @@ import (
 )
 
 type cafeUsecase struct {
-	cafeRepo       cafe.Repository
-	staffUcase     staff.Usecase
-	contextTimeout time.Duration
+	cafeRepo        cafe.Repository
+	staffGrpcClient staffClient.StaffClientInterface
+	contextTimeout  time.Duration
 }
 
-func NewCafeUsecase(c cafe.Repository, s staff.Usecase, timeout time.Duration) cafe.Usecase {
+func NewCafeUsecase(c cafe.Repository, stClient staffClient.StaffClientInterface, timeout time.Duration) cafe.Usecase {
 	return &cafeUsecase{
-		cafeRepo:       c,
-		staffUcase:     s,
-		contextTimeout: timeout,
+		cafeRepo:        c,
+		contextTimeout:  timeout,
+		staffGrpcClient: stClient,
 	}
 }
 
 func (cu *cafeUsecase) checkIsOwnerById(c context.Context, staffID int) (bool, error) {
-	staffObj, err := cu.staffUcase.GetByID(c, staffID)
+	staffObj, err := cu.staffGrpcClient.GetById(c, staffID)
 
 	if err != nil {
 		return false, err
@@ -120,4 +120,12 @@ func (cu *cafeUsecase) Update(c context.Context, newCafe models.Cafe) (models.Ca
 	}
 
 	return cu.cafeRepo.Update(ctx, newCafe)
+}
+
+func (cu *cafeUsecase) GetAllCafes(ctx context.Context, since int, limit int) ([]models.Cafe, error) {
+	ctx, cancel := context.WithTimeout(ctx, cu.contextTimeout)
+	defer cancel()
+
+	cafes, err := cu.cafeRepo.GetAllCafes(ctx, since, limit)
+	return cafes, err
 }

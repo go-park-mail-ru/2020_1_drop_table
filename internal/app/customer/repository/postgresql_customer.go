@@ -20,24 +20,25 @@ func NewPostgresCustomerRepository(conn *sqlx.DB) customer.Repository {
 func (p *postgresCustomerRepository) Add(ctx context.Context, cu models.Customer) (models.Customer, error) {
 	query := `INSERT INTO Customer(
     CafeID, 
-	Points) 
-	VALUES ($1,$2) 
+    Type,
+	Points,
+    surveyresult) 
+	VALUES ($1,$2,$3,$4) 
 	RETURNING *`
 
 	var customerDB models.Customer
-	err := p.conn.GetContext(ctx, &customerDB, query, cu.CafeID, cu.Points)
+	err := p.conn.GetContext(ctx, &customerDB, query, cu.CafeID, cu.Type, cu.Points, "{}")
 
 	return customerDB, err
 }
 
-func (p *postgresCustomerRepository) SetLoyaltyPoints(ctx context.Context, points int,
+func (p *postgresCustomerRepository) SetLoyaltyPoints(ctx context.Context, points,
 	customerID string) (models.Customer, error) {
 
 	query := `UPDATE Customer SET Points=$1 WHERE CustomerID=$2 RETURNING *`
 
 	var customerDB models.Customer
 	err := p.conn.GetContext(ctx, &customerDB, query, points, customerID)
-
 	return customerDB, err
 }
 

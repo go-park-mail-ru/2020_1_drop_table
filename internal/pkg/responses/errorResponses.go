@@ -2,7 +2,6 @@ package responses
 
 import (
 	globalModels "2020_1_drop_table/internal/app/models"
-	"encoding/json"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"net/http"
@@ -18,6 +17,17 @@ func SendServerError(errorMessage string, w http.ResponseWriter) {
 }
 
 func SendSingleError(errorMessage string, w http.ResponseWriter) {
+	log.Error().Msgf(errorMessage)
+	errs := make([]HttpError, 1, 1)
+	errs[0] = HttpError{
+		Code:    400,
+		Message: errorMessage,
+	}
+	SendSeveralErrors(errs, w)
+}
+
+func SendSingleErrorWithMessage(errForLog error, errorMessage string, w http.ResponseWriter) {
+	log.Error().Msgf(errForLog.Error())
 	errs := make([]HttpError, 1, 1)
 	errs[0] = HttpError{
 		Code:    400,
@@ -28,7 +38,7 @@ func SendSingleError(errorMessage string, w http.ResponseWriter) {
 
 func SendSeveralErrors(errors []HttpError, w http.ResponseWriter) {
 	httpResponse := HttpResponse{Errors: errors}
-	serializedError, err := json.Marshal(httpResponse)
+	serializedError, err := httpResponse.MarshalJSON()
 	if err != nil {
 		message := fmt.Sprintf("HttpResponse is json serializing: %s", err.Error())
 		SendServerError(message, w)
@@ -41,7 +51,6 @@ func SendSeveralErrors(errors []HttpError, w http.ResponseWriter) {
 		SendServerError(message, w)
 		return
 	}
-	log.Info().Msgf("errors sent")
 }
 
 func SendForbidden(w http.ResponseWriter) {

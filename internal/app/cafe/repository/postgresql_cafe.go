@@ -23,7 +23,7 @@ func (p *postgresCafeRepository) Add(ctx context.Context, ca models.Cafe) (model
 	Address, 
 	Description, 
 	StaffID, 
-	OpenTime, 
+	OpenTime,
 	CloseTime, 
 	Photo) 
 	VALUES ($1,$2,$3,$4,$5,$6,$7) 
@@ -45,7 +45,6 @@ func (p *postgresCafeRepository) GetByID(ctx context.Context, id int) (models.Ca
 	if err != nil {
 		return models.Cafe{}, err
 	}
-
 	return dbCafe, nil
 }
 
@@ -67,37 +66,23 @@ func (p *postgresCafeRepository) Update(ctx context.Context, newCafe models.Cafe
 	CafeName=$1, 
 	Address=$2, 
 	Description=$3, 
-	StaffID=$4, 
-	OpenTime=$5, 
-	CloseTime=$6, 
-	Photo=NotEmpty($7,Photo) 
-	WHERE CafeID=$8
+	OpenTime=$4, 
+	CloseTime=$5, 
+	Photo=NotEmpty($6,Photo) 
+	WHERE CafeID=$7
 	RETURNING *`
 
 	var CafeDB models.Cafe
 
 	err := p.Conn.GetContext(ctx, &CafeDB, query, newCafe.CafeName, newCafe.Address, newCafe.Description,
-		newCafe.StaffID, newCafe.OpenTime, newCafe.CloseTime, newCafe.Photo, newCafe.CafeID)
+		newCafe.OpenTime, newCafe.CloseTime, newCafe.Photo, newCafe.CafeID)
 
 	return CafeDB, err
 }
 
-func (p *postgresCafeRepository) UpdateSavedPass(ctx context.Context, newCafe models.Cafe) error {
-	query := `UPDATE Cafe SET 
-	SavedApplePassID=$1
-	WHERE CafeID=$2`
-
-	_, err := p.Conn.ExecContext(ctx, query, newCafe.SavedApplePassID, newCafe.CafeID)
-
-	return err
-}
-
-func (p *postgresCafeRepository) UpdatePublishedPass(ctx context.Context, newCafe models.Cafe) error {
-	query := `UPDATE Cafe SET 
-	PublishedApplePassID=$1
-	WHERE CafeID=$2`
-
-	_, err := p.Conn.ExecContext(ctx, query, newCafe.PublishedApplePassID, newCafe.CafeID)
-
-	return err
+func (p *postgresCafeRepository) GetAllCafes(ctx context.Context, since int, limit int) ([]models.Cafe, error) {
+	query := `SELECT * from cafe OFFSET $1 LIMIT $2`
+	var CafesList []models.Cafe
+	err := p.Conn.SelectContext(ctx, &CafesList, query, since, limit)
+	return CafesList, err
 }

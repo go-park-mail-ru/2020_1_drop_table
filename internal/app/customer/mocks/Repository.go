@@ -72,18 +72,18 @@ func (_m *Repository) GetByID(ctx context.Context, customerID string) (models.Cu
 }
 
 // SetLoyaltyPoints provides a mock function with given fields: ctx, points, customerID
-func (_m *Repository) SetLoyaltyPoints(ctx context.Context, points int, customerID string) (models.Customer, error) {
+func (_m *Repository) SetLoyaltyPoints(ctx context.Context, points string, customerID string) (models.Customer, error) {
 	ret := _m.Called(ctx, points, customerID)
 
 	var r0 models.Customer
-	if rf, ok := ret.Get(0).(func(context.Context, int, string) models.Customer); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) models.Customer); ok {
 		r0 = rf(ctx, points, customerID)
 	} else {
 		r0 = ret.Get(0).(models.Customer)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, int, string) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
 		r1 = rf(ctx, points, customerID)
 	} else {
 		r1 = ret.Error(1)

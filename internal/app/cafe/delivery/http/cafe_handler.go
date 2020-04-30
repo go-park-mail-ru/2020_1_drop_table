@@ -8,7 +8,6 @@ import (
 	globalModels "2020_1_drop_table/internal/app/models"
 	"2020_1_drop_table/internal/pkg/permissions"
 	"2020_1_drop_table/internal/pkg/responses"
-	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -28,6 +27,7 @@ func NewCafeHandler(r *mux.Router, us cafe.Usecase) {
 	r.HandleFunc("/api/v1/cafe", permissions.SetCSRF(handler.GetByOwnerIDHandler)).Methods("GET")
 	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}", permissions.SetCSRF(handler.GetByIDHandler)).Methods("GET")
 	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}", permissions.CheckCSRF(permissions.CheckAuthenticated(handler.EditCafeHandler))).Methods("PUT")
+	r.HandleFunc("/api/v1/cafe/get_all", handler.GetAllCafes).Methods("GET")
 }
 
 func (c *CafeHandler) fetchCafe(r *http.Request) (models.Cafe, error) {
@@ -37,14 +37,13 @@ func (c *CafeHandler) fetchCafe(r *http.Request) (models.Cafe, error) {
 	}
 
 	jsonData := r.FormValue("jsonData")
-	fmt.Println(jsonData)
 	if jsonData == "" || jsonData == "null" {
 		return models.Cafe{}, globalModels.ErrEmptyJSON
 	}
 
 	cafeObj := models.Cafe{}
-
-	if err := json.Unmarshal([]byte(jsonData), &cafeObj); err != nil {
+	err = cafeObj.UnmarshalJSON([]byte(jsonData))
+	if err != nil {
 		return models.Cafe{}, globalModels.ErrBadJSON
 	}
 	if file, handler, err := r.FormFile("photo"); err == nil {
@@ -126,4 +125,19 @@ func (c *CafeHandler) GetByIDHandler(w http.ResponseWriter, r *http.Request) {
 
 	responses.SendOKAnswer(cafeObj, w)
 	return
+}
+
+func (c *CafeHandler) GetAllCafes(writer http.ResponseWriter, request *http.Request) {
+	limit, err := strconv.Atoi(request.FormValue("limit"))
+	since, err2 := strconv.Atoi(request.FormValue("since"))
+	if err != nil || err2 != nil {
+		responses.SendSingleError("Bad GET params", writer)
+		return
+	}
+	cafes, err := c.CUsecase.GetAllCafes(request.Context(), since, limit)
+	if err != nil {
+		responses.SendSingleError(err.Error(), writer)
+		return
+	}
+	responses.SendOKAnswer(cafes, writer)
 }

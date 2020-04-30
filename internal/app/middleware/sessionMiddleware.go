@@ -27,7 +27,9 @@ func (s *sessionMiddleware) SessionMiddleware(next http.Handler) http.Handler {
 			err = session.Save(r, w)
 			if err != nil {
 				responses.SendServerError(err.Error(), w)
+				return
 			}
+
 		}
 
 		r = r.WithContext(context.WithValue(r.Context(), "session", session))

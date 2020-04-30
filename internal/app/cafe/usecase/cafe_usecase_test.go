@@ -5,14 +5,15 @@ import (
 	cafeModels "2020_1_drop_table/internal/app/cafe/models"
 	_cafeUsecase "2020_1_drop_table/internal/app/cafe/usecase"
 	globalModels "2020_1_drop_table/internal/app/models"
-	staffMocks "2020_1_drop_table/internal/app/staff/mocks"
-	staffModels "2020_1_drop_table/internal/app/staff/models"
+	staffClientMock "2020_1_drop_table/internal/microservices/staff/delivery/grpc/client/mocks"
+	staffModels "2020_1_drop_table/internal/microservices/staff/models"
 	"context"
 	"fmt"
 	"github.com/bxcodec/faker"
 	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+
 	"testing"
 	"time"
 )
@@ -26,10 +27,8 @@ func TestAdd(t *testing.T) {
 	}
 
 	mockCafeRepo := new(cafeMocks.Repository)
-	mockStaffUcase := new(staffMocks.Usecase)
-
-	cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffUcase, time.Second*2)
-
+	mockStaffGRPCClient := new(staffClientMock.StaffClientInterface)
+	cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffGRPCClient, time.Second*2)
 	var owner staffModels.SafeStaff
 	err := faker.FakeData(&owner)
 	assert.NoError(t, err)
@@ -74,7 +73,7 @@ func TestAdd(t *testing.T) {
 	for i, testCase := range testCases {
 		message := fmt.Sprintf("test case number: %d", i)
 
-		mockStaffUcase.On("GetByID",
+		mockStaffGRPCClient.On("GetById",
 			mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("int")).Return(
 			testCase.staff, nil)
 
@@ -109,9 +108,8 @@ func TestGetByOwnerID(t *testing.T) {
 	}
 
 	mockCafeRepo := new(cafeMocks.Repository)
-	mockStaffUcase := new(staffMocks.Usecase)
-
-	cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffUcase, time.Second*2)
+	mockStaffGRPCClient := new(staffClientMock.StaffClientInterface)
+	cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffGRPCClient, time.Second*2)
 
 	var owner staffModels.SafeStaff
 	err := faker.FakeData(&owner)
@@ -172,9 +170,8 @@ func TestGetByID(t *testing.T) {
 	}
 
 	mockCafeRepo := new(cafeMocks.Repository)
-	mockStaffUcase := new(staffMocks.Usecase)
-
-	cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffUcase, time.Second*2)
+	mockStaffGRPCClient := new(staffClientMock.StaffClientInterface)
+	cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffGRPCClient, time.Second*2)
 
 	ownerID := 1
 
@@ -227,9 +224,8 @@ func TestUpdate(t *testing.T) {
 	}
 
 	mockCafeRepo := new(cafeMocks.Repository)
-	mockStaffUcase := new(staffMocks.Usecase)
-
-	cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffUcase, time.Second*2)
+	mockStaffGRPCClient := new(staffClientMock.StaffClientInterface)
+	cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffGRPCClient, time.Second*2)
 
 	var owner staffModels.SafeStaff
 	err := faker.FakeData(&owner)

@@ -35,6 +35,29 @@ func (_m *Repository) Add(ctx context.Context, ca models.Cafe) (models.Cafe, err
 	return r0, r1
 }
 
+// GetAllCafes provides a mock function with given fields: ctx, since, limit
+func (_m *Repository) GetAllCafes(ctx context.Context, since int, limit int) ([]models.Cafe, error) {
+	ret := _m.Called(ctx, since, limit)
+
+	var r0 []models.Cafe
+	if rf, ok := ret.Get(0).(func(context.Context, int, int) []models.Cafe); ok {
+		r0 = rf(ctx, since, limit)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Cafe)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int, int) error); ok {
+		r1 = rf(ctx, since, limit)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetByID provides a mock function with given fields: ctx, id
 func (_m *Repository) GetByID(ctx context.Context, id int) (models.Cafe, error) {
 	ret := _m.Called(ctx, id)
@@ -98,32 +121,4 @@ func (_m *Repository) Update(ctx context.Context, newCafe models.Cafe) (models.C
 	}
 
 	return r0, r1
-}
-
-// UpdatePublishedPass provides a mock function with given fields: ctx, newCafe
-func (_m *Repository) UpdatePublishedPass(ctx context.Context, newCafe models.Cafe) error {
-	ret := _m.Called(ctx, newCafe)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, models.Cafe) error); ok {
-		r0 = rf(ctx, newCafe)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// UpdateSavedPass provides a mock function with given fields: ctx, newCafe
-func (_m *Repository) UpdateSavedPass(ctx context.Context, newCafe models.Cafe) error {
-	ret := _m.Called(ctx, newCafe)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, models.Cafe) error); ok {
-		r0 = rf(ctx, newCafe)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
 }
