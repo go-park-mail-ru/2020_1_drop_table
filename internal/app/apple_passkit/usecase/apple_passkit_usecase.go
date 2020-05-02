@@ -153,17 +153,22 @@ func (ap *applePassKitUsecase) getImageUrls(passObj models.ApplePassDB, cafeID i
 	serverStartUrl := fmt.Sprintf("%s/%s/cafe/%d/apple_pass/%s", configs.ServerUrl, configs.ApiVersion,
 		cafeID, passObj.Type)
 
-	return map[string]string{
+	passMap := map[string]string{
 		"design":       passObj.Design,
 		"type":         passObj.Type,
 		"loyalty_info": passObj.LoyaltyInfo,
-		"icon":         fmt.Sprintf("%s/icon", serverStartUrl),
-		"icon2x":       fmt.Sprintf("%s/icon2x", serverStartUrl),
-		"logo":         fmt.Sprintf("%s/logo", serverStartUrl),
-		"logo2x":       fmt.Sprintf("%s/logo2x", serverStartUrl),
-		"strip":        fmt.Sprintf("%s/strip", serverStartUrl),
-		"strip2x":      fmt.Sprintf("%s/strip2x", serverStartUrl),
 	}
+
+	allImages := map[string][]byte{"icon": passObj.Icon, "icon2x": passObj.Icon2x,
+		"logo": passObj.Logo, "logo2x": passObj.Logo2x, "strip": passObj.Strip, "strip2x": passObj.Strip2x}
+
+	for imageName, imageData := range allImages {
+		if len(imageData) != 0 {
+			passMap[imageName] = fmt.Sprintf("%s/%s", serverStartUrl, imageName)
+		}
+	}
+
+	return passMap
 }
 
 func (ap *applePassKitUsecase) GetPass(c context.Context, cafeID int, Type string,
@@ -180,7 +185,7 @@ func (ap *applePassKitUsecase) GetImage(c context.Context, imageName string, caf
 	published bool) ([]byte, error) {
 	passObj, err := ap.passKitRepo.GetPassByCafeID(c, cafeID, Type, true)
 	if err != nil {
-		passObj, err = ap.passKitRepo.GetPassByCafeID(c, cafeID, Type, true)
+		passObj, err = ap.passKitRepo.GetPassByCafeID(c, cafeID, Type, false)
 	}
 	if err != nil {
 		return nil, err
