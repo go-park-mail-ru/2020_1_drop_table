@@ -15,6 +15,9 @@ import (
 	_customerRepo "2020_1_drop_table/internal/app/customer/repository"
 	_customerUseCase "2020_1_drop_table/internal/app/customer/usecase"
 	"2020_1_drop_table/internal/app/middleware"
+	http2 "2020_1_drop_table/internal/app/statistics/delivery/http"
+	"2020_1_drop_table/internal/app/statistics/repository"
+	"2020_1_drop_table/internal/app/statistics/usecase"
 	staffClient "2020_1_drop_table/internal/microservices/staff/delivery/grpc/client"
 	"2020_1_drop_table/internal/pkg/apple_pass_generator"
 	"2020_1_drop_table/internal/pkg/apple_pass_generator/meta"
@@ -79,7 +82,9 @@ func main() {
 		&applePassGenerator, timeoutContext, &meta.Meta{})
 
 	_appleHttpDeliver.NewPassKitHandler(r, applePassKitUcase)
-
+	statRepo := repository.NewPostgresStatisticsRepository(conn)
+	statUcase := usecase.NewStatisticsUsecase(statRepo, timeoutContext)
+	http2.NewStatisticsHandler(r, statUcase)
 	customerUseCase := _customerUseCase.NewCustomerUsecase(customerRepo, applePassKitRepo, grpcStaffClient, timeoutContext)
 	_customerHttpDeliver.NewCustomerHandler(r, customerUseCase)
 
