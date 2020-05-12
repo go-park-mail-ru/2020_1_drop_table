@@ -16,5 +16,5 @@
  media
 
 # Config files
+.env
 configs/apple_config_files
-/configs/configs.env
