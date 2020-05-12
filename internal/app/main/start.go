@@ -83,7 +83,7 @@ func main() {
 
 	_appleHttpDeliver.NewPassKitHandler(r, applePassKitUcase)
 	statRepo := repository.NewPostgresStatisticsRepository(conn)
-	statUcase := usecase.NewStatisticsUsecase(statRepo, timeoutContext)
+	statUcase := usecase.NewStatisticsUsecase(statRepo, grpcStaffClient, timeoutContext)
 	http2.NewStatisticsHandler(r, statUcase)
 	customerUseCase := _customerUseCase.NewCustomerUsecase(customerRepo, applePassKitRepo, grpcStaffClient, timeoutContext)
 	_customerHttpDeliver.NewCustomerHandler(r, customerUseCase)

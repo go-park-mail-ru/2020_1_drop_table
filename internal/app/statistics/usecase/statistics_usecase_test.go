@@ -20,7 +20,8 @@ func TestAdd(t *testing.T) {
 	fmt.Println(err)
 	rep := repository.NewPostgresStatisticsRepository(conn)
 	timeoutContext := configs.Timeouts.ContextTimeout
-	stUcase := NewStatisticsUsecase(rep, timeoutContext)
+
+	stUcase := NewStatisticsUsecase(rep, nil, timeoutContext)
 	err = stUcase.AddData(`{"asd":"bsd"}`, time.Now(), "c81ccfda-68fc-4cef-8e7a-abc92958e6ee", 4, 2)
 	assert.Nil(t, err)
 

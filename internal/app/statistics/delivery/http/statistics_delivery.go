@@ -4,6 +4,7 @@ import (
 	globalModels "2020_1_drop_table/internal/app/models"
 	"2020_1_drop_table/internal/app/statistics"
 	models2 "2020_1_drop_table/internal/app/statistics/models"
+	"2020_1_drop_table/internal/pkg/responses"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
@@ -41,7 +42,16 @@ func fetchWorkerData(r *http.Request) (models2.GetWorkerDataStruct, error) {
 func (h StatisticsHandler) GetWorkerData(writer http.ResponseWriter, request *http.Request) {
 	//todo permissions only for this cafe staff
 	workerData, err := fetchWorkerData(request)
-	fmt.Println(workerData, err)
+	if err != nil {
+		responses.SendServerError(err.Error(), writer)
+		return
+	}
+	res, err := h.SUsecase.GetWorkerData(request.Context(), workerData.StaffID, workerData.Limit, workerData.Since)
+	if err != nil {
+		responses.SendServerError(err.Error(), writer)
+		return
+	}
+	responses.SendOKAnswer(res, writer)
 }
 
 func NewStatisticsHandler(r *mux.Router, us statistics.Usecase) {
