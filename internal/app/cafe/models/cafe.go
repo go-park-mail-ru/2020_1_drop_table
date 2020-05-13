@@ -25,5 +25,5 @@ type CafeWithGeoData struct {
 	OpenTime    time.Time `json:"openTime"`
 	CloseTime   time.Time `json:"closeTime"`
 	Photo       string    `json:"photo"`
-	Location    string    `json:"location"`
+	Location    string    `json:"location" db:"location_str"`
 }

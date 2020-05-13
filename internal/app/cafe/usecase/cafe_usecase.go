@@ -62,7 +62,7 @@ func cafeToCafeWithGeoData(cafe models.Cafe) models.CafeWithGeoData {
 	}
 }
 
-func (cu *cafeUsecase) Add(c context.Context, newCafe models.Cafe) (models.Cafe, error) {
+func (cu *cafeUsecase) Add(c context.Context, newCafe models.Cafe) (models.CafeWithGeoData, error) {
 	ctx, cancel := context.WithTimeout(c, cu.contextTimeout)
 	defer cancel()
 
@@ -72,15 +72,15 @@ func (cu *cafeUsecase) Add(c context.Context, newCafe models.Cafe) (models.Cafe,
 	staffID, ok := staffInterface.(int)
 
 	if !found || !ok || staffID <= 0 {
-		return models.Cafe{}, globalModels.ErrForbidden
+		return models.CafeWithGeoData{}, globalModels.ErrForbidden
 	}
 
 	isOwner, err := cu.checkIsOwnerById(c, staffID)
 	if err != nil {
-		return models.Cafe{}, err
+		return models.CafeWithGeoData{}, err
 	}
 	if !isOwner {
-		return models.Cafe{}, globalModels.ErrForbidden
+		return models.CafeWithGeoData{}, globalModels.ErrForbidden
 	}
 
 	newCafe.StaffID = staffID
@@ -88,7 +88,7 @@ func (cu *cafeUsecase) Add(c context.Context, newCafe models.Cafe) (models.Cafe,
 	validation := validator.New()
 
 	if err := validation.Struct(newCafe); err != nil {
-		return models.Cafe{}, err
+		return models.CafeWithGeoData{}, err
 	}
 
 	newCafeWithGeo := cafeToCafeWithGeoData(newCafe)
@@ -98,7 +98,7 @@ func (cu *cafeUsecase) Add(c context.Context, newCafe models.Cafe) (models.Cafe,
 		if err == nil {
 			newCafeWithGeo.Address = geoInfo.FormattedAddress
 			newCafeWithGeo.Location = fmt.Sprintf(
-				"%f_%f", geoInfo.Geometry.Location.Lat, geoInfo.Geometry.Location.Lon)
+				"%f %f", geoInfo.Geometry.Location.Lat, geoInfo.Geometry.Location.Lon)
 		}
 	}
 
@@ -160,7 +160,7 @@ func (cu *cafeUsecase) Update(c context.Context, newCafe models.Cafe) (models.Ca
 	return cu.cafeRepo.Update(ctx, newCafe)
 }
 
-func (cu *cafeUsecase) GetAllCafes(ctx context.Context, since int, limit int) ([]models.Cafe, error) {
+func (cu *cafeUsecase) GetAllCafes(ctx context.Context, since int, limit int) ([]models.CafeWithGeoData, error) {
 	ctx, cancel := context.WithTimeout(ctx, cu.contextTimeout)
 	defer cancel()
 

@@ -78,13 +78,13 @@ func (c *CafeHandler) AddCafeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cafeObj, err = c.CUsecase.Add(r.Context(), cafeObj)
+	cafeObjWithGeo, err := c.CUsecase.Add(r.Context(), cafeObj)
 	if err != nil {
 		responses.SendSingleError(err.Error(), w)
 		return
 	}
 
-	responses.SendOKAnswer(cafeObj, w)
+	responses.SendOKAnswer(cafeObjWithGeo, w)
 	return
 }
 

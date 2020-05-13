@@ -15,6 +15,9 @@ type postgresCafeRepository struct {
 func GeneratePointToGeo(latitude string, longitude string) string {
 	return fmt.Sprintf("SRID=4326;POINT(%s %s)", latitude, longitude)
 }
+func GeneratePointToGeoWithPoint(point string) string {
+	return fmt.Sprintf("SRID=4326;POINT(%s)", point)
+}
 
 func (p *postgresCafeRepository) GetCafeSortedByRadius(ctx context.Context, latitude string, longitude string, radius string) ([]models.CafeWithGeoData, error) {
 	point := GeneratePointToGeo(latitude, longitude)
@@ -33,7 +36,7 @@ func NewPostgresCafeRepository(conn *sqlx.DB) cafe.Repository {
 	}
 }
 
-func (p *postgresCafeRepository) Add(ctx context.Context, ca models.CafeWithGeoData) (models.Cafe, error) {
+func (p *postgresCafeRepository) Add(ctx context.Context, ca models.CafeWithGeoData) (models.CafeWithGeoData, error) {
 	query := `INSERT INTO Cafe(
 	CafeName, 
 	Address, 
@@ -41,13 +44,16 @@ func (p *postgresCafeRepository) Add(ctx context.Context, ca models.CafeWithGeoD
 	StaffID, 
 	OpenTime,
 	CloseTime, 
-	Photo) 
-	VALUES ($1,$2,$3,$4,$5,$6,$7) 
-	RETURNING CafeID,CafeName,Address,Description,StaffID,OpenTime,CloseTime,Photo`
+	Photo,
+    location,
+    location_str) 
+	VALUES ($1,$2,$3,$4,$5,$6,$7,ST_GeomFromEWKT($8),$9) 
+	RETURNING CafeID,CafeName,Address,Description,StaffID,OpenTime,CloseTime,Photo,location_str`
 
-	var dbCafe models.Cafe
+	var dbCafe models.CafeWithGeoData
+	postGisPoint := GeneratePointToGeoWithPoint(ca.Location)
 	err := p.Conn.GetContext(ctx, &dbCafe, query, ca.CafeName, ca.Address,
-		ca.Description, ca.StaffID, ca.OpenTime, ca.CloseTime, ca.Photo)
+		ca.Description, ca.StaffID, ca.OpenTime, ca.CloseTime, ca.Photo, postGisPoint, ca.Location)
 
 	return dbCafe, err
 }
@@ -96,9 +102,9 @@ func (p *postgresCafeRepository) Update(ctx context.Context, newCafe models.Cafe
 	return CafeDB, err
 }
 
-func (p *postgresCafeRepository) GetAllCafes(ctx context.Context, since int, limit int) ([]models.Cafe, error) {
-	query := `SELECT CafeID,CafeName,Address,Description,StaffID,OpenTime,CloseTime,Photo from cafe OFFSET $1 LIMIT $2`
-	var CafesList []models.Cafe
+func (p *postgresCafeRepository) GetAllCafes(ctx context.Context, since int, limit int) ([]models.CafeWithGeoData, error) {
+	query := `SELECT CafeID,CafeName,Address,Description,StaffID,OpenTime,CloseTime,Photo,location_str from cafe OFFSET $1 LIMIT $2`
+	var CafesList []models.CafeWithGeoData
 	err := p.Conn.SelectContext(ctx, &CafesList, query, since, limit)
 	return CafesList, err
 }
