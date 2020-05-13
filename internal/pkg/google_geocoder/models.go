@@ -9,10 +9,6 @@ type GoogleGeoResponseResults struct {
 	AddressComponents []AddressComponents `json:"address_components"`
 	FormattedAddress  string              `json:"formatted_address"`
 	Geometry          Geometry            `json:"geometry"`
-	PartialMatch      string              `json:"partial_match"`
-	PlaceId           string              `json:"place_id"`
-	PlusCode          map[string]string   `json:"plus_code"`
-	Types             []string            `json:"types"`
 }
 
 type AddressComponents struct {
