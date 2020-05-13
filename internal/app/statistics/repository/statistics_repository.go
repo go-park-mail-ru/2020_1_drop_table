@@ -17,11 +17,11 @@ type postgresStatisticsRepository struct {
 }
 
 func generateWhereStatement(cafeList []cafeModels.Cafe) string {
-	query := `where`
+	query := `where(`
 	for _, cafe := range cafeList {
 		query = query + " cafeID=" + strconv.Itoa(cafe.CafeID) + " or "
 	}
-	query = query[:len(query)-3]
+	query = query[:len(query)-3] + ")"
 	return query
 }
 
@@ -32,10 +32,23 @@ func generateDateTruncStatement(typ string) string {
 	return `date_trunc('DAY', time)`
 }
 
-func (p postgresStatisticsRepository) GetGraphsDataFromRepo(ctx context.Context, cafeList []cafeModels.Cafe, typ string, since string, to string) {
+func generateBetweenStatement(dateTruncStatement string, since string, to string) string {
+	return fmt.Sprintf(`(%s between '%s' and '%s')`, dateTruncStatement, since, to)
+}
+
+func (p postgresStatisticsRepository) GetGraphsDataFromRepo(ctx context.Context, cafeList []cafeModels.Cafe, typ string, since string, to string) ([]models.StatisticsGraphRawStruct, error) {
 	whereStatement := generateWhereStatement(cafeList)
 	dateTrunc := generateDateTruncStatement(typ)
-	fmt.Println(cafeList, typ, since, to, whereStatement, dateTrunc)
+	betweenStatement := generateBetweenStatement(dateTrunc, since, to)
+	query := fmt.Sprintf(`SELECT count(*), %s as date, cafeID, staffID
+from statistics_table
+%s and %s
+group by %s, cafeID, staffID
+order by cafeID, %s`, dateTrunc, whereStatement, betweenStatement, dateTrunc, dateTrunc)
+	fmt.Println(query)
+	var res []models.StatisticsGraphRawStruct
+	err := p.Conn.SelectContext(ctx, &res, query)
+	return res, err
 
 }
 

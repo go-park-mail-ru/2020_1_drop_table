@@ -10,5 +10,5 @@ import (
 type Repository interface {
 	AddData(jsonData string, time time.Time, clientUUID string, staffID int, cafeId int) error
 	GetWorkerDataFromRepo(ctx context.Context, staffId int, limit int, since int) ([]models.StatisticsStruct, error)
-	GetGraphsDataFromRepo(ctx context.Context, cafeList []cafeModels.Cafe, typ string, since string, to string)
+	GetGraphsDataFromRepo(ctx context.Context, cafeList []cafeModels.Cafe, typ string, since string, to string) ([]models.StatisticsGraphRawStruct, error)
 }

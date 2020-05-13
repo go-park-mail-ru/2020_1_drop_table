@@ -59,7 +59,8 @@ func (s statisticsUsecase) GetDataForGraphs(ctx context.Context, typ string, sin
 		return globalModels.ErrForbidden
 	}
 	cafes, err := s.cafeClient.GetByOwnerId(ctx, requestUser.StaffID)
-	fmt.Println(cafes)
-	s.statisticsRepo.GetGraphsDataFromRepo(ctx, cafes, typ, since, to)
+	rawData, err := s.statisticsRepo.GetGraphsDataFromRepo(ctx, cafes, typ, since, to)
+	fmt.Println(rawData)
+	//todo parse rawData to json
 	return nil
 }
