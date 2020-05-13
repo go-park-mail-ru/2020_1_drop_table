@@ -3,7 +3,7 @@ version: "3"
 services:
   main_serivce:
     build:
-      context: docker
+      context:
       dockerfile: docker/main_service.Dockerfile
     container_name: main_service_container
     ports:
