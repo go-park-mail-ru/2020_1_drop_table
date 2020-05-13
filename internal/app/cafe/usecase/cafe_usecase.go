@@ -49,6 +49,19 @@ func (cu *cafeUsecase) checkIsOwnerById(c context.Context, staffID int) (bool, e
 	return staffObj.IsOwner, nil
 }
 
+func cafeToCafeWithGeoData(cafe models.Cafe) models.CafeWithGeoData {
+	return models.CafeWithGeoData{
+		CafeID:      cafe.CafeID,
+		CafeName:    cafe.CafeName,
+		Address:     cafe.Address,
+		Description: cafe.Description,
+		StaffID:     cafe.StaffID,
+		OpenTime:    cafe.OpenTime,
+		CloseTime:   cafe.CloseTime,
+		Photo:       cafe.Photo,
+	}
+}
+
 func (cu *cafeUsecase) Add(c context.Context, newCafe models.Cafe) (models.Cafe, error) {
 	ctx, cancel := context.WithTimeout(c, cu.contextTimeout)
 	defer cancel()
@@ -78,12 +91,18 @@ func (cu *cafeUsecase) Add(c context.Context, newCafe models.Cafe) (models.Cafe,
 		return models.Cafe{}, err
 	}
 
+	newCafeWithGeo := cafeToCafeWithGeoData(newCafe)
+
 	if newCafe.Address != "" {
 		geoInfo, err := cu.geoCoder.GetGeoByAddress(newCafe.Address)
-		fmt.Println(geoInfo, err)
+		if err == nil {
+			newCafeWithGeo.Address = geoInfo.FormattedAddress
+			newCafeWithGeo.Location = fmt.Sprintf(
+				"%f_%f", geoInfo.Geometry.Location.Lat, geoInfo.Geometry.Location.Lon)
+		}
 	}
 
-	return cu.cafeRepo.Add(ctx, newCafe)
+	return cu.cafeRepo.Add(ctx, newCafeWithGeo)
 }
 
 func (cu *cafeUsecase) GetByOwnerID(c context.Context) ([]models.Cafe, error) {
