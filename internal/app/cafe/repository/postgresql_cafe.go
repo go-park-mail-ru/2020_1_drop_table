@@ -33,7 +33,7 @@ func NewPostgresCafeRepository(conn *sqlx.DB) cafe.Repository {
 	}
 }
 
-func (p *postgresCafeRepository) Add(ctx context.Context, ca models.Cafe) (models.Cafe, error) {
+func (p *postgresCafeRepository) Add(ctx context.Context, ca models.CafeWithGeoData) (models.Cafe, error) {
 	query := `INSERT INTO Cafe(
 	CafeName, 
 	Address, 

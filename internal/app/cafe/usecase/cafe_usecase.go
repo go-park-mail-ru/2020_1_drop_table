@@ -5,7 +5,9 @@ import (
 	"2020_1_drop_table/internal/app/cafe/models"
 	globalModels "2020_1_drop_table/internal/app/models"
 	staffClient "2020_1_drop_table/internal/microservices/staff/delivery/grpc/client"
+	geo "2020_1_drop_table/internal/pkg/google_geocoder"
 	"context"
+	"fmt"
 	"github.com/gorilla/sessions"
 	"gopkg.in/go-playground/validator.v9"
 	"time"
@@ -15,6 +17,7 @@ type cafeUsecase struct {
 	cafeRepo        cafe.Repository
 	staffGrpcClient staffClient.StaffClientInterface
 	contextTimeout  time.Duration
+	geoCoder        geo.GoogleGeoCoder
 }
 
 func (cu *cafeUsecase) GetCafeSortedByRadius(ctx context.Context, latitude string, longitude string, radius string) ([]models.CafeWithGeoData, error) {
@@ -26,11 +29,13 @@ func (cu *cafeUsecase) GetByOwnerIDWithOwnerID(ctx context.Context, ownerID int)
 	return cu.cafeRepo.GetByOwnerID(ctx, ownerID)
 }
 
-func NewCafeUsecase(c cafe.Repository, stClient staffClient.StaffClientInterface, timeout time.Duration) cafe.Usecase {
+func NewCafeUsecase(c cafe.Repository, stClient staffClient.StaffClientInterface,
+	timeout time.Duration, geoCoder geo.GoogleGeoCoder) cafe.Usecase {
 	return &cafeUsecase{
 		cafeRepo:        c,
 		contextTimeout:  timeout,
 		staffGrpcClient: stClient,
+		geoCoder:        geoCoder,
 	}
 }
 
@@ -42,6 +47,19 @@ func (cu *cafeUsecase) checkIsOwnerById(c context.Context, staffID int) (bool, e
 	}
 
 	return staffObj.IsOwner, nil
+}
+
+func cafeToCafeWithGeoData(cafe models.Cafe) models.CafeWithGeoData {
+	return models.CafeWithGeoData{
+		CafeID:      cafe.CafeID,
+		CafeName:    cafe.CafeName,
+		Address:     cafe.Address,
+		Description: cafe.Description,
+		StaffID:     cafe.StaffID,
+		OpenTime:    cafe.OpenTime,
+		CloseTime:   cafe.CloseTime,
+		Photo:       cafe.Photo,
+	}
 }
 
 func (cu *cafeUsecase) Add(c context.Context, newCafe models.Cafe) (models.Cafe, error) {
@@ -73,7 +91,18 @@ func (cu *cafeUsecase) Add(c context.Context, newCafe models.Cafe) (models.Cafe,
 		return models.Cafe{}, err
 	}
 
-	return cu.cafeRepo.Add(ctx, newCafe)
+	newCafeWithGeo := cafeToCafeWithGeoData(newCafe)
+
+	if newCafe.Address != "" {
+		geoInfo, err := cu.geoCoder.GetGeoByAddress(newCafe.Address)
+		if err == nil {
+			newCafeWithGeo.Address = geoInfo.FormattedAddress
+			newCafeWithGeo.Location = fmt.Sprintf(
+				"%f_%f", geoInfo.Geometry.Location.Lat, geoInfo.Geometry.Location.Lon)
+		}
+	}
+
+	return cu.cafeRepo.Add(ctx, newCafeWithGeo)
 }
 
 func (cu *cafeUsecase) GetByOwnerID(c context.Context) ([]models.Cafe, error) {

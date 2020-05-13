@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.4.1
+	github.com/FlameInTheDark/go-yandex-geocoding v0.0.0-20190115063735-fbb6b4357ff4
 	github.com/bxcodec/faker v2.0.1+incompatible
 	github.com/fatih/structs v1.1.0
 	github.com/garyburd/redigo v1.6.0 // indirect
