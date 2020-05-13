@@ -2,8 +2,12 @@ version: "3"
 
 services:
   main_serivce:
-    build: docker/main_service.Dockerfile
+    build:
+      context: .
+      dockerfile: main_service.Dockerfile
     container_name: main_service_container
+    ports:
+    - 8080:8080
     env_file:
       - .env
 
