@@ -1,17 +1,21 @@
 package usecase
 
 import (
+	cafeClient "2020_1_drop_table/internal/app/cafe/delivery/grpc/client"
+	globalModels "2020_1_drop_table/internal/app/models"
 	"2020_1_drop_table/internal/app/statistics"
 	"2020_1_drop_table/internal/app/statistics/models"
 	staffClient "2020_1_drop_table/internal/microservices/staff/delivery/grpc/client"
 	"context"
 	"errors"
+	"fmt"
 	"time"
 )
 
 type statisticsUsecase struct {
 	statisticsRepo statistics.Repository
 	staffClient    staffClient.StaffClientInterface
+	cafeClient     cafeClient.CafeGRPCClientInterface
 	contextTimeout time.Duration
 }
 
@@ -37,10 +41,25 @@ func (s statisticsUsecase) GetWorkerData(ctx context.Context, staffID int, limit
 	return data, err
 }
 
-func NewStatisticsUsecase(st statistics.Repository, staffClient staffClient.StaffClientInterface, timeout time.Duration) *statisticsUsecase {
+func NewStatisticsUsecase(st statistics.Repository, staffClient staffClient.StaffClientInterface, cafeClient cafeClient.CafeGRPCClientInterface, timeout time.Duration) *statisticsUsecase {
 	return &statisticsUsecase{
 		statisticsRepo: st,
 		contextTimeout: timeout,
 		staffClient:    staffClient,
+		cafeClient:     cafeClient,
 	}
+}
+
+func (s statisticsUsecase) GetDataForGraphs(ctx context.Context, typ string, since string, to string) error {
+	ctx, cancel := context.WithTimeout(ctx, s.contextTimeout)
+	defer cancel()
+
+	requestUser, err := s.staffClient.GetFromSession(ctx)
+	if err != nil {
+		return globalModels.ErrForbidden
+	}
+	cafes, err := s.cafeClient.GetByOwnerId(ctx, requestUser.StaffID)
+	fmt.Println(cafes)
+	s.statisticsRepo.GetGraphsDataFromRepo(ctx, cafes, typ, since, to)
+	return nil
 }

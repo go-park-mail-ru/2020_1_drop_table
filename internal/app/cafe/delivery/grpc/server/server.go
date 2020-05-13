@@ -46,6 +46,19 @@ func (s *server) GetByID(ctx context.Context, id *proto.ID) (*proto.Cafe, error)
 	return cafeModelToProto(cafeObj), err
 }
 
+func (s *server) GetByOwnerID(ctx context.Context, id *proto.ID) (*proto.ListCafe, error) {
+	cafeList, err := s.cafeUseCase.GetByOwnerIDWithOwnerID(ctx, int(id.Id))
+	return &proto.ListCafe{Cafe: cafeListToProto(cafeList)}, err
+}
+
+func cafeListToProto(cafeList []models.Cafe) []*proto.Cafe {
+	var resList []*proto.Cafe
+	for _, caf := range cafeList {
+		resList = append(resList, cafeModelToProto(caf))
+	}
+	return resList
+}
+
 func cafeModelToProto(cafe models.Cafe) *proto.Cafe {
 	return &proto.Cafe{
 		CafeID:      int64(cafe.CafeID),

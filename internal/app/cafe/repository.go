@@ -11,4 +11,5 @@ type Repository interface {
 	GetByOwnerID(ctx context.Context, staffID int) ([]models.Cafe, error)
 	Update(ctx context.Context, newCafe models.Cafe) (models.Cafe, error)
 	GetAllCafes(ctx context.Context, since int, limit int) ([]models.Cafe, error)
+	GetCafeSortedByRadius(ctx context.Context, latitude string, longitude string, radius string) ([]models.CafeWithGeoData, error)
 }

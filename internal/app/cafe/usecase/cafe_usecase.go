@@ -17,6 +17,15 @@ type cafeUsecase struct {
 	contextTimeout  time.Duration
 }
 
+func (cu *cafeUsecase) GetCafeSortedByRadius(ctx context.Context, latitude string, longitude string, radius string) ([]models.CafeWithGeoData, error) {
+
+	return cu.cafeRepo.GetCafeSortedByRadius(ctx, latitude, longitude, radius)
+}
+
+func (cu *cafeUsecase) GetByOwnerIDWithOwnerID(ctx context.Context, ownerID int) ([]models.Cafe, error) {
+	return cu.cafeRepo.GetByOwnerID(ctx, ownerID)
+}
+
 func NewCafeUsecase(c cafe.Repository, stClient staffClient.StaffClientInterface, timeout time.Duration) cafe.Usecase {
 	return &cafeUsecase{
 		cafeRepo:        c,

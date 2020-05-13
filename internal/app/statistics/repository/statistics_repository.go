@@ -1,9 +1,11 @@
 package repository
 
 import (
+	cafeModels "2020_1_drop_table/internal/app/cafe/models"
 	"2020_1_drop_table/internal/app/statistics"
 	"2020_1_drop_table/internal/app/statistics/models"
 	"context"
+	"fmt"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"time"
@@ -11,6 +13,11 @@ import (
 
 type postgresStatisticsRepository struct {
 	Conn *sqlx.DB
+}
+
+func (p postgresStatisticsRepository) GetGraphsDataFromRepo(ctx context.Context, cafeList []cafeModels.Cafe, typ string, since string, to string) {
+	//todo implement
+	fmt.Println(cafeList, typ, since, to)
 }
 
 func (p postgresStatisticsRepository) GetWorkerDataFromRepo(ctx context.Context, staffId int, limit int, since int) ([]models.StatisticsStruct, error) {

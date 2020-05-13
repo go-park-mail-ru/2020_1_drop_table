@@ -5,6 +5,7 @@ import (
 	_appleHttpDeliver "2020_1_drop_table/internal/app/apple_passkit/delivery/http"
 	_appleRepo "2020_1_drop_table/internal/app/apple_passkit/repository"
 	_appleUsecase "2020_1_drop_table/internal/app/apple_passkit/usecase"
+	cafeClient "2020_1_drop_table/internal/app/cafe/delivery/grpc/client"
 	"2020_1_drop_table/internal/app/cafe/delivery/grpc/server"
 	_cafeHttpDeliver "2020_1_drop_table/internal/app/cafe/delivery/http"
 	_cafeRepo "2020_1_drop_table/internal/app/cafe/repository"
@@ -83,7 +84,11 @@ func main() {
 
 	_appleHttpDeliver.NewPassKitHandler(r, applePassKitUcase)
 	statRepo := repository.NewPostgresStatisticsRepository(conn)
-	statUcase := usecase.NewStatisticsUsecase(statRepo, grpcStaffClient, timeoutContext)
+
+	grpcCafeConn, err := grpc.Dial(configs.GRPCCafeUrl, grpc.WithInsecure())
+	grpcCafeClient := cafeClient.NewCafeClient(grpcCafeConn)
+
+	statUcase := usecase.NewStatisticsUsecase(statRepo, grpcStaffClient, grpcCafeClient, timeoutContext)
 	http2.NewStatisticsHandler(r, statUcase)
 	customerUseCase := _customerUseCase.NewCustomerUsecase(customerRepo, applePassKitRepo, grpcStaffClient, timeoutContext)
 	_customerHttpDeliver.NewCustomerHandler(r, customerUseCase)

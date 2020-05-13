@@ -16,6 +16,16 @@ type StatisticsHandler struct {
 	SUsecase statistics.Usecase
 }
 
+func NewStatisticsHandler(r *mux.Router, us statistics.Usecase) {
+	handler := StatisticsHandler{
+		SUsecase: us,
+	}
+
+	r.HandleFunc("/api/v1/statistics/get_worker_data", handler.GetWorkerData).Methods("POST") //todo check csrf
+	r.HandleFunc("/api/v1/statistics/get_graphs_data", handler.GetGraphsData).Methods("GET")  //todo check csrf
+
+}
+
 func fetchWorkerData(r *http.Request) (models2.GetWorkerDataStruct, error) {
 
 	data, err := ioutil.ReadAll(r.Body)
@@ -43,22 +53,23 @@ func (h StatisticsHandler) GetWorkerData(writer http.ResponseWriter, request *ht
 	//todo permissions only for this cafe staff
 	workerData, err := fetchWorkerData(request)
 	if err != nil {
-		responses.SendServerError(err.Error(), writer)
+		responses.SendSingleError(err.Error(), writer)
 		return
 	}
 	res, err := h.SUsecase.GetWorkerData(request.Context(), workerData.StaffID, workerData.Limit, workerData.Since)
 	if err != nil {
-		responses.SendServerError(err.Error(), writer)
+		responses.SendSingleError(err.Error(), writer)
 		return
 	}
 	responses.SendOKAnswer(res, writer)
 }
 
-func NewStatisticsHandler(r *mux.Router, us statistics.Usecase) {
-	handler := StatisticsHandler{
-		SUsecase: us,
-	}
+func (h StatisticsHandler) GetGraphsData(writer http.ResponseWriter, request *http.Request) {
+	typ := request.FormValue("type")
+	since := request.FormValue("since")
+	to := request.FormValue("to")
+	fmt.Println(typ, since, to)
+	err := h.SUsecase.GetDataForGraphs(request.Context(), typ, since, to)
 
-	r.HandleFunc("/api/v1/statistics/get_worker_data", handler.GetWorkerData).Methods("GET")
-
+	fmt.Println(err)
 }

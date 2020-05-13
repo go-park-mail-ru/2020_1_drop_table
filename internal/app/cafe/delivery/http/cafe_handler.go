@@ -28,6 +28,7 @@ func NewCafeHandler(r *mux.Router, us cafe.Usecase) {
 	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}", permissions.SetCSRF(handler.GetByIDHandler)).Methods("GET")
 	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}", permissions.CheckCSRF(permissions.CheckAuthenticated(handler.EditCafeHandler))).Methods("PUT")
 	r.HandleFunc("/api/v1/cafe/get_all", handler.GetAllCafes).Methods("GET")
+	r.HandleFunc("/api/v1/cafe/get_by_geo", handler.GetCafeListByGeoAndRadius).Methods("GET")
 }
 
 func (c *CafeHandler) fetchCafe(r *http.Request) (models.Cafe, error) {
@@ -54,6 +55,20 @@ func (c *CafeHandler) fetchCafe(r *http.Request) (models.Cafe, error) {
 	}
 
 	return cafeObj, nil
+}
+
+func (c *CafeHandler) GetCafeListByGeoAndRadius(w http.ResponseWriter, r *http.Request) {
+	latitude := r.FormValue("latitude")
+	longitude := r.FormValue("longitude")
+	radius := r.FormValue("radius")
+	fmt.Println(latitude, longitude, radius)
+
+	res, err := c.CUsecase.GetCafeSortedByRadius(r.Context(), latitude, longitude, radius)
+	if err != nil {
+		responses.SendSingleError(err.Error(), w)
+		return
+	}
+	responses.SendOKAnswer(res, w)
 }
 
 func (c *CafeHandler) AddCafeHandler(w http.ResponseWriter, r *http.Request) {
