@@ -7,7 +7,7 @@ services:
       context: .
       dockerfile: docker/builder.Dockerfile
     env_file:
-      - docker/.env
+      - .env
 
   main_serivce:
     build:
@@ -17,6 +17,6 @@ services:
     ports:
     - 8080:8080
     env_file:
-      - docker/.env
+      - .env
     depends_on:
       - builder
