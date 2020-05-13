@@ -1,6 +1,12 @@
 version: "3"
 
 services:
+  builder:
+    build:
+      context: .
+      dockerfile: docker/builder.Dockerfile
+    env_file:
+      - docker/.env
   main_serivce:
     build:
       context: .
