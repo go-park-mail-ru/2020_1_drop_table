@@ -1,0 +1,9 @@
+version: "3"
+
+services:
+  main_serivce:
+    build: docker/main_service.Dockerfile
+    container_name: main_service_container
+    env_file:
+      - .env
+
