@@ -1,7 +1,7 @@
 FROM golang:1.13
 
-RUN apk update && apk upgrade && \
-    apk --update add git make
+RUN apt update && apt upgrade && \
+    apt --update add git make
 
 WORKDIR /app
 
