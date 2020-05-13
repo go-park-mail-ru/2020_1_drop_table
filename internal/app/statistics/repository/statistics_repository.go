@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	"strconv"
 	"time"
 )
 
@@ -15,9 +16,27 @@ type postgresStatisticsRepository struct {
 	Conn *sqlx.DB
 }
 
+func generateWhereStatement(cafeList []cafeModels.Cafe) string {
+	query := `where`
+	for _, cafe := range cafeList {
+		query = query + " cafeID=" + strconv.Itoa(cafe.CafeID) + " or "
+	}
+	query = query[:len(query)-3]
+	return query
+}
+
+func generateDateTruncStatement(typ string) string {
+	if typ == "MONTH" {
+		return `date_trunc('MONTH', time)`
+	}
+	return `date_trunc('DAY', time)`
+}
+
 func (p postgresStatisticsRepository) GetGraphsDataFromRepo(ctx context.Context, cafeList []cafeModels.Cafe, typ string, since string, to string) {
-	//todo implement
-	fmt.Println(cafeList, typ, since, to)
+	whereStatement := generateWhereStatement(cafeList)
+	dateTrunc := generateDateTruncStatement(typ)
+	fmt.Println(cafeList, typ, since, to, whereStatement, dateTrunc)
+
 }
 
 func (p postgresStatisticsRepository) GetWorkerDataFromRepo(ctx context.Context, staffId int, limit int, since int) ([]models.StatisticsStruct, error) {
