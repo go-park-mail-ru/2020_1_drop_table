@@ -22,6 +22,7 @@ import (
 	staffClient "2020_1_drop_table/internal/microservices/staff/delivery/grpc/client"
 	"2020_1_drop_table/internal/pkg/apple_pass_generator"
 	"2020_1_drop_table/internal/pkg/apple_pass_generator/meta"
+	geo "2020_1_drop_table/internal/pkg/google_geocoder"
 	"2020_1_drop_table/internal/pkg/metrics"
 	"fmt"
 	"github.com/gorilla/mux"
@@ -69,7 +70,9 @@ func main() {
 	grpcCustomerConn, err := grpc.Dial(configs.GRPCCustomerUrl, grpc.WithInsecure())
 	grpcCustomerClient := customer.NewCustomerClient(grpcCustomerConn)
 
-	cafeUsecase := _cafeUsecase.NewCafeUsecase(cafeRepo, grpcStaffClient, timeoutContext)
+	geoCoder := geo.NewGoogleGeoCoder(configs.GoogleMapAPIKey, "ru", "ru")
+
+	cafeUsecase := _cafeUsecase.NewCafeUsecase(cafeRepo, grpcStaffClient, timeoutContext, *geoCoder)
 	_cafeHttpDeliver.NewCafeHandler(r, cafeUsecase)
 
 	applePassGenerator := apple_pass_generator.NewGenerator(

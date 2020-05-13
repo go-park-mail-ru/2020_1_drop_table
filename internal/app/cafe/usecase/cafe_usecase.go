@@ -5,7 +5,9 @@ import (
 	"2020_1_drop_table/internal/app/cafe/models"
 	globalModels "2020_1_drop_table/internal/app/models"
 	staffClient "2020_1_drop_table/internal/microservices/staff/delivery/grpc/client"
+	geo "2020_1_drop_table/internal/pkg/google_geocoder"
 	"context"
+	"fmt"
 	"github.com/gorilla/sessions"
 	"gopkg.in/go-playground/validator.v9"
 	"time"
@@ -15,6 +17,7 @@ type cafeUsecase struct {
 	cafeRepo        cafe.Repository
 	staffGrpcClient staffClient.StaffClientInterface
 	contextTimeout  time.Duration
+	geoCoder        geo.GoogleGeoCoder
 }
 
 func (cu *cafeUsecase) GetCafeSortedByRadius(ctx context.Context, latitude string, longitude string, radius string) ([]models.CafeWithGeoData, error) {
@@ -26,11 +29,13 @@ func (cu *cafeUsecase) GetByOwnerIDWithOwnerID(ctx context.Context, ownerID int)
 	return cu.cafeRepo.GetByOwnerID(ctx, ownerID)
 }
 
-func NewCafeUsecase(c cafe.Repository, stClient staffClient.StaffClientInterface, timeout time.Duration) cafe.Usecase {
+func NewCafeUsecase(c cafe.Repository, stClient staffClient.StaffClientInterface,
+	timeout time.Duration, geoCoder geo.GoogleGeoCoder) cafe.Usecase {
 	return &cafeUsecase{
 		cafeRepo:        c,
 		contextTimeout:  timeout,
 		staffGrpcClient: stClient,
+		geoCoder:        geoCoder,
 	}
 }
 
@@ -71,6 +76,11 @@ func (cu *cafeUsecase) Add(c context.Context, newCafe models.Cafe) (models.Cafe,
 
 	if err := validation.Struct(newCafe); err != nil {
 		return models.Cafe{}, err
+	}
+
+	if newCafe.Address != "" {
+		geoInfo, err := cu.geoCoder.GetGeoByAddress(newCafe.Address)
+		fmt.Println(geoInfo, err)
 	}
 
 	return cu.cafeRepo.Add(ctx, newCafe)
