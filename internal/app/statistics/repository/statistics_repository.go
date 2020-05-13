@@ -44,7 +44,7 @@ func (p postgresStatisticsRepository) GetGraphsDataFromRepo(ctx context.Context,
 from statistics_table
 %s and %s
 group by %s, cafeID, staffID
-order by cafeID, %s`, dateTrunc, whereStatement, betweenStatement, dateTrunc, dateTrunc)
+order by cafeID,staffID, %s`, dateTrunc, whereStatement, betweenStatement, dateTrunc, dateTrunc)
 	fmt.Println(query)
 	var res []models.StatisticsGraphRawStruct
 	err := p.Conn.SelectContext(ctx, &res, query)

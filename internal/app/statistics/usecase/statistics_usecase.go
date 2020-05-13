@@ -61,6 +61,20 @@ func (s statisticsUsecase) GetDataForGraphs(ctx context.Context, typ string, sin
 	cafes, err := s.cafeClient.GetByOwnerId(ctx, requestUser.StaffID)
 	rawData, err := s.statisticsRepo.GetGraphsDataFromRepo(ctx, cafes, typ, since, to)
 	fmt.Println(rawData)
-	//todo parse rawData to json
+	jsonify(rawData)
 	return nil
+}
+
+func jsonify(data []models.StatisticsGraphRawStruct) {
+	var m = make(map[int]interface{})
+	var prevElem = data[0]
+	for _, el := range data {
+		fmt.Println(el)
+		if el.CafeId > prevElem.CafeId {
+			m[el.CafeId] = el
+
+		}
+		prevElem = el
+	}
+	fmt.Println("map: ", m)
 }
