@@ -116,5 +116,6 @@ func main() {
 		WriteTimeout: configs.Timeouts.WriteTimeout,
 		ReadTimeout:  configs.Timeouts.ReadTimeout,
 	}
+	fmt.Println("main server started at ", configs.MainService)
 	log.Error().Msgf(srv.ListenAndServe().Error())
 }

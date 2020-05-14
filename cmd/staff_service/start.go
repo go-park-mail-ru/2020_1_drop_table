@@ -72,5 +72,6 @@ func main() {
 		WriteTimeout: configs.Timeouts.WriteTimeout,
 		ReadTimeout:  configs.Timeouts.ReadTimeout,
 	}
+	fmt.Println("staff server started at ", configs.HTTPStaffUrl)
 	log.Error().Msgf(srv.ListenAndServe().Error())
 }
