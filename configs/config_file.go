@@ -27,6 +27,8 @@ const GRPCCustomerUrl = "0.0.0.0:8082"
 
 var ApplePassword = os.Getenv("ApplePassword")
 
+var GoogleMapAPIKey = os.Getenv("GoogleMapAPIKey")
+
 type timeouts struct {
 	WriteTimeout   time.Duration
 	ReadTimeout    time.Duration

@@ -5,18 +5,21 @@ import (
 	"2020_1_drop_table/internal/app/customer"
 	"2020_1_drop_table/internal/app/customer/models"
 	globalModels "2020_1_drop_table/internal/app/models"
+	"2020_1_drop_table/internal/app/statistics"
 	staffClient "2020_1_drop_table/internal/microservices/staff/delivery/grpc/client"
 	loyaltySystems "2020_1_drop_table/internal/pkg/apple_pass_generator/loyalty_systems"
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 )
 
 type customerUsecase struct {
-	customerRepo   customer.Repository
-	passKitRepo    apple_passkit.Repository
-	staffClient    staffClient.StaffClientInterface
-	contextTimeout time.Duration
+	customerRepo      customer.Repository
+	passKitRepo       apple_passkit.Repository
+	staffClient       staffClient.StaffClientInterface
+	statisticsUsecase statistics.Usecase
+	contextTimeout    time.Duration
 }
 
 func NewCustomerUsecase(c customer.Repository, p apple_passkit.Repository, clientInterface staffClient.StaffClientInterface,
@@ -59,6 +62,7 @@ func (u customerUsecase) GetPoints(ctx context.Context, uuid string) (string, er
 func (u customerUsecase) SetPoints(ctx context.Context, uuid string, points string) error {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
+	currTime := time.Now()
 
 	requestStaff, err := u.staffClient.GetFromSession(ctx)
 	if err != nil {
@@ -90,6 +94,13 @@ func (u customerUsecase) SetPoints(ctx context.Context, uuid string, points stri
 
 	newPoints, err := loyaltySystem.SettingPoints(pass.LoyaltyInfo, targetCustomer.Points, points)
 	if err != nil {
+		return err
+	}
+
+	//todo check if this work all together
+	err = u.statisticsUsecase.AddData(newPoints, currTime, targetCustomer.CustomerID, requestStaff.StaffID, requestStaff.CafeId)
+	if err != nil {
+		fmt.Println("err when statistics add customer", err)
 		return err
 	}
 

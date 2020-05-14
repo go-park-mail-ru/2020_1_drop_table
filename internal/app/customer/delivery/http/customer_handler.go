@@ -50,7 +50,6 @@ func (h CustomerHandler) SetPoints(writer http.ResponseWriter, r *http.Request) 
 		responses.SendSingleError(err.Error(), writer)
 		return
 	}
-
 	err = h.CUsecase.SetPoints(r.Context(), uuid, string(body))
 	if err != nil {
 		responses.SendSingleError(err.Error(), writer)

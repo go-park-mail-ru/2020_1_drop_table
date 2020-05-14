@@ -1,3 +1,4 @@
+//protoc --go_out=plugins=grpc:. *.proto
 syntax = "proto3";
 import "google/protobuf/timestamp.proto";
 package customer;
@@ -5,6 +6,7 @@ option go_package = ".;cafe";
 
 service CafeGRPCHandler{
   rpc GetByID(ID) returns (Cafe);
+  rpc GetByOwnerID(ID) returns (ListCafe);
 }
 
 message ID{
@@ -20,4 +22,8 @@ message Cafe{
   google.protobuf.Timestamp OpenTime = 6;
   google.protobuf.Timestamp CloseTime = 7;
   string Photo = 8;
+}
+
+message ListCafe{
+  repeated Cafe Cafe = 1;
 }
