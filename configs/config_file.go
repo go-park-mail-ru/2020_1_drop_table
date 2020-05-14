@@ -19,6 +19,7 @@ const AppleCertificate = "configs/apple_config_files/passcertificate.pem"
 const AppleKey = "configs/apple_config_files/passkey.pem"
 
 //on urls with this ports frontend need to send data
+const MainService = "0.0.0.0:8080"
 const HTTPStaffUrl = "0.0.0.0:8084"
 const GRPCStaffUrl = "0.0.0.0:8083"
 const HTTPSurveyUrl = "0.0.0.0:8086"

@@ -110,9 +110,10 @@ func main() {
 	http.Handle("/", r)
 	srv := &http.Server{
 		Handler:      r,
-		Addr:         "127.0.0.1:8080",
+		Addr:         configs.MainService,
 		WriteTimeout: configs.Timeouts.WriteTimeout,
 		ReadTimeout:  configs.Timeouts.ReadTimeout,
 	}
+	fmt.Println("I AM ALIVE")
 	log.Error().Msgf(srv.ListenAndServe().Error())
 }
