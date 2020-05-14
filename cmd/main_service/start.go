@@ -54,6 +54,8 @@ func main() {
 		configs.PostgresPreferences.Port,
 		configs.PostgresPreferences.Host)
 
+	fmt.Println(connStr)
+
 	conn, err := sqlx.Open("postgres", connStr)
 	if err != nil {
 		log.Error().Msgf(err.Error())

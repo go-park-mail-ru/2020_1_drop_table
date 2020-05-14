@@ -42,8 +42,17 @@ services:
       - $PWD/redis-data:/var/lib/redis
 
   postgres:
-    image: postgres
-    env_file:
-      - envs/postgres.env
+    build:
+      context: docker/
+      dockerfile: postgis.Dockerfile
+    image: postgres11-postgis2.5
+    container_name: postgres11-postgis2.5
+    volumes:
+      - postgres11-postgis2.5:/var/lib/postgresql/data
+      - ./backups:/opt/backups
     ports:
-      - "5432:5432"
+      - '5432:5432'
+    env_file: envs/postgres.env
+
+volumes:
+  postgres11-postgis2.5:

@@ -20,4 +20,5 @@ configs/apple_config_files
 configs/redis.conf
 
 # Enviroment files
-envs/
+envs/golang.env
+envs/postgres.env
