@@ -4,17 +4,14 @@ go 1.13
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.4.1
-	github.com/azer/logger v1.0.0 // indirect
-	github.com/azer/yolo v0.0.0-20200421082124-9f74cacbc50c // indirect
+	github.com/FlameInTheDark/go-yandex-geocoding v0.0.0-20190115063735-fbb6b4357ff4
 	github.com/bxcodec/faker v2.0.1+incompatible
 	github.com/fatih/structs v1.1.0
-	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/garyburd/redigo v1.6.0 // indirect
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/golang/protobuf v1.4.0
 	github.com/gorilla/mux v1.7.4
 	github.com/gorilla/sessions v1.2.0
-	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/gommon v0.3.0 // indirect
