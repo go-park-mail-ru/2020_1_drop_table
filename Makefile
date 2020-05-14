@@ -27,6 +27,10 @@ build-and-run: build-docker
 run-background:
 	docker-compose up -d
 
+## stop: Stop all containers on machine
+stop:
+	docker stop $(docker ps -a -q)
+
 .PHONY: help
 all: help
 help: Makefile
