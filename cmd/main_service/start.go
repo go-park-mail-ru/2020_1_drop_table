@@ -114,6 +114,5 @@ func main() {
 		WriteTimeout: configs.Timeouts.WriteTimeout,
 		ReadTimeout:  configs.Timeouts.ReadTimeout,
 	}
-	fmt.Println("I AM ALIVE")
 	log.Error().Msgf(srv.ListenAndServe().Error())
 }
