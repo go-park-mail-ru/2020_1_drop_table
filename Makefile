@@ -25,7 +25,7 @@ build-and-run: build-docker
 
 ## run-background: Run process in background(available after build)
 run-background:
-	docker-compose up --detach
+	docker-compose up -d
 
 .PHONY: help
 all: help
