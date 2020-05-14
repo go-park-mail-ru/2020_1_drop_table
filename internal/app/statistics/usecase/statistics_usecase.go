@@ -9,6 +9,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -50,16 +52,62 @@ func NewStatisticsUsecase(st statistics.Repository, staffClient staffClient.Staf
 	}
 }
 
-func (s statisticsUsecase) GetDataForGraphs(ctx context.Context, typ string, since string, to string) error {
+func (s statisticsUsecase) GetDataForGraphs(ctx context.Context, typ string, since string, to string) (map[string]map[string][]models.TempStruct, error) {
 	ctx, cancel := context.WithTimeout(ctx, s.contextTimeout)
 	defer cancel()
 
 	requestUser, err := s.staffClient.GetFromSession(ctx)
 	if err != nil {
-		return globalModels.ErrForbidden
+		return nil, globalModels.ErrForbidden
 	}
 	cafes, err := s.cafeClient.GetByOwnerId(ctx, requestUser.StaffID)
-	fmt.Println(cafes)
-	s.statisticsRepo.GetGraphsDataFromRepo(ctx, cafes, typ, since, to)
-	return nil
+	if err != nil {
+		message := fmt.Sprintf("cafe not found")
+		return nil, errors.New(message)
+	}
+	rawData, err := s.statisticsRepo.GetGraphsDataFromRepo(ctx, cafes, typ, since, to)
+	if err != nil {
+		message := fmt.Sprintf("cant found statistics data with this input")
+		return nil, errors.New(message)
+	}
+	fmt.Println(rawData)
+	jsonData := jsonify(rawData)
+	return jsonData, nil
+}
+
+func jsonify(data []models.StatisticsGraphRawStruct) map[string]map[string][]models.TempStruct {
+	//todo refactor work super slow
+
+	var m = make(map[string][]models.TempStruct)
+	var resMap = make(map[string]map[string][]models.TempStruct)
+
+	for _, el := range data {
+		staffIdAndCafe := strconv.Itoa(el.StaffId) + "_" + strconv.Itoa(el.CafeId)
+		m[staffIdAndCafe] = append(m[staffIdAndCafe], models.TempStruct{
+			NumOfUsage: el.Count,
+			Date:       el.Date,
+		})
+	}
+	tempMap := make(map[string][]models.TempStruct)
+	prevKey := getFirstKeyFromMap(m)
+	fmt.Println(prevKey)
+	for key, value := range m {
+		keysArr := strings.Split(key, "_")
+		staffId := keysArr[0]
+		cafeId := keysArr[1]
+		if prevKey != cafeId {
+			tempMap = make(map[string][]models.TempStruct)
+		}
+		tempMap[staffId] = append(tempMap[staffId], value...)
+		resMap[cafeId] = tempMap
+		prevKey = cafeId
+	}
+	return resMap
+}
+
+func getFirstKeyFromMap(m map[string][]models.TempStruct) string {
+	for key := range m {
+		return strings.Split(key, `_`)[1]
+	}
+	return ""
 }
