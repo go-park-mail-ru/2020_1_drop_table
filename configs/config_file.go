@@ -6,7 +6,7 @@ import (
 )
 
 const MediaFolder = "media"
-const ServerUrl = "http://localhost:8080"
+const ServerUrl = "http://0.0.0.0:8080"
 const FrontEndUrl = "http://localhost:3000"
 const ApiVersion = "api/v1"
 
@@ -19,11 +19,11 @@ const AppleCertificate = "configs/apple_config_files/passcertificate.pem"
 const AppleKey = "configs/apple_config_files/passkey.pem"
 
 //on urls with this ports frontend need to send data
-const HTTPStaffUrl = "localhost:8084"
-const GRPCStaffUrl = "localhost:8083"
-const HTTPSurveyUrl = "localhost:8086"
-const GRPCCafeUrl = "localhost:8085"
-const GRPCCustomerUrl = "localhost:8082"
+const HTTPStaffUrl = "0.0.0.0:8084"
+const GRPCStaffUrl = "0.0.0.0:8083"
+const HTTPSurveyUrl = "0.0.0.0:8086"
+const GRPCCafeUrl = "0.0.0.0:8085"
+const GRPCCustomerUrl = "0.0.0.0:8082"
 
 var ApplePassword = os.Getenv("ApplePassword")
 
@@ -42,6 +42,8 @@ func init() {
 		User:     os.Getenv("PostgresUser"),
 		Password: os.Getenv("PostgresPassword"),
 		Port:     os.Getenv("PostgresPort"),
+		Host:     os.Getenv("PostgresHost"),
+		DBName:   os.Getenv("PostgresDBName"),
 	}
 
 	RedisPreferences = redisPreferencesStruct{

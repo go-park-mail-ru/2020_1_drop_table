@@ -4,6 +4,8 @@ type postgresPreferencesStruct struct {
 	User     string
 	Password string
 	Port     string
+	Host     string
+	DBName   string
 }
 
 type redisPreferencesStruct struct {

@@ -1,0 +1,58 @@
+version: "3"
+
+services:
+  main_serivce:
+    image: main_service
+    ports:
+      - "8080:8080"
+      - "8082:8082"
+    env_file:
+      - envs/golang.env
+    depends_on:
+      - redis
+      - postgres
+
+  staff:
+    image: staff_service
+    env_file:
+      - envs/golang.env
+    ports:
+      - "8084:8084"
+      - "8083:8083"
+    depends_on:
+      - redis
+      - postgres
+
+  survey:
+    image: survey_service
+    env_file:
+      - envs/golang.env
+    ports:
+      - "8085:8085"
+      - "8086:8086"
+    depends_on:
+      - redis
+      - postgres
+
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+    volumes:
+      - $PWD/redis-data:/var/lib/redis
+
+  postgres:
+    build:
+      context: docker/
+      dockerfile: postgis.Dockerfile
+    image: postgres11-postgis2.5
+    container_name: postgres11-postgis2.5
+    volumes:
+      - postgres11-postgis2.5:/var/lib/postgresql/data
+      - ./backups:/opt/backups
+    ports:
+      - '5432:5432'
+    env_file: envs/postgres.env
+
+volumes:
+  postgres11-postgis2.5:

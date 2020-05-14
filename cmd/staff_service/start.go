@@ -4,10 +4,10 @@ import (
 	"2020_1_drop_table/configs"
 	cafeClient "2020_1_drop_table/internal/app/cafe/delivery/grpc/client"
 	"2020_1_drop_table/internal/app/middleware"
-	staffClient "2020_1_drop_table/internal/microservices/staff/delivery/grpc/client"
-	http2 "2020_1_drop_table/internal/microservices/survey/delivery/http"
-	surveyRepo "2020_1_drop_table/internal/microservices/survey/repository"
-	surveyUsecase "2020_1_drop_table/internal/microservices/survey/usecase"
+	grpcServer "2020_1_drop_table/internal/microservices/staff/delivery/grpc/grpc_server"
+	staffHandler "2020_1_drop_table/internal/microservices/staff/delivery/http"
+	_staffRepo "2020_1_drop_table/internal/microservices/staff/repository"
+	_staffUsecase "2020_1_drop_table/internal/microservices/staff/usecase"
 	"2020_1_drop_table/internal/pkg/metrics"
 	"fmt"
 	"github.com/gorilla/mux"
@@ -36,10 +36,12 @@ func main() {
 
 	timeoutContext := configs.Timeouts.ContextTimeout
 
-	connStr := fmt.Sprintf("user=%s password=%s dbname=postgres sslmode=disable port=%s",
+	connStr := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable port=%s host=%s",
 		configs.PostgresPreferences.User,
 		configs.PostgresPreferences.Password,
-		configs.PostgresPreferences.Port)
+		configs.PostgresPreferences.DBName,
+		configs.PostgresPreferences.Port,
+		configs.PostgresPreferences.Host)
 
 	conn, err := sqlx.Open("postgres", connStr)
 	if err != nil {
@@ -47,24 +49,26 @@ func main() {
 		return
 	}
 
-	survRepo := surveyRepo.NewPostgresSurveyRepository(conn)
-
-	grpcConn, err := grpc.Dial(configs.GRPCStaffUrl, grpc.WithInsecure())
-	grpcStaffClient := staffClient.NewStaffClient(grpcConn)
-
 	grpcCafeConn, err := grpc.Dial(configs.GRPCCafeUrl, grpc.WithInsecure())
 	grpcCafeClient := cafeClient.NewCafeClient(grpcCafeConn)
 
-	surveyUcase := surveyUsecase.NewSurveyUsecase(survRepo, grpcStaffClient, grpcCafeClient, timeoutContext)
-	http2.NewSurveyHandler(r, surveyUcase)
+	staffRepo := _staffRepo.NewPostgresStaffRepository(conn)
+	staffUsecase := _staffUsecase.NewStaffUsecase(&staffRepo, grpcCafeClient, timeoutContext)
 
-	//OPTIONS
+	go grpcServer.StartStaffGrpcServer(staffUsecase)
+	staffHandler.NewStaffHandler(r, staffUsecase)
+
+	//static server
+	r.PathPrefix(fmt.Sprintf("/%s/", configs.MediaFolder)).Handler(
+		http.StripPrefix(fmt.Sprintf("/%s/", configs.MediaFolder),
+			http.FileServer(http.Dir(configs.MediaFolder))))
+
 	middleware.AddOptionsRequest(r)
 
 	http.Handle("/", r)
 	srv := &http.Server{
 		Handler:      r,
-		Addr:         configs.HTTPSurveyUrl,
+		Addr:         configs.HTTPStaffUrl,
 		WriteTimeout: configs.Timeouts.WriteTimeout,
 		ReadTimeout:  configs.Timeouts.ReadTimeout,
 	}
