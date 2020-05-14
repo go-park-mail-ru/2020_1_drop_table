@@ -70,5 +70,6 @@ func main() {
 		WriteTimeout: configs.Timeouts.WriteTimeout,
 		ReadTimeout:  configs.Timeouts.ReadTimeout,
 	}
+	fmt.Println("survey server started at ", configs.HTTPSurveyUrl)
 	log.Error().Msgf(srv.ListenAndServe().Error())
 }

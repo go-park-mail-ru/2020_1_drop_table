@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
 type StatisticsHandler struct {
@@ -68,6 +69,9 @@ func (h StatisticsHandler) GetGraphsData(writer http.ResponseWriter, request *ht
 	typ := request.FormValue("type")
 	since := request.FormValue("since")
 	to := request.FormValue("to")
+	since = strings.Replace(since, "_", " ", -1)
+	to = strings.Replace(to, "_", " ", -1)
+	fmt.Println(since, to)
 	fmt.Println(typ, since, to)
 	jsonData, err := h.SUsecase.GetDataForGraphs(request.Context(), typ, since, to)
 	if err != nil {
