@@ -8,9 +8,9 @@ DOCKER_DIR := ${CURDIR}/docker
 
 ## build: Build compiles project
 build:
-	go build -o ${MAIN_SERVICE_BINARY} internal/app/main/start.go
-	go build -o ${STAFF_BINARY} internal/microservices/staff/main/start.go
-	go build -o ${SURVEY_BINARY} internal/microservices/survey/main/start.go
+	go build -o ${MAIN_SERVICE_BINARY} cmd/main_service/start.go
+	go build -o ${STAFF_BINARY} cmd/staff_service/start.go
+	go build -o ${SURVEY_BINARY} cmd/survey_service/start.go
 
 ## build-docker: Builds all docker containers
 build-docker:
