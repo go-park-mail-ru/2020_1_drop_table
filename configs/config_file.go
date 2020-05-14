@@ -40,6 +40,8 @@ func init() {
 		User:     os.Getenv("PostgresUser"),
 		Password: os.Getenv("PostgresPassword"),
 		Port:     os.Getenv("PostgresPort"),
+		Host:     os.Getenv("PostgresHost"),
+		DBName:   os.Getenv("PostgresDBName"),
 	}
 
 	RedisPreferences = redisPreferencesStruct{

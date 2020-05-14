@@ -36,10 +36,12 @@ func main() {
 
 	timeoutContext := configs.Timeouts.ContextTimeout
 
-	connStr := fmt.Sprintf("user=%s password=%s dbname=postgres sslmode=disable port=%s",
+	connStr := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable port=%s host=%s",
 		configs.PostgresPreferences.User,
 		configs.PostgresPreferences.Password,
-		configs.PostgresPreferences.Port)
+		configs.PostgresPreferences.DBName,
+		configs.PostgresPreferences.Port,
+		configs.PostgresPreferences.Host)
 
 	conn, err := sqlx.Open("postgres", connStr)
 	if err != nil {
