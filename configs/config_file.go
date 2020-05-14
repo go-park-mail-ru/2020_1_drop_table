@@ -6,9 +6,10 @@ import (
 )
 
 const MediaFolder = "media"
-const ServerUrl = "http://0.0.0.0:8080"
-const FrontEndUrl = "http://localhost:3000"
 const ApiVersion = "api/v1"
+
+var FrontEndUrl = os.Getenv("FrontEndUrl")
+var ServerUrl = os.Getenv("ServerUrl")
 
 var PostgresPreferences postgresPreferencesStruct
 
