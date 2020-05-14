@@ -9,5 +9,5 @@ import (
 type Usecase interface {
 	AddData(jsonData string, time time.Time, clientUUID string, staffId int, cafeId int) error
 	GetWorkerData(ctx context.Context, staffID int, limit int, since int) ([]models.StatisticsStruct, error)
-	GetDataForGraphs(ctx context.Context, typ string, since string, to string) error
+	GetDataForGraphs(ctx context.Context, typ string, since string, to string) (map[string]map[string][]models.TempStruct, error)
 }

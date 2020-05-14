@@ -22,3 +22,8 @@ type StatisticsGraphRawStruct struct {
 	CafeId  int       `json:"cafeId"`
 	StaffId int       `json:"staffId"`
 }
+
+type TempStruct struct {
+	NumOfUsage int
+	Date       time.Time
+}

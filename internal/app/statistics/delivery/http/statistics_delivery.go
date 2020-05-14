@@ -69,7 +69,11 @@ func (h StatisticsHandler) GetGraphsData(writer http.ResponseWriter, request *ht
 	since := request.FormValue("since")
 	to := request.FormValue("to")
 	fmt.Println(typ, since, to)
-	err := h.SUsecase.GetDataForGraphs(request.Context(), typ, since, to)
+	jsonData, err := h.SUsecase.GetDataForGraphs(request.Context(), typ, since, to)
+	if err != nil {
+		responses.SendSingleError(err.Error(), writer)
+		return
+	}
+	responses.SendOKAnswer(jsonData, writer)
 
-	fmt.Println(err)
 }
