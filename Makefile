@@ -19,6 +19,10 @@ build-docker:
 	docker build -t staff_service -f ${DOCKER_DIR}/staff.Dockerfile .
 	docker build -t survey_service -f ${DOCKER_DIR}/survey.Dockerfile .
 
+## run-and-build: Build and run docker
+build-and-run: build-docker
+	docker-compose up --build
+
 .PHONY: help
 all: help
 help: Makefile
