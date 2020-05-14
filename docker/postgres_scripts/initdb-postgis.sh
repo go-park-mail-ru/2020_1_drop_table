@@ -39,6 +39,12 @@ psql -c "CREATE DATABASE gis;"
 psql gis -c "CREATE EXTENSION IF NOT EXISTS postgis;"
 psql gis -c "CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;"
 
+/etc/init.d/postgresql start &&\
+psql --command "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';" &&\
+createdb -O docker docker &&\
+psql -f /opt/db.sql -d docker &&\
+/etc/init.d/postgresql stop
+
 # restore database if dump file exists
 if [ -f /opt/backups/restore.dump ]; then
   echo "Restoring backup..."
