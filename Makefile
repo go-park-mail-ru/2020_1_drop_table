@@ -21,7 +21,10 @@ build-docker:
 
 ## run-and-build: Build and run docker
 build-and-run: build-docker
-	docker-compose up --build
+	docker-compose up
+
+run-inf:
+	docker-compose up --detach
 
 .PHONY: help
 all: help
