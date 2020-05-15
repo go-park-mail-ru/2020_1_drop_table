@@ -55,7 +55,6 @@ services:
     image: kartoza/postgis:12.0
     volumes:
       - postgis-data:/var/lib/postgresql
-      - dbbackups:/backups
       - $PWD/docker/postgres_scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
     env_file:
       - envs/postgres.env
