@@ -1,13 +1,20 @@
 version: "3"
 
+volumes:
+  dbbackups:
+  postgis-data:
+  redis:
+
 services:
-  main_serivce:
+  main_service:
     image: main_service
     ports:
       - "8080:8080"
       - "8082:8082"
     env_file:
       - envs/golang.env
+    volumes:
+      - $PWD/media:/app/media
     depends_on:
       - redis
       - postgres
@@ -19,6 +26,8 @@ services:
     ports:
       - "8084:8084"
       - "8083:8083"
+    volumes:
+      - $PWD/media:/app/media
     depends_on:
       - redis
       - postgres
@@ -30,6 +39,8 @@ services:
     ports:
       - "8085:8085"
       - "8086:8086"
+    volumes:
+      - $PWD/media:/app/media
     depends_on:
       - redis
       - postgres
@@ -39,20 +50,17 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - $PWD/redis-data:/var/lib/redis
+      - redis:/data
 
   postgres:
-    build:
-      context: docker/
-      dockerfile: postgis.Dockerfile
-    image: postgres11-postgis2.5
-    container_name: postgres11-postgis2.5
+    image: kartoza/postgis:12.0
     volumes:
-      - postgres11-postgis2.5:/var/lib/postgresql/data
-      - ./backups:/opt/backups
+      - postgis-data:/var/lib/postgresql
+      - $PWD/docker/postgres_scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    env_file:
+      - envs/postgres.env
     ports:
-      - '5432:5432'
-    env_file: envs/postgres.env
-
-volumes:
-  postgres11-postgis2.5:
+      - "5432:5432"
+    restart: on-failure
+    healthcheck:
+      test: "exit 0"
