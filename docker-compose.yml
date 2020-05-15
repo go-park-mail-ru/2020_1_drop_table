@@ -60,7 +60,7 @@ services:
     env_file:
       - envs/postgres.env
     ports:
-      - 25432:5432
+      - "5432:5432"
     restart: on-failure
     healthcheck:
       test: "exit 0"
