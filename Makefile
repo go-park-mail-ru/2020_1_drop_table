@@ -18,6 +18,7 @@ build-docker:
 	docker build -t main_service -f ${DOCKER_DIR}/main_service.Dockerfile .
 	docker build -t staff_service -f ${DOCKER_DIR}/staff.Dockerfile .
 	docker build -t survey_service -f ${DOCKER_DIR}/survey.Dockerfile .
+	docker build -t postgres11-postgis2.5 -f ${DOCKER_DIR}/postgis.Dockerfile .
 
 ## run-and-build: Build and run docker
 build-and-run: build-docker
