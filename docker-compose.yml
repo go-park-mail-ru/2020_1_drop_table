@@ -1,5 +1,9 @@
 version: "3"
 
+volumes:
+  dbbackups:
+  postgis-data:
+
 services:
   main_service:
     image: main_service
@@ -48,14 +52,15 @@ services:
       - $PWD/redis-data:/var/lib/redis
 
   postgres:
-#    build:
-#      context: docker/
-#      dockerfile: postgis.Dockerfile
-    image: postgres11-postgis2.5
-    container_name: postgres11-postgis2.5
+    image: kartoza/postgis:12.0
     volumes:
-      - postgres11-postgis2.5:/var/lib/postgresql/data
-      - ./backups:/opt/backups
+      - postgis-data:/var/lib/postgresql
+      - dbbackups:/backups
+      - $PWD/docker/postgres_scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    env_file:
+      - envs/postgres.env
     ports:
-      - '5432:5432'
-    env_file: envs/postgres.env
+      - 25432:5432
+    restart: on-failure
+    healthcheck:
+      test: "exit 0"
