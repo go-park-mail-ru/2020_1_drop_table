@@ -6,7 +6,6 @@ import (
 	models2 "2020_1_drop_table/internal/app/statistics/models"
 	"2020_1_drop_table/internal/pkg/responses"
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
@@ -43,7 +42,7 @@ func fetchWorkerData(r *http.Request) (models2.GetWorkerDataStruct, error) {
 
 	var WorkerData models2.GetWorkerDataStruct
 	err = json.Unmarshal(data, &WorkerData)
-	fmt.Println(err)
+
 	if err != nil {
 		return models2.GetWorkerDataStruct{}, globalModels.ErrBadJSON
 	}
@@ -71,8 +70,7 @@ func (h StatisticsHandler) GetGraphsData(writer http.ResponseWriter, request *ht
 	to := request.FormValue("to")
 	since = strings.Replace(since, "_", " ", -1)
 	to = strings.Replace(to, "_", " ", -1)
-	fmt.Println(since, to)
-	fmt.Println(typ, since, to)
+
 	jsonData, err := h.SUsecase.GetDataForGraphs(request.Context(), typ, since, to)
 	if err != nil {
 		responses.SendSingleError(err.Error(), writer)
