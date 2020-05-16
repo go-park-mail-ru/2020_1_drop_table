@@ -10,7 +10,6 @@ import (
 	loyaltySystems "2020_1_drop_table/internal/pkg/apple_pass_generator/loyalty_systems"
 	"context"
 	"database/sql"
-	"fmt"
 	"time"
 )
 
@@ -100,7 +99,7 @@ func (u customerUsecase) SetPoints(ctx context.Context, uuid string, points stri
 	//todo check if this work all together
 	err = u.statisticsUsecase.AddData(newPoints, currTime, targetCustomer.CustomerID, requestStaff.StaffID, requestStaff.CafeId)
 	if err != nil {
-		fmt.Println("err when statistics add customer", err)
+
 		return err
 	}
 

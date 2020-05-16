@@ -61,7 +61,6 @@ func (c *CafeHandler) GetCafeListByGeoAndRadius(w http.ResponseWriter, r *http.R
 	latitude := r.FormValue("latitude")
 	longitude := r.FormValue("longitude")
 	radius := r.FormValue("radius")
-	fmt.Println(latitude, longitude, radius)
 
 	res, err := c.CUsecase.GetCafeSortedByRadius(r.Context(), latitude, longitude, radius)
 	if err != nil {

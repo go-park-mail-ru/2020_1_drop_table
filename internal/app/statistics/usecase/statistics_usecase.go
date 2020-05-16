@@ -70,7 +70,7 @@ func (s statisticsUsecase) GetDataForGraphs(ctx context.Context, typ string, sin
 		message := fmt.Sprintf("cant found statistics data with this input")
 		return nil, errors.New(message)
 	}
-	fmt.Println(rawData)
+
 	jsonData := jsonify(rawData)
 	return jsonData, nil
 }
@@ -90,7 +90,7 @@ func jsonify(data []models.StatisticsGraphRawStruct) map[string]map[string][]mod
 	}
 	tempMap := make(map[string][]models.TempStruct)
 	prevKey := getFirstKeyFromMap(m)
-	fmt.Println(prevKey)
+
 	for key, value := range m {
 		keysArr := strings.Split(key, "_")
 		staffId := keysArr[0]
