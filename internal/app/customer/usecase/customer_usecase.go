@@ -23,13 +23,14 @@ type customerUsecase struct {
 }
 
 func NewCustomerUsecase(c customer.Repository, p apple_passkit.Repository, clientInterface staffClient.StaffClientInterface,
-	timeout time.Duration) customer.Usecase {
+	timeout time.Duration,statUsecase statistics.Usecase) customer.Usecase {
 
 	return &customerUsecase{
 		contextTimeout: timeout,
 		passKitRepo:    p,
 		customerRepo:   c,
 		staffClient:    clientInterface,
+		statisticsUsecase: statUsecase,
 	}
 }
 

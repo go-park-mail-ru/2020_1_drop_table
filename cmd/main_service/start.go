@@ -95,7 +95,7 @@ func main() {
 
 	statUcase := usecase.NewStatisticsUsecase(statRepo, grpcStaffClient, grpcCafeClient, timeoutContext)
 	http2.NewStatisticsHandler(r, statUcase)
-	customerUseCase := _customerUseCase.NewCustomerUsecase(customerRepo, applePassKitRepo, grpcStaffClient, timeoutContext)
+	customerUseCase := _customerUseCase.NewCustomerUsecase(customerRepo, applePassKitRepo, grpcStaffClient, timeoutContext,statUcase)
 	_customerHttpDeliver.NewCustomerHandler(r, customerUseCase)
 
 	go server.StartCafeGrpcServer(cafeUsecase)
