@@ -77,9 +77,9 @@ func (u customerUsecase) SetPoints(ctx context.Context, uuid string, points stri
 		}
 		return err
 	}
-	if requestStaff.CafeId != targetCustomer.CafeID {
-		return globalModels.ErrForbidden
-	}
+	//if requestStaff.CafeId != targetCustomer.CafeID {
+	//	return globalModels.ErrForbidden
+	//}
 
 	pass, err := u.passKitRepo.GetPassByCafeID(ctx, targetCustomer.CafeID, targetCustomer.Type, true)
 	if err != nil {
