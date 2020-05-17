@@ -73,7 +73,7 @@ func (u customerUsecase) SetPoints(ctx context.Context, uuid string, points stri
 		return err
 	}
 
-	
+
 	targetCustomer, err := u.customerRepo.GetByID(ctx, uuid)
 	if err != nil {
 		fmt.Println("err here 2: ",err)
@@ -86,20 +86,26 @@ func (u customerUsecase) SetPoints(ctx context.Context, uuid string, points stri
 		return globalModels.ErrForbidden
 	}
 
+	fmt.Println("here1")
 	pass, err := u.passKitRepo.GetPassByCafeID(ctx, targetCustomer.CafeID, targetCustomer.Type, true)
 	if err != nil {
 		return err
 	}
+	fmt.Println("here2",pass,err)
 
 	loyaltySystem, ok := loyaltySystems.LoyaltySystems[targetCustomer.Type]
 	if !ok {
 		return err
 	}
 
+	fmt.Println("here3",loyaltySystem,ok)
+
 	newPoints, err := loyaltySystem.SettingPoints(pass.LoyaltyInfo, targetCustomer.Points, points)
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("here4",newPoints,err)
 
 	//todo check if this work all together
 	err = u.statisticsUsecase.AddData(newPoints, currTime, targetCustomer.CustomerID, requestStaff.StaffID, requestStaff.CafeId)
@@ -107,8 +113,10 @@ func (u customerUsecase) SetPoints(ctx context.Context, uuid string, points stri
 
 		return err
 	}
+	fmt.Println("here5",err)
 
 	_, err = u.customerRepo.SetLoyaltyPoints(ctx, newPoints, uuid)
+	fmt.Println("here6",err)
 	return err
 }
 
