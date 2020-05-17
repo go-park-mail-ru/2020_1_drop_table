@@ -20,7 +20,7 @@ type cafeUsecase struct {
 	geoCoder        geo.GoogleGeoCoder
 }
 
-func (cu *cafeUsecase) GetCafeSortedByRadius(ctx context.Context, latitude string, longitude string, radius string) ([]models.CafeWithGeoData, error) {
+func (cu *cafeUsecase) GetCafeSortedByRadius(ctx context.Context, latitude string, longitude string, radius string) ([]models.Cafe, error) {
 
 	return cu.cafeRepo.GetCafeSortedByRadius(ctx, latitude, longitude, radius)
 }
@@ -49,8 +49,8 @@ func (cu *cafeUsecase) checkIsOwnerById(c context.Context, staffID int) (bool, e
 	return staffObj.IsOwner, nil
 }
 
-func cafeToCafeWithGeoData(cafe models.Cafe) models.CafeWithGeoData {
-	return models.CafeWithGeoData{
+func cafeToCafeWithGeoData(cafe models.Cafe) models.Cafe {
+	return models.Cafe{
 		CafeID:      cafe.CafeID,
 		CafeName:    cafe.CafeName,
 		Address:     cafe.Address,
@@ -62,7 +62,7 @@ func cafeToCafeWithGeoData(cafe models.Cafe) models.CafeWithGeoData {
 	}
 }
 
-func (cu *cafeUsecase) Add(c context.Context, newCafe models.Cafe) (models.CafeWithGeoData, error) {
+func (cu *cafeUsecase) Add(c context.Context, newCafe models.Cafe) (models.Cafe, error) {
 	ctx, cancel := context.WithTimeout(c, cu.contextTimeout)
 	defer cancel()
 
@@ -72,15 +72,15 @@ func (cu *cafeUsecase) Add(c context.Context, newCafe models.Cafe) (models.CafeW
 	staffID, ok := staffInterface.(int)
 
 	if !found || !ok || staffID <= 0 {
-		return models.CafeWithGeoData{}, globalModels.ErrForbidden
+		return models.Cafe{}, globalModels.ErrForbidden
 	}
 
 	isOwner, err := cu.checkIsOwnerById(c, staffID)
 	if err != nil {
-		return models.CafeWithGeoData{}, err
+		return models.Cafe{}, err
 	}
 	if !isOwner {
-		return models.CafeWithGeoData{}, globalModels.ErrForbidden
+		return models.Cafe{}, globalModels.ErrForbidden
 	}
 
 	newCafe.StaffID = staffID
@@ -88,7 +88,7 @@ func (cu *cafeUsecase) Add(c context.Context, newCafe models.Cafe) (models.CafeW
 	validation := validator.New()
 
 	if err := validation.Struct(newCafe); err != nil {
-		return models.CafeWithGeoData{}, err
+		return models.Cafe{}, err
 	}
 
 	newCafeWithGeo := cafeToCafeWithGeoData(newCafe)
@@ -160,7 +160,7 @@ func (cu *cafeUsecase) Update(c context.Context, newCafe models.Cafe) (models.Ca
 	return cu.cafeRepo.Update(ctx, newCafe)
 }
 
-func (cu *cafeUsecase) GetAllCafes(ctx context.Context, since int, limit int, search string) ([]models.CafeWithGeoData, error) {
+func (cu *cafeUsecase) GetAllCafes(ctx context.Context, since int, limit int, search string) ([]models.Cafe, error) {
 	ctx, cancel := context.WithTimeout(ctx, cu.contextTimeout)
 	defer cancel()
 	if search != "" {

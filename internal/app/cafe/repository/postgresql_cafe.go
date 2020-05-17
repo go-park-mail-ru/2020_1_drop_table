@@ -12,7 +12,7 @@ type postgresCafeRepository struct {
 	Conn *sqlx.DB
 }
 
-func (p *postgresCafeRepository) SearchCafes(ctx context.Context, searchBy string, limit int, since int) ([]models.CafeWithGeoData, error) {
+func (p *postgresCafeRepository) SearchCafes(ctx context.Context, searchBy string, limit int, since int) ([]models.Cafe, error) {
 	query := `  SELECT CafeID,CafeName,Address,Description,StaffID,OpenTime,CloseTime,Photo,location_str
 				FROM cafe
 				WHERE CafeName % $1
@@ -22,8 +22,8 @@ func (p *postgresCafeRepository) SearchCafes(ctx context.Context, searchBy strin
 				limit $2
 				offset $3`
 	fmt.Println(query)
-	var cafes []models.CafeWithGeoData
-	err := p.Conn.Select(&cafes, query, searchBy, limit, since)
+	var cafes []models.Cafe
+	err := p.Conn.SelectContext(ctx, &cafes, query, searchBy, limit, since)
 	return cafes, err
 
 }
@@ -41,9 +41,9 @@ func GeneratePointToGeoWithPoint(point string) string {
 	return fmt.Sprintf("SRID=4326;POINT(%s)", point)
 }
 
-func (p *postgresCafeRepository) GetCafeSortedByRadius(ctx context.Context, latitude string, longitude string, radius string) ([]models.CafeWithGeoData, error) {
+func (p *postgresCafeRepository) GetCafeSortedByRadius(ctx context.Context, latitude string, longitude string, radius string) ([]models.Cafe, error) {
 	point := GeneratePointToGeo(latitude, longitude)
-	var resArr []models.CafeWithGeoData
+	var resArr []models.Cafe
 	query := `SELECT CafeID,CafeName,Address,Description,StaffID,OpenTime,CloseTime,Photo,location_str
               FROM cafe where ST_Distance(location::geography, $1::geography)<$2 
               ORDER BY location <-> $1`
@@ -52,7 +52,7 @@ func (p *postgresCafeRepository) GetCafeSortedByRadius(ctx context.Context, lati
 	return resArr, err
 }
 
-func (p *postgresCafeRepository) Add(ctx context.Context, ca models.CafeWithGeoData) (models.CafeWithGeoData, error) {
+func (p *postgresCafeRepository) Add(ctx context.Context, ca models.Cafe) (models.Cafe, error) {
 	query := `INSERT INTO Cafe(
 	CafeName, 
 	Address, 
@@ -66,7 +66,7 @@ func (p *postgresCafeRepository) Add(ctx context.Context, ca models.CafeWithGeoD
 	VALUES ($1,$2,$3,$4,$5,$6,$7,ST_GeomFromEWKT($8),$9) 
 	RETURNING CafeID,CafeName,Address,Description,StaffID,OpenTime,CloseTime,Photo,location_str`
 
-	var dbCafe models.CafeWithGeoData
+	var dbCafe models.Cafe
 	postGisPoint := GeneratePointToGeoWithPoint(ca.Location)
 	err := p.Conn.GetContext(ctx, &dbCafe, query, ca.CafeName, ca.Address,
 		ca.Description, ca.StaffID, ca.OpenTime, ca.CloseTime, ca.Photo, postGisPoint, ca.Location)
@@ -75,7 +75,7 @@ func (p *postgresCafeRepository) Add(ctx context.Context, ca models.CafeWithGeoD
 }
 
 func (p *postgresCafeRepository) GetByID(ctx context.Context, id int) (models.Cafe, error) {
-	query := `SELECT CafeID,CafeName,Address,Description,StaffID,OpenTime,CloseTime,Photo FROM Cafe WHERE CafeID=$1`
+	query := `SELECT CafeID,CafeName,Address,Description,StaffID,OpenTime,CloseTime,Photo,location_str FROM Cafe WHERE CafeID=$1`
 
 	var dbCafe models.Cafe
 	err := p.Conn.GetContext(ctx, &dbCafe, query, id)
@@ -87,7 +87,7 @@ func (p *postgresCafeRepository) GetByID(ctx context.Context, id int) (models.Ca
 }
 
 func (p *postgresCafeRepository) GetByOwnerID(ctx context.Context, staffID int) ([]models.Cafe, error) {
-	query := `SELECT CafeID,CafeName,Address,Description,StaffID,OpenTime,CloseTime,Photo FROM Cafe WHERE StaffID=$1 ORDER BY CafeID`
+	query := `SELECT CafeID,CafeName,Address,Description,StaffID,OpenTime,CloseTime,Photo,location_str FROM Cafe WHERE StaffID=$1 ORDER BY CafeID`
 
 	var cafes []models.Cafe
 	err := p.Conn.SelectContext(ctx, &cafes, query, staffID)
@@ -108,7 +108,7 @@ func (p *postgresCafeRepository) Update(ctx context.Context, newCafe models.Cafe
 	CloseTime=$5, 
 	Photo=NotEmpty($6,Photo) 
 	WHERE CafeID=$7
-	RETURNING CafeID,CafeName,Address,Description,StaffID,OpenTime,CloseTime,Photo`
+	RETURNING CafeID,CafeName,Address,Description,StaffID,OpenTime,CloseTime,Photo,location_str`
 
 	var CafeDB models.Cafe
 
@@ -118,9 +118,9 @@ func (p *postgresCafeRepository) Update(ctx context.Context, newCafe models.Cafe
 	return CafeDB, err
 }
 
-func (p *postgresCafeRepository) GetAllCafes(ctx context.Context, since int, limit int) ([]models.CafeWithGeoData, error) {
+func (p *postgresCafeRepository) GetAllCafes(ctx context.Context, since int, limit int) ([]models.Cafe, error) {
 	query := `SELECT CafeID,CafeName,Address,Description,StaffID,OpenTime,CloseTime,Photo,location_str from cafe OFFSET $1 LIMIT $2`
-	var CafesList []models.CafeWithGeoData
+	var CafesList []models.Cafe
 	err := p.Conn.SelectContext(ctx, &CafesList, query, since, limit)
 	return CafesList, err
 }
