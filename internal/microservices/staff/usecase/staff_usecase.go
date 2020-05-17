@@ -164,7 +164,7 @@ func (s *staffUsecase) GetQrForStaff(ctx context.Context, idCafe int, position s
 	ownerCafe, err := s.cafeClient.GetByID(ctx, idCafe)
 	if err != nil {
 		message := fmt.Sprintf("Cant find cafe with this owner because of -> %s", err)
-		if err == sql.ErrNoRows {
+		if err.Error() == `rpc error: code = Unknown desc = sql: no rows in result set` {
 			message = fmt.Sprintf("User is not owner of cafe")
 		}
 		log.Error().Msgf(message)

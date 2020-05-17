@@ -56,6 +56,8 @@ func easyjsonCa472b4bDecode20201DropTableInternalAppCafeModels(in *jlexer.Lexer,
 			}
 		case "photo":
 			out.Photo = string(in.String())
+		case "location":
+			out.Location = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -109,6 +111,11 @@ func easyjsonCa472b4bEncode20201DropTableInternalAppCafeModels(out *jwriter.Writ
 		const prefix string = ",\"photo\":"
 		out.RawString(prefix)
 		out.String(string(in.Photo))
+	}
+	{
+		const prefix string = ",\"location\":"
+		out.RawString(prefix)
+		out.String(string(in.Location))
 	}
 	out.RawByte('}')
 }
