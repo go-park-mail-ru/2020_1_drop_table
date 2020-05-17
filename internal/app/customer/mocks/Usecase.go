@@ -79,7 +79,7 @@ func (_m *Usecase) GetPoints(ctx context.Context, uuid string) (string, error) {
 }
 
 // SetPoints provides a mock function with given fields: ctx, uuid, points
-func (_m *Usecase) SetPoints(ctx context.Context, uuid string, points string) error {
+func (_m *Usecase) 	SetPoints(ctx context.Context, uuid string, points string) error {
 	ret := _m.Called(ctx, uuid, points)
 
 	var r0 error

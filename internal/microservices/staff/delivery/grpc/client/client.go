@@ -45,6 +45,7 @@ func (s StaffClient) GetFromSession(ctx context.Context) (models.SafeStaff, erro
 	ctx = s.AddSessionInMetadata(ctx)
 	empt := proto.Empty{}
 	r, err := s.client.GetFromSession(ctx, &empt, grpc.EmptyCallOption{})
+	fmt.Println("in staff client: ", r,err)
 	if err != nil {
 		fmt.Println("Unexpected Error", err)
 		return models.SafeStaff{}, err

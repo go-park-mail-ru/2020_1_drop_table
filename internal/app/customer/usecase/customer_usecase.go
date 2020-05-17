@@ -10,6 +10,7 @@ import (
 	loyaltySystems "2020_1_drop_table/internal/pkg/apple_pass_generator/loyalty_systems"
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 )
 
@@ -65,21 +66,25 @@ func (u customerUsecase) SetPoints(ctx context.Context, uuid string, points stri
 
 	requestStaff, err := u.staffClient.GetFromSession(ctx)
 	if err != nil {
+		fmt.Println("err here: ",err)
 		if err == sql.ErrNoRows {
 			return globalModels.ErrForbidden
 		}
 		return err
 	}
+
+	
 	targetCustomer, err := u.customerRepo.GetByID(ctx, uuid)
 	if err != nil {
+		fmt.Println("err here 2: ",err)
 		if err == sql.ErrNoRows {
 			return globalModels.ErrNotFound
 		}
 		return err
 	}
-	//if requestStaff.CafeId != targetCustomer.CafeID {
-	//	return globalModels.ErrForbidden
-	//}
+	if requestStaff.CafeId != targetCustomer.CafeID {
+		return globalModels.ErrForbidden
+	}
 
 	pass, err := u.passKitRepo.GetPassByCafeID(ctx, targetCustomer.CafeID, targetCustomer.Type, true)
 	if err != nil {

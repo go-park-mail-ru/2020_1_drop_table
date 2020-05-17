@@ -18,7 +18,7 @@ func NewCustomerHandler(r *mux.Router, us customer.Usecase) {
 	handler := CustomerHandler{CUsecase: us}
 	r.HandleFunc("/api/v1/customers/{uuid}/points/", permissions.SetCSRF(handler.GetPoints)).Methods("GET")
 	r.HandleFunc("/api/v1/customers/{uuid}/customer/", permissions.SetCSRF(handler.GetCustomer)).Methods("GET")
-	r.HandleFunc("/api/v1/customers/{uuid}/", permissions.CheckCSRF(handler.SetPoints)).Methods("PUT")
+	r.HandleFunc("/api/v1/customers/{uuid}/", handler.SetPoints).Methods("PUT")
 
 }
 
