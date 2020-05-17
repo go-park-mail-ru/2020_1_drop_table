@@ -21,7 +21,6 @@ func (p *postgresCafeRepository) SearchCafes(ctx context.Context, searchBy strin
 				   or Address  LIKE '%' || $1 || '%'
 				limit $2
 				offset $3`
-	fmt.Println(query)
 	var cafes []models.Cafe
 	err := p.Conn.SelectContext(ctx, &cafes, query, searchBy, limit, since)
 	return cafes, err
