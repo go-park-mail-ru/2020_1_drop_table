@@ -23,6 +23,12 @@ build-docker:
 build-and-run: build-docker
 	docker-compose up
 
+## run: Build and run docker with new changes
+run: build-docker
+	docker-compose up --build --no-deps
+
+
+
 ## run-background: Run process in background(available after build)
 run-background:
 	docker-compose up -d

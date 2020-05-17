@@ -12,4 +12,5 @@ type Repository interface {
 	Update(ctx context.Context, newCafe models.Cafe) (models.Cafe, error)
 	GetAllCafes(ctx context.Context, since int, limit int) ([]models.CafeWithGeoData, error)
 	GetCafeSortedByRadius(ctx context.Context, latitude string, longitude string, radius string) ([]models.CafeWithGeoData, error)
+	SearchCafes(ctx context.Context, searchBy string, limit int, since int) ([]models.CafeWithGeoData, error)
 }

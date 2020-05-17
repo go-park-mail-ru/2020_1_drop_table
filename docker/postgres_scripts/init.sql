@@ -4,21 +4,27 @@ ALTER SYSTEM SET shared_buffers = '128MB';
 
 CREATE EXTENSION postgis;
 CREATE EXTENSION btree_gist;
+
+
 CREATE TABLE IF NOT EXISTS Cafe
-    (
-      CafeID               SERIAL PRIMARY KEY,
-      CafeName             TEXT,
-      Address              TEXT,
-      Description          TEXT,
-      StaffID              INT,
-      OpenTime             TIME,
-      CloseTime            TIME,
-      Photo                TEXT,
-			location GEOMETRY(POINT, 4326),
-      location_str text
-    );
-CREATE INDEX cafe_staff_id_idx on cafe(StaffID);
-CREATE INDEX cafe_location_idx ON cafe USING GIST (location);
+(
+    CafeID       SERIAL PRIMARY KEY,
+    CafeName     TEXT,
+    Address      TEXT,
+    Description  TEXT,
+    StaffID      INT,
+    OpenTime     TIME,
+    CloseTime    TIME,
+    Photo        TEXT,
+    location     GEOMETRY(POINT, 4326),
+    location_str text
+);
+
+CREATE EXTENSION if not exists pg_trgm;
+
+CREATE INDEX if not exists cafe_trgm_idx ON cafe USING gist (cafename, address gist_trgm_ops);
+CREATE INDEX if not exists cafe_staff_id_idx on cafe (StaffID);
+CREATE INDEX if not exists cafe_location_idx ON cafe USING GIST (location);
 
 CREATE TABLE IF NOT EXISTS Staff
 (

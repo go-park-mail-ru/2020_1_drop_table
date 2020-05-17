@@ -12,6 +12,28 @@ type postgresCafeRepository struct {
 	Conn *sqlx.DB
 }
 
+func (p *postgresCafeRepository) SearchCafes(ctx context.Context, searchBy string, limit int, since int) ([]models.CafeWithGeoData, error) {
+	query := `  SELECT CafeID,CafeName,Address,Description,StaffID,OpenTime,CloseTime,Photo,location_str
+				FROM cafe
+				WHERE CafeName % $1
+				   or Address % $1
+				   or CafeName LIKE '%' || $1 || '%'
+				   or Address  LIKE '%' || $1 || '%'
+				limit $2
+				offset $3`
+	fmt.Println(query)
+	var cafes []models.CafeWithGeoData
+	err := p.Conn.Select(&cafes, query, searchBy, limit, since)
+	return cafes, err
+
+}
+
+func NewPostgresCafeRepository(conn *sqlx.DB) cafe.Repository {
+	return &postgresCafeRepository{
+		Conn: conn,
+	}
+}
+
 func GeneratePointToGeo(latitude string, longitude string) string {
 	return fmt.Sprintf("SRID=4326;POINT(%s %s)", latitude, longitude)
 }
@@ -28,12 +50,6 @@ func (p *postgresCafeRepository) GetCafeSortedByRadius(ctx context.Context, lati
 
 	err := p.Conn.SelectContext(ctx, &resArr, query, point, radius)
 	return resArr, err
-}
-
-func NewPostgresCafeRepository(conn *sqlx.DB) cafe.Repository {
-	return &postgresCafeRepository{
-		Conn: conn,
-	}
 }
 
 func (p *postgresCafeRepository) Add(ctx context.Context, ca models.CafeWithGeoData) (models.CafeWithGeoData, error) {
