@@ -160,10 +160,13 @@ func (cu *cafeUsecase) Update(c context.Context, newCafe models.Cafe) (models.Ca
 	return cu.cafeRepo.Update(ctx, newCafe)
 }
 
-func (cu *cafeUsecase) GetAllCafes(ctx context.Context, since int, limit int) ([]models.CafeWithGeoData, error) {
+func (cu *cafeUsecase) GetAllCafes(ctx context.Context, since int, limit int, search string) ([]models.CafeWithGeoData, error) {
 	ctx, cancel := context.WithTimeout(ctx, cu.contextTimeout)
 	defer cancel()
-
+	if search != "" {
+		cafes, err := cu.cafeRepo.SearchCafes(ctx, search, limit, since)
+		return cafes, err
+	}
 	cafes, err := cu.cafeRepo.GetAllCafes(ctx, since, limit)
 	return cafes, err
 }

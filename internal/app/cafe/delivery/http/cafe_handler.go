@@ -144,11 +144,12 @@ func (c *CafeHandler) GetByIDHandler(w http.ResponseWriter, r *http.Request) {
 func (c *CafeHandler) GetAllCafes(writer http.ResponseWriter, request *http.Request) {
 	limit, err := strconv.Atoi(request.FormValue("limit"))
 	since, err2 := strconv.Atoi(request.FormValue("since"))
+	search := request.FormValue("searchBy")
 	if err != nil || err2 != nil {
 		responses.SendSingleError("Bad GET params", writer)
 		return
 	}
-	cafes, err := c.CUsecase.GetAllCafes(request.Context(), since, limit)
+	cafes, err := c.CUsecase.GetAllCafes(request.Context(), since, limit, search)
 	if err != nil {
 		responses.SendSingleError(err.Error(), writer)
 		return
