@@ -56,6 +56,7 @@ func makeContextFromMetaDataInContext(ctx context.Context) context.Context {
 
 func (s *server) GetFromSession(ctx context.Context, in *proto.Empty) (*proto.SafeStaff, error) {
 	ctx = makeContextFromMetaDataInContext(ctx)
+
 	safeStaff, err := s.staffUseCase.GetFromSession(ctx)
 
 	return transformIntoRPC(&safeStaff), err
