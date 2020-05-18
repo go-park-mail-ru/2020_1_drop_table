@@ -1,7 +1,6 @@
 package staff
 
 import (
-	"2020_1_drop_table/configs"
 	staff2 "2020_1_drop_table/internal/microservices/staff"
 	proto "2020_1_drop_table/internal/microservices/staff/delivery/grpc/protobuff"
 	"2020_1_drop_table/internal/microservices/staff/models"
@@ -30,8 +29,8 @@ func NewStaffServerGRPC(gserver *grpc.Server, staffUCase staff2.Usecase) {
 	reflection.Register(gserver)
 }
 
-func StartStaffGrpcServer(staffUCase staff2.Usecase) {
-	list, err := net.Listen("tcp", configs.GRPCStaffUrl)
+func StartStaffGrpcServer(staffUCase staff2.Usecase, url string) {
+	list, err := net.Listen("tcp", url)
 	if err != nil {
 		log.Err(err)
 	}

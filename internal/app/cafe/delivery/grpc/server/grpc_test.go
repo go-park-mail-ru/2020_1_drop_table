@@ -1,7 +1,6 @@
 package server
 
 import (
-	"2020_1_drop_table/configs"
 	"2020_1_drop_table/internal/app/cafe/delivery/grpc/client"
 	cafeMock "2020_1_drop_table/internal/app/cafe/mocks"
 	"2020_1_drop_table/internal/app/cafe/models"
@@ -59,8 +58,9 @@ func TestGetById(t *testing.T) {
 	}
 
 	cafeUsecase := new(cafeMock.Usecase)
-	go StartCafeGrpcServer(cafeUsecase)
-	grpcConn, err := grpc.Dial(configs.GRPCCafeUrl, grpc.WithInsecure())
+	urlForTests := "localhost:8093"
+	go StartCafeGrpcServer(cafeUsecase, urlForTests)
+	grpcConn, err := grpc.Dial(urlForTests, grpc.WithInsecure())
 	assert.Nil(t, err, "no error when start grpc conn")
 	cafeGrpcClient := client.NewCafeClient(grpcConn)
 	for _, testCase := range testCases {

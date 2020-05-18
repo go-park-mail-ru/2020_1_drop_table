@@ -235,7 +235,7 @@ func TestGetByOwnerID(t *testing.T) {
 
 		rep := repository.NewPostgresCafeRepository(sqlxDB)
 
-		cafesObj, err := rep.GetByOwnerID(context.Background(), testCase.staffID)
+		cafesObj, err := rep.GetByOwnerId(context.Background(), testCase.staffID)
 		assert.Equal(t, testCase.err, err, message)
 		if err == nil {
 			assert.Equal(t, testCase.cafesArray, cafesObj, message)

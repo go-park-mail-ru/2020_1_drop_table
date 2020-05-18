@@ -1,7 +1,6 @@
 package server_test
 
 import (
-	"2020_1_drop_table/configs"
 	customer "2020_1_drop_table/internal/app/customer/delivery/grpc/client"
 	"2020_1_drop_table/internal/app/customer/delivery/grpc/server"
 	models2 "2020_1_drop_table/internal/app/customer/models"
@@ -58,9 +57,9 @@ func TestAdd(t *testing.T) {
 	}
 
 	customerMockUsecase := new(customerMocks.Usecase)
-
-	go server.StartCustomerGrpcServer(customerMockUsecase)
-	grpcConn, err := grpc.Dial(configs.GRPCCustomerUrl, grpc.WithInsecure())
+	urlForTest := "localhost:8095"
+	go server.StartCustomerGrpcServer(customerMockUsecase, urlForTest)
+	grpcConn, err := grpc.Dial(urlForTest, grpc.WithInsecure())
 	assert.Nil(t, err, "no error when start grpc conn")
 	custGrpcClient := customer.NewCustomerClient(grpcConn)
 
