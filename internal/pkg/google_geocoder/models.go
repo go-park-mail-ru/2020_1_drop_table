@@ -1,6 +1,6 @@
-package google_geocoder
+package googleGeocoder
 
-type GoogleGeoCoderResponse struct {
+type Response struct {
 	Status  string                     `json:"status"`
 	Results []GoogleGeoResponseResults `json:"results"`
 }
