@@ -184,7 +184,7 @@ func TestGetByOwnerID(t *testing.T) {
 			return testCase.staffID == id
 		}
 
-		mockCafeRepo.On("GetByOwnerID",
+		mockCafeRepo.On("GetByOwnerId",
 			mock.AnythingOfType("*context.timerCtx"), mock.MatchedBy(idMatches)).Return(
 			testCase.expectedCafes, testCase.err)
 
