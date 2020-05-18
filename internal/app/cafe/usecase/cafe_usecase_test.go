@@ -151,7 +151,7 @@ func TestGetByOwnerID(t *testing.T) {
 	assert.NoError(t, err)
 	owner.IsOwner = true
 
-	cafeArray := make([]cafeModels.Cafe, 4, 4)
+	cafeArray := make([]cafeModels.Cafe, 4)
 	err = faker.FakeData(&cafeArray)
 	assert.NoError(t, err)
 	for _, cafe := range cafeArray {
@@ -171,7 +171,7 @@ func TestGetByOwnerID(t *testing.T) {
 		//Test anonymous user
 		{
 			staffID:       -1,
-			expectedCafes: make([]cafeModels.Cafe, 0, 0),
+			expectedCafes: make([]cafeModels.Cafe, 0),
 			err:           globalModels.ErrForbidden,
 		},
 	}
@@ -199,7 +199,6 @@ func TestGetByOwnerID(t *testing.T) {
 
 func TestGetByID(t *testing.T) {
 	type getByOwnerTestCase struct {
-		staffID      int
 		expectedCafe cafeModels.Cafe
 		err          error
 	}
@@ -220,13 +219,11 @@ func TestGetByID(t *testing.T) {
 	testCases := []getByOwnerTestCase{
 		//Test OK
 		{
-			staffID:      ownerID,
 			expectedCafe: expectedCafe,
 			err:          nil,
 		},
 		//Test OK (anonymous user)
 		{
-			staffID:      -1,
 			expectedCafe: expectedCafe,
 			err:          nil,
 		},

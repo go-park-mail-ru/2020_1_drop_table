@@ -192,7 +192,7 @@ func TestGetByOwnerID(t *testing.T) {
 	err = faker.FakeData(&staffID)
 	assert.NoError(t, err)
 
-	inputCafeArray := make([]cafeModels.Cafe, 5, 5)
+	inputCafeArray := make([]cafeModels.Cafe, 5)
 	err = faker.FakeData(&inputCafeArray)
 	assert.NoError(t, err)
 

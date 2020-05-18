@@ -67,9 +67,17 @@ func main() {
 
 	cafeRepo := _cafeRepo.NewPostgresCafeRepository(conn)
 	grpcConn, err := grpc.Dial(configs.GRPCStaffUrl, grpc.WithInsecure())
+	if err != nil {
+		log.Error().Msg(err.Error())
+		return
+	}
 	grpcStaffClient := staffClient.NewStaffClient(grpcConn)
 
 	grpcCustomerConn, err := grpc.Dial(configs.GRPCCustomerUrl, grpc.WithInsecure())
+	if err != nil {
+		log.Error().Msg(err.Error())
+		return
+	}
 	grpcCustomerClient := customer.NewCustomerClient(grpcCustomerConn)
 
 	geoCoder := geo.NewGoogleGeoCoder(configs.GoogleMapAPIKey, "ru", "ru")
@@ -91,6 +99,10 @@ func main() {
 	statRepo := repository.NewPostgresStatisticsRepository(conn)
 
 	grpcCafeConn, err := grpc.Dial(configs.GRPCCafeUrl, grpc.WithInsecure())
+	if err != nil {
+		log.Error().Msg(err.Error())
+		return
+	}
 	grpcCafeClient := cafeClient.NewCafeClient(grpcCafeConn)
 
 	statUcase := usecase.NewStatisticsUsecase(statRepo, grpcStaffClient, grpcCafeClient, timeoutContext)
