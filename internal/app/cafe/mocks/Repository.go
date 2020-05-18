@@ -102,6 +102,52 @@ func (_m *Repository) GetByOwnerID(ctx context.Context, staffID int) ([]models.C
 	return r0, r1
 }
 
+// GetCafeSortedByRadius provides a mock function with given fields: ctx, latitude, longitude, radius
+func (_m *Repository) GetCafeSortedByRadius(ctx context.Context, latitude string, longitude string, radius string) ([]models.Cafe, error) {
+	ret := _m.Called(ctx, latitude, longitude, radius)
+
+	var r0 []models.Cafe
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) []models.Cafe); ok {
+		r0 = rf(ctx, latitude, longitude, radius)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Cafe)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string) error); ok {
+		r1 = rf(ctx, latitude, longitude, radius)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// SearchCafes provides a mock function with given fields: ctx, searchBy, limit, since
+func (_m *Repository) SearchCafes(ctx context.Context, searchBy string, limit int, since int) ([]models.Cafe, error) {
+	ret := _m.Called(ctx, searchBy, limit, since)
+
+	var r0 []models.Cafe
+	if rf, ok := ret.Get(0).(func(context.Context, string, int, int) []models.Cafe); ok {
+		r0 = rf(ctx, searchBy, limit, since)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Cafe)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string, int, int) error); ok {
+		r1 = rf(ctx, searchBy, limit, since)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // Update provides a mock function with given fields: ctx, newCafe
 func (_m *Repository) Update(ctx context.Context, newCafe models.Cafe) (models.Cafe, error) {
 	ret := _m.Called(ctx, newCafe)

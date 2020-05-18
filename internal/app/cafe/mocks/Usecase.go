@@ -35,13 +35,13 @@ func (_m *Usecase) Add(c context.Context, newCafe models.Cafe) (models.Cafe, err
 	return r0, r1
 }
 
-// GetAllCafes provides a mock function with given fields: ctx, since, limit
-func (_m *Usecase) GetAllCafes(ctx context.Context, since int, limit int) ([]models.Cafe, error) {
-	ret := _m.Called(ctx, since, limit)
+// GetAllCafes provides a mock function with given fields: ctx, since, limit, search
+func (_m *Usecase) GetAllCafes(ctx context.Context, since int, limit int, search string) ([]models.Cafe, error) {
+	ret := _m.Called(ctx, since, limit, search)
 
 	var r0 []models.Cafe
-	if rf, ok := ret.Get(0).(func(context.Context, int, int) []models.Cafe); ok {
-		r0 = rf(ctx, since, limit)
+	if rf, ok := ret.Get(0).(func(context.Context, int, int, string) []models.Cafe); ok {
+		r0 = rf(ctx, since, limit, search)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]models.Cafe)
@@ -49,8 +49,8 @@ func (_m *Usecase) GetAllCafes(ctx context.Context, since int, limit int) ([]mod
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, int, int) error); ok {
-		r1 = rf(ctx, since, limit)
+	if rf, ok := ret.Get(1).(func(context.Context, int, int, string) error); ok {
+		r1 = rf(ctx, since, limit, search)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -95,6 +95,52 @@ func (_m *Usecase) GetByOwnerID(c context.Context) ([]models.Cafe, error) {
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
 		r1 = rf(c)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetByOwnerIDWithOwnerID provides a mock function with given fields: ctx, ownerID
+func (_m *Usecase) GetByOwnerIDWithOwnerID(ctx context.Context, ownerID int) ([]models.Cafe, error) {
+	ret := _m.Called(ctx, ownerID)
+
+	var r0 []models.Cafe
+	if rf, ok := ret.Get(0).(func(context.Context, int) []models.Cafe); ok {
+		r0 = rf(ctx, ownerID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Cafe)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, ownerID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetCafeSortedByRadius provides a mock function with given fields: ctx, latitude, longitude, radius
+func (_m *Usecase) GetCafeSortedByRadius(ctx context.Context, latitude string, longitude string, radius string) ([]models.Cafe, error) {
+	ret := _m.Called(ctx, latitude, longitude, radius)
+
+	var r0 []models.Cafe
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) []models.Cafe); ok {
+		r0 = rf(ctx, latitude, longitude, radius)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Cafe)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string) error); ok {
+		r1 = rf(ctx, latitude, longitude, radius)
 	} else {
 		r1 = ret.Error(1)
 	}
