@@ -7,6 +7,7 @@ import (
 	globalModels "2020_1_drop_table/internal/app/models"
 	staffClientMock "2020_1_drop_table/internal/microservices/staff/delivery/grpc/client/mocks"
 	staffModels "2020_1_drop_table/internal/microservices/staff/models"
+	geoMocks "2020_1_drop_table/internal/pkg/google_geocoder/mocks"
 	"context"
 	"fmt"
 	"github.com/bxcodec/faker"
@@ -28,7 +29,9 @@ func TestAdd(t *testing.T) {
 
 	mockCafeRepo := new(cafeMocks.Repository)
 	mockStaffGRPCClient := new(staffClientMock.StaffClientInterface)
-	cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffGRPCClient, time.Second*2)
+	mockGeoCoder := new(geoMocks.GoogleGeoCoder)
+
+	cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffGRPCClient, time.Second*2, mockGeoCoder)
 	var owner staffModels.SafeStaff
 	err := faker.FakeData(&owner)
 	assert.NoError(t, err)
@@ -77,6 +80,9 @@ func TestAdd(t *testing.T) {
 			mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("int")).Return(
 			testCase.staff, nil)
 
+		mockGeoCoder.On("GetGeoByAddress",
+			mock.AnythingOfType("string")).Return(testCase.inputCafe.Address, nil)
+
 		cafeMatches := func(c cafeModels.Cafe) bool {
 			assert.Equal(t, testCase.expectedCafe, c, message)
 			return c == testCase.expectedCafe
@@ -109,7 +115,8 @@ func TestGetByOwnerID(t *testing.T) {
 
 	mockCafeRepo := new(cafeMocks.Repository)
 	mockStaffGRPCClient := new(staffClientMock.StaffClientInterface)
-	cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffGRPCClient, time.Second*2)
+	mockGeoCoder := new(geoMocks.GoogleGeoCoder)
+	cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffGRPCClient, time.Second*2, mockGeoCoder)
 
 	var owner staffModels.SafeStaff
 	err := faker.FakeData(&owner)
@@ -171,7 +178,9 @@ func TestGetByID(t *testing.T) {
 
 	mockCafeRepo := new(cafeMocks.Repository)
 	mockStaffGRPCClient := new(staffClientMock.StaffClientInterface)
-	cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffGRPCClient, time.Second*2)
+	mockGeoCoder := new(geoMocks.GoogleGeoCoder)
+
+	cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffGRPCClient, time.Second*2, mockGeoCoder)
 
 	ownerID := 1
 
@@ -225,7 +234,9 @@ func TestUpdate(t *testing.T) {
 
 	mockCafeRepo := new(cafeMocks.Repository)
 	mockStaffGRPCClient := new(staffClientMock.StaffClientInterface)
-	cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffGRPCClient, time.Second*2)
+	mockGeoCoder := new(geoMocks.GoogleGeoCoder)
+
+	cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffGRPCClient, time.Second*2, mockGeoCoder)
 
 	var owner staffModels.SafeStaff
 	err := faker.FakeData(&owner)
