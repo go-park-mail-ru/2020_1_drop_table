@@ -85,7 +85,7 @@ func (p *postgresCafeRepository) GetByID(ctx context.Context, id int) (models.Ca
 	return dbCafe, nil
 }
 
-func (p *postgresCafeRepository) GetByOwnerID(ctx context.Context, staffID int) ([]models.Cafe, error) {
+func (p *postgresCafeRepository) GetByOwnerId(ctx context.Context, staffID int) ([]models.Cafe, error) {
 	query := `SELECT CafeID,CafeName,Address,Description,StaffID,OpenTime,CloseTime,Photo,location_str FROM Cafe WHERE StaffID=$1 ORDER BY CafeID`
 
 	var cafes []models.Cafe

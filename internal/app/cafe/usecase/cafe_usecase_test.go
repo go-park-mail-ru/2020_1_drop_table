@@ -7,6 +7,7 @@ import (
 	globalModels "2020_1_drop_table/internal/app/models"
 	staffClientMock "2020_1_drop_table/internal/microservices/staff/delivery/grpc/client/mocks"
 	staffModels "2020_1_drop_table/internal/microservices/staff/models"
+	googleGeocoder "2020_1_drop_table/internal/pkg/google_geocoder"
 	geoMocks "2020_1_drop_table/internal/pkg/google_geocoder/mocks"
 	"context"
 	"fmt"
@@ -21,10 +22,11 @@ import (
 
 func TestAdd(t *testing.T) {
 	type addTestCase struct {
-		inputCafe    cafeModels.Cafe
-		expectedCafe cafeModels.Cafe
-		staff        staffModels.SafeStaff
-		err          error
+		inputCafe      cafeModels.Cafe
+		expectedCafe   cafeModels.Cafe
+		staff          staffModels.SafeStaff
+		geoCoderResult googleGeocoder.GoogleGeoResponseResults
+		err            error
 	}
 
 	mockCafeRepo := new(cafeMocks.Repository)
@@ -50,27 +52,53 @@ func TestAdd(t *testing.T) {
 	var anonymous staffModels.SafeStaff
 	anonymous.StaffID = -1
 
+	geoResult := googleGeocoder.GoogleGeoResponseResults{
+		AddressComponents: []googleGeocoder.AddressComponents{
+			{
+				LongName:  "МГТУ им. Н.Э.Баумана",
+				ShortName: "МГТУ им. Н.Э.Баумана",
+				Types:     []string{},
+			},
+		},
+		FormattedAddress: "2-я Бауманская ул., д.5, стр.1, Москва, 105005",
+		Geometry: googleGeocoder.Geometry{
+			Location: googleGeocoder.GeoCoordinates{
+				Lat: 55.766275,
+				Lon: 37.683366,
+			},
+			LocationType: "",
+			Viewport:     nil,
+		},
+	}
+
+	expectedCafe.Address = geoResult.FormattedAddress
+	expectedCafe.Location = fmt.Sprintf("%f %f",
+		geoResult.Geometry.Location.Lat, geoResult.Geometry.Location.Lon)
+
 	testCases := []addTestCase{
 		//Test OK
 		{
-			inputCafe:    inputCafe,
-			expectedCafe: expectedCafe,
-			staff:        owner,
-			err:          nil,
+			inputCafe:      inputCafe,
+			expectedCafe:   expectedCafe,
+			staff:          owner,
+			geoCoderResult: geoResult,
+			err:            nil,
 		},
 		//Test not owner user
 		{
-			inputCafe:    cafeModels.Cafe{},
-			expectedCafe: cafeModels.Cafe{},
-			staff:        notOwner,
-			err:          globalModels.ErrForbidden,
+			inputCafe:      cafeModels.Cafe{},
+			expectedCafe:   cafeModels.Cafe{},
+			staff:          notOwner,
+			geoCoderResult: geoResult,
+			err:            globalModels.ErrForbidden,
 		},
 		//Test anonymous user
 		{
-			inputCafe:    inputCafe,
-			expectedCafe: expectedCafe,
-			staff:        anonymous,
-			err:          globalModels.ErrForbidden,
+			inputCafe:      inputCafe,
+			expectedCafe:   expectedCafe,
+			staff:          anonymous,
+			geoCoderResult: geoResult,
+			err:            globalModels.ErrForbidden,
 		},
 	}
 	for i, testCase := range testCases {
@@ -81,7 +109,7 @@ func TestAdd(t *testing.T) {
 			testCase.staff, nil)
 
 		mockGeoCoder.On("GetGeoByAddress",
-			mock.AnythingOfType("string")).Return(testCase.inputCafe.Address, nil)
+			mock.AnythingOfType("string")).Return(testCase.geoCoderResult, nil)
 
 		cafeMatches := func(c cafeModels.Cafe) bool {
 			assert.Equal(t, testCase.expectedCafe, c, message)
@@ -156,7 +184,7 @@ func TestGetByOwnerID(t *testing.T) {
 			return testCase.staffID == id
 		}
 
-		mockCafeRepo.On("GetByOwnerID",
+		mockCafeRepo.On("GetByOwnerId",
 			mock.AnythingOfType("*context.timerCtx"), mock.MatchedBy(idMatches)).Return(
 			testCase.expectedCafes, testCase.err)
 

@@ -1,4 +1,4 @@
-package google_geocoder
+package googleGeocoder
 
 import (
 	"encoding/json"
@@ -56,7 +56,7 @@ func (g *googleGeoCoder) GetGeoByAddress(address string) (GoogleGeoResponseResul
 		return GoogleGeoResponseResults{}, err
 	}
 
-	var responseStruct GoogleGeoCoderResponse
+	var responseStruct Response
 	err = json.Unmarshal(body, &responseStruct)
 	if err != nil {
 		return GoogleGeoResponseResults{}, err

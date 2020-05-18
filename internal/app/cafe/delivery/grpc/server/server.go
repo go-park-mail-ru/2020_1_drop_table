@@ -1,7 +1,6 @@
 package server
 
 import (
-	"2020_1_drop_table/configs"
 	"2020_1_drop_table/internal/app/cafe"
 	proto "2020_1_drop_table/internal/app/cafe/delivery/grpc/protobuff"
 	"2020_1_drop_table/internal/app/cafe/models"
@@ -19,8 +18,8 @@ type server struct {
 	cafeUseCase cafe.Usecase
 }
 
-func StartCafeGrpcServer(cafeUseCase cafe.Usecase) {
-	list, err := net.Listen("tcp", configs.GRPCCafeUrl)
+func StartCafeGrpcServer(cafeUseCase cafe.Usecase, url string) {
+	list, err := net.Listen("tcp", url)
 	if err != nil {
 		log.Err(err)
 	}

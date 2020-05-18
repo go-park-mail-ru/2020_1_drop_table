@@ -55,7 +55,7 @@ func main() {
 	staffRepo := _staffRepo.NewPostgresStaffRepository(conn)
 	staffUsecase := _staffUsecase.NewStaffUsecase(&staffRepo, grpcCafeClient, timeoutContext)
 
-	go grpcServer.StartStaffGrpcServer(staffUsecase)
+	go grpcServer.StartStaffGrpcServer(staffUsecase, configs.GRPCStaffUrl)
 	staffHandler.NewStaffHandler(r, staffUsecase)
 
 	//static server

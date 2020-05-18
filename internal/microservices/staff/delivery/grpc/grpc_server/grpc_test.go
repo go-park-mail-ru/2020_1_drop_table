@@ -1,7 +1,6 @@
 package staff
 
 import (
-	"2020_1_drop_table/configs"
 	staff "2020_1_drop_table/internal/microservices/staff/delivery/grpc/client"
 	staffMocks "2020_1_drop_table/internal/microservices/staff/mocks"
 	"2020_1_drop_table/internal/microservices/staff/models"
@@ -64,8 +63,9 @@ func TestGetById(t *testing.T) {
 	}
 
 	staffMockUsecase := new(staffMocks.Usecase)
-	go StartStaffGrpcServer(staffMockUsecase)
-	grpcConn, err := grpc.Dial(configs.GRPCStaffUrl, grpc.WithInsecure())
+	urlForTests := "localhost:8091"
+	go StartStaffGrpcServer(staffMockUsecase, urlForTests)
+	grpcConn, err := grpc.Dial(urlForTests, grpc.WithInsecure())
 	assert.Nil(t, err, "no error when start grpc conn")
 	custGrpcClient := staff.NewStaffClient(grpcConn)
 

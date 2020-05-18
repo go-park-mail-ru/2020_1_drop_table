@@ -26,7 +26,7 @@ func (cu *cafeUsecase) GetCafeSortedByRadius(ctx context.Context, latitude strin
 }
 
 func (cu *cafeUsecase) GetByOwnerIDWithOwnerID(ctx context.Context, ownerID int) ([]models.Cafe, error) {
-	return cu.cafeRepo.GetByOwnerID(ctx, ownerID)
+	return cu.cafeRepo.GetByOwnerId(ctx, ownerID)
 }
 
 func NewCafeUsecase(c cafe.Repository, stClient staffClient.StaffClientInterface,
@@ -118,7 +118,7 @@ func (cu *cafeUsecase) GetByOwnerID(c context.Context) ([]models.Cafe, error) {
 		return make([]models.Cafe, 0), globalModels.ErrForbidden
 	}
 
-	return cu.cafeRepo.GetByOwnerID(ctx, staffID)
+	return cu.cafeRepo.GetByOwnerId(ctx, staffID)
 }
 
 func (cu *cafeUsecase) GetByID(c context.Context, id int) (models.Cafe, error) {

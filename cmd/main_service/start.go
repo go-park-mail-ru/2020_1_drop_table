@@ -98,8 +98,8 @@ func main() {
 	customerUseCase := _customerUseCase.NewCustomerUsecase(customerRepo, applePassKitRepo, grpcStaffClient, timeoutContext, statUcase)
 	_customerHttpDeliver.NewCustomerHandler(r, customerUseCase)
 
-	go server.StartCafeGrpcServer(cafeUsecase)
-	go server2.StartCustomerGrpcServer(customerUseCase)
+	go server.StartCafeGrpcServer(cafeUsecase, configs.GRPCCafeUrl)
+	go server2.StartCustomerGrpcServer(customerUseCase, configs.GRPCCustomerUrl)
 
 	//OPTIONS
 	middleware.AddOptionsRequest(r)
