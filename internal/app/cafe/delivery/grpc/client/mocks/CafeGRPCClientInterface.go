@@ -34,3 +34,26 @@ func (_m *CafeGRPCClientInterface) GetByID(ctx context.Context, id int) (models.
 
 	return r0, r1
 }
+
+// GetByOwnerId provides a mock function with given fields: ctx, ownerId
+func (_m *CafeGRPCClientInterface) GetByOwnerId(ctx context.Context, ownerId int) ([]models.Cafe, error) {
+	ret := _m.Called(ctx, ownerId)
+
+	var r0 []models.Cafe
+	if rf, ok := ret.Get(0).(func(context.Context, int) []models.Cafe); ok {
+		r0 = rf(ctx, ownerId)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Cafe)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, ownerId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
