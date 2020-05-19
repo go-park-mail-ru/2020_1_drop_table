@@ -1,4 +1,4 @@
-package usecase
+package usecase_test
 
 import (
 	cafeClientGRPCMock "2020_1_drop_table/internal/app/cafe/delivery/grpc/client/mocks"
@@ -7,6 +7,7 @@ import (
 	staffClientGRPCMock "2020_1_drop_table/internal/microservices/staff/delivery/grpc/client/mocks"
 	"2020_1_drop_table/internal/microservices/staff/models"
 	"2020_1_drop_table/internal/microservices/survey/mocks"
+	"2020_1_drop_table/internal/microservices/survey/usecase"
 	"context"
 	"database/sql"
 	"errors"
@@ -124,7 +125,7 @@ func TestSetTemplate(t *testing.T) {
 	surveyRepo := mocks.Repository{}
 	cafeRepo := new(cafeClientGRPCMock.CafeGRPCClientInterface)
 	staffUsecase := new(staffClientGRPCMock.StaffClientInterface)
-	s := NewSurveyUsecase(&surveyRepo, staffUsecase, cafeRepo, timeout)
+	s := usecase.NewSurveyUsecase(&surveyRepo, staffUsecase, cafeRepo, timeout)
 
 	for _, testCase := range testCases {
 		staffUsecase.On("GetFromSession", mock.AnythingOfType("*context.timerCtx")).Return(testCase.RetGetFromContext, nil)
@@ -187,7 +188,7 @@ func TestGetSurvey(t *testing.T) {
 	surveyRepo := mocks.Repository{}
 	cafeRepo := new(cafeClientGRPCMock.CafeGRPCClientInterface)
 	staffUsecase := new(staffClientGRPCMock.StaffClientInterface)
-	s := NewSurveyUsecase(&surveyRepo, staffUsecase, cafeRepo, timeout)
+	s := usecase.NewSurveyUsecase(&surveyRepo, staffUsecase, cafeRepo, timeout)
 
 	for _, testCase := range testCases {
 		surveyRepo.On("GetSurveyTemplate", mock.AnythingOfType("*context.timerCtx"), testCase.InputData.CafeID).Return(testCase.OutputData.Survey, testCase.GetSurveyErr)
@@ -247,7 +248,7 @@ func TestSubmitSurvey(t *testing.T) {
 	surveyRepo := mocks.Repository{}
 	cafeRepo := new(cafeClientGRPCMock.CafeGRPCClientInterface)
 	staffUsecase := new(staffClientGRPCMock.StaffClientInterface)
-	s := NewSurveyUsecase(&surveyRepo, staffUsecase, cafeRepo, timeout)
+	s := usecase.NewSurveyUsecase(&surveyRepo, staffUsecase, cafeRepo, timeout)
 
 	for _, testCase := range testCases {
 		surveyRepo.On("SubmitSurvey", mock.AnythingOfType("*context.timerCtx"), testCase.InputData.Survey, testCase.InputData.CustomerUUID).Return(testCase.SubmitSurveyErr)

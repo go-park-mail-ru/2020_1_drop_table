@@ -24,7 +24,8 @@ func (p *ApplePass) AddImage(imageName string, imageData []byte) {
 }
 
 func (p *ApplePass) insertValues() {
-	var replaceValues []string
+	replaceValuesLen := len(p.envValues) * 2
+	replaceValues := make([]string, 0, replaceValuesLen)
 	for key, value := range p.envValues {
 		valueName := fmt.Sprintf("<<%s>>", key)
 		replaceValues = append(replaceValues, valueName)

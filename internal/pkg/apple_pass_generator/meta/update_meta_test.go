@@ -1,6 +1,7 @@
-package meta
+package meta_test
 
 import (
+	"2020_1_drop_table/internal/pkg/apple_pass_generator/meta"
 	"fmt"
 	"github.com/bxcodec/faker"
 	"github.com/stretchr/testify/assert"
@@ -17,7 +18,7 @@ func TestUpdateMeta(t *testing.T) {
 	var passesCount int
 	err := faker.FakeData(&passesCount)
 	assert.NoError(t, err)
-
+	errNoVar := fmt.Errorf("not found update func for var <<%s>>", "NO GIVEN NAME")
 	testCases := []updateMetaTestCase{
 		// Test OK
 		{
@@ -35,14 +36,14 @@ func TestUpdateMeta(t *testing.T) {
 		{
 			oldValues: map[string]interface{}{"NO GIVEN NAME": "NOT INT"},
 			newValues: nil,
-			err:       fmt.Errorf("not found update func for var <<%s>>", "NO GIVEN NAME"),
+			err:       errNoVar,
 		},
 	}
 
 	for i, testCase := range testCases {
 		message := fmt.Sprintf("test case number: %d", i)
 
-		var m Meta
+		var m meta.Meta
 		newValues, err := m.UpdateMeta(testCase.oldValues)
 		assert.Equal(t, err, testCase.err, message)
 
