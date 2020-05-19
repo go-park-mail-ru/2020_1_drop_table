@@ -13,6 +13,15 @@ on:
       - testci
 
 jobs:
+  linter:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v1
+        with:
+          version: v1.26
   build:
     runs-on: ubuntu-latest
     steps:
