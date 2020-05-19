@@ -18,7 +18,7 @@
       steps:
         - uses: actions/checkout@v1
         - name: Testing
-          run: ls
+          run: ls -a
 
     deploy:
       runs-on: ubuntu-latest
