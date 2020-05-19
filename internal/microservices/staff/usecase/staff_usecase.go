@@ -146,7 +146,6 @@ func (s *staffUsecase) GetFromSession(c context.Context) (models.SafeStaff, erro
 }
 
 func (s *staffUsecase) GetQrForStaff(ctx context.Context, idCafe int, position string) (string, error) {
-
 	ctx, cancel := context.WithTimeout(ctx, s.contextTimeout)
 	defer cancel()
 	staffId, err := s.GetStaffId(ctx)
@@ -165,7 +164,7 @@ func (s *staffUsecase) GetQrForStaff(ctx context.Context, idCafe int, position s
 	if err != nil {
 		message := fmt.Sprintf("Cant find cafe with this owner because of -> %s", err)
 		if err.Error() == `rpc error: code = Unknown desc = sql: no rows in result set` {
-			message = fmt.Sprintf("User is not owner of cafe")
+			message = "User is not owner of cafe"
 		}
 		log.Error().Msgf(message)
 		return "", errors.New(message)
@@ -178,13 +177,16 @@ func (s *staffUsecase) GetQrForStaff(ctx context.Context, idCafe int, position s
 		}
 		uString := u.String()
 		err = s.staffRepo.AddUuid(ctx, uString, idCafe)
+		if err != nil {
+			return "", err
+		}
 		path, err := generateQRCode(uString, position)
 		if err != nil {
 			return "", err
 		}
 		return path, nil
 	}
-	message := fmt.Sprintf("User is not owner of this cafe")
+	message := "user is not owner of this cafe"
 	log.Error().Msgf(message)
 	return "", errors.New(message)
 }
@@ -251,7 +253,7 @@ func (s *staffUsecase) GetStaffListByOwnerId(ctx context.Context, ownerId int) (
 }
 
 func (s *staffUsecase) CheckIfStaffInOwnerCafes(ctx context.Context, requestUser models.SafeStaff, staffId int) (bool, error) {
-	if requestUser.StaffID == staffId && requestUser.IsOwner == true {
+	if requestUser.StaffID == staffId && requestUser.IsOwner {
 		return true, nil
 	}
 	staffList, err := s.GetStaffListByOwnerId(ctx, requestUser.StaffID)

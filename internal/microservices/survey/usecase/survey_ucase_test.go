@@ -239,7 +239,7 @@ func TestSubmitSurvey(t *testing.T) {
 			OutputData: CheckStructOutput{
 				Err: globalModels.ErrBadUuid,
 			},
-			SubmitSurveyErr: errors.New(fmt.Sprintf(`pq: invalid input syntax for type uuid: "%s"`, "Not valid UUID")),
+			SubmitSurveyErr: fmt.Errorf(`pq: invalid input syntax for type uuid: "%s"`, "Not valid UUID"),
 		},
 	}
 

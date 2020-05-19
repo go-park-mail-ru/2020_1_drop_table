@@ -174,7 +174,6 @@ func (s *StaffHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	responses.SendOKAnswer(safeStaff, w)
-	return
 }
 
 func (s *StaffHandler) GetStaffByIdHandler(w http.ResponseWriter, r *http.Request) {
@@ -193,7 +192,6 @@ func (s *StaffHandler) GetStaffByIdHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	responses.SendOKAnswer(safeStaff, w)
-	return
 }
 
 func (s *StaffHandler) GetCurrentStaffHandler(w http.ResponseWriter, r *http.Request) {
@@ -205,7 +203,6 @@ func (s *StaffHandler) GetCurrentStaffHandler(w http.ResponseWriter, r *http.Req
 	}
 
 	responses.SendOKAnswer(staffObj, w)
-	return
 }
 
 func (s *StaffHandler) EditStaffHandler(w http.ResponseWriter, r *http.Request) {
@@ -233,7 +230,6 @@ func (s *StaffHandler) EditStaffHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	responses.SendOKAnswer(staffObj, w)
-	return
 }
 
 func (s *StaffHandler) GenerateQrHandler(w http.ResponseWriter, r *http.Request) {
@@ -245,7 +241,7 @@ func (s *StaffHandler) GenerateQrHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	if position == "" {
-		message := fmt.Sprintf("dont send position in GET params")
+		message := "dont send position in GET params"
 		responses.SendSingleError(message, w)
 		return
 	}

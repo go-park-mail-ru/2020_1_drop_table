@@ -137,7 +137,6 @@ func (ap *applePassKitHandler) UpdatePassHandler(w http.ResponseWriter, r *http.
 	}
 
 	responses.SendOKAnswer(response, w)
-	return
 }
 
 func (ap *applePassKitHandler) GetPassHandler(w http.ResponseWriter, r *http.Request) {
@@ -157,9 +156,11 @@ func (ap *applePassKitHandler) GetPassHandler(w http.ResponseWriter, r *http.Req
 	}
 
 	applePassObj, err := ap.passesUsecace.GetPass(r.Context(), CafeID, Type, published)
-
+	if err != nil {
+		responses.SendSingleError(err.Error(), w)
+		return
+	}
 	responses.SendOKAnswer(applePassObj, w)
-	return
 }
 
 func (ap *applePassKitHandler) GetImageHandler(w http.ResponseWriter, r *http.Request) {
@@ -195,8 +196,6 @@ func (ap *applePassKitHandler) GetImageHandler(w http.ResponseWriter, r *http.Re
 	w.Header().Set("Content-Disposition", "attachment; filename="+filename)
 	w.Header().Set("Content-Type", "image/png")
 	http.ServeContent(w, r, filename, time.Time{}, bytes.NewReader(image))
-
-	return
 }
 
 func (ap *applePassKitHandler) GenerateNewPass(w http.ResponseWriter, r *http.Request) {
@@ -226,6 +225,4 @@ func (ap *applePassKitHandler) GenerateNewPass(w http.ResponseWriter, r *http.Re
 	w.Header().Set("Content-Disposition", "attachment; filename="+filename)
 	w.Header().Set("Content-Type", "application/vnd.apple.pkpass")
 	http.ServeContent(w, r, filename, time.Time{}, bytes.NewReader(pass.Bytes()))
-
-	return
 }

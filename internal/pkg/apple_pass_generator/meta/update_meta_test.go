@@ -1,7 +1,6 @@
 package meta
 
 import (
-	"errors"
 	"fmt"
 	"github.com/bxcodec/faker"
 	"github.com/stretchr/testify/assert"
@@ -36,7 +35,7 @@ func TestUpdateMeta(t *testing.T) {
 		{
 			oldValues: map[string]interface{}{"NO GIVEN NAME": "NOT INT"},
 			newValues: nil,
-			err:       errors.New(fmt.Sprintf("not found update func for var <<%s>>", "NO GIVEN NAME")),
+			err:       fmt.Errorf("not found update func for var <<%s>>", "NO GIVEN NAME"),
 		},
 	}
 

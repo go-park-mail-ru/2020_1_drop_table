@@ -29,7 +29,7 @@ func StartCafeGrpcServer(cafeUseCase cafe.Usecase, url string) {
 		}),
 	)
 	NewCafeServerGRPC(server, cafeUseCase)
-	server.Serve(list)
+	_ = server.Serve(list)
 }
 
 func NewCafeServerGRPC(gServer *grpc.Server, cafeUCase cafe.Usecase) {

@@ -8,7 +8,6 @@ import (
 	staffClient "2020_1_drop_table/internal/microservices/staff/delivery/grpc/client"
 	"context"
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -62,12 +61,12 @@ func (s statisticsUsecase) GetDataForGraphs(ctx context.Context, typ string, sin
 	}
 	cafes, err := s.cafeClient.GetByOwnerId(ctx, requestUser.StaffID)
 	if err != nil {
-		message := fmt.Sprintf("cafe not found")
+		message := "cafe not found"
 		return nil, errors.New(message)
 	}
 	rawData, err := s.statisticsRepo.GetGraphsDataFromRepo(ctx, cafes, typ, since, to)
 	if err != nil {
-		message := fmt.Sprintf("cant found statistics data with this input")
+		message := "cant found statistics data with this input"
 		return nil, errors.New(message)
 	}
 

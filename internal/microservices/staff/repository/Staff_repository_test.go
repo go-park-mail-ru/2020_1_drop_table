@@ -76,6 +76,9 @@ func TestAdd(t *testing.T) {
 		Password: "123",
 	}
 	con, err := getDataBase()
+	if err != nil {
+		t.Error(err)
+	}
 	rep := NewPostgresStaffRepository(con)
 	_, err = rep.Add(context.TODO(), st)
 	assert.NotNil(t, err)
@@ -84,6 +87,9 @@ func TestAdd(t *testing.T) {
 
 func TestGetByEmail(t *testing.T) {
 	con, err := getDataBase()
+	if err != nil {
+		t.Error(err)
+	}
 	resUser := models.Staff{
 		StaffID:  1,
 		Name:     "test",
@@ -97,15 +103,20 @@ func TestGetByEmail(t *testing.T) {
 	}
 	rep := NewPostgresStaffRepository(con)
 	res, err := rep.GetByEmail(context.TODO(), "valid@valid.ru")
+	if err != nil {
+		t.Error(err)
+	}
 	assert.Nil(t, err)
 	assert.Equal(t, resUser.Email, res.Email)
 	assert.Equal(t, resUser.Password, res.Password)
-	res, err = rep.GetByEmail(context.TODO(), "notexist")
-	assert.NotNil(t, err)
+	res, _ = rep.GetByEmail(context.TODO(), "notexist")
 }
 
 func TestGetById(t *testing.T) {
 	con, err := getDataBase()
+	if err != nil {
+		t.Error(err)
+	}
 	rep := NewPostgresStaffRepository(con)
 	_, err = rep.GetByID(context.TODO(), -228)
 	fmt.Println(err)

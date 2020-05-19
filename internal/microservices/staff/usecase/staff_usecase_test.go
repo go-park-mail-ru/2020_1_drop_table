@@ -167,8 +167,8 @@ func TestGeById(t *testing.T) {
 		session := sessions.Session{Values: map[interface{}]interface{}{"userID": sessionUserID}}
 		c := context.WithValue(context.Background(), "session", &session)
 		realUser, realErr := s.GetByID(c, testCase.id)
-		assert.Equal(t, testCase.expectedUser.Email, realUser.Email)
 		assert.Equal(t, testCase.expectedErr, realErr)
+		assert.Equal(t, testCase.expectedUser.Email, realUser.Email)
 
 	}
 }

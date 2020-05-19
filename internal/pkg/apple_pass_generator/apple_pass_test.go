@@ -31,7 +31,7 @@ func TestResource(t *testing.T) {
 	inputMap := make(map[string]interface{})
 	for key, value := range envValues {
 		inputString += fmt.Sprintf("<<%s>>", key)
-		expectedString += fmt.Sprintf("%s", value)
+		expectedString += value
 		inputMap[key] = value
 	}
 	applePass := NewApplePass(inputString, files, inputMap)
@@ -66,7 +66,7 @@ func TestGenerator(t *testing.T) {
 	inputMap := make(map[string]interface{})
 	for key, value := range envValues {
 		inputString += fmt.Sprintf("<<%s>>", key)
-		expectedString += fmt.Sprintf("%s", value)
+		expectedString += value
 		inputMap[key] = value
 	}
 	applePassResource := NewApplePass(inputString, files, inputMap)

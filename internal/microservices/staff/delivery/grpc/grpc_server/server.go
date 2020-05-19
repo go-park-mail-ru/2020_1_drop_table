@@ -40,20 +40,20 @@ func StartStaffGrpcServer(staffUCase staff2.Usecase, url string) {
 		}),
 	)
 	NewStaffServerGRPC(server, staffUCase)
-	server.Serve(list)
+	_ = server.Serve(list)
 }
 
 func makeContextFromMetaDataInContext(ctx context.Context) context.Context {
 	md, _ := metadata.FromIncomingContext(ctx)
 
-	userid, _ := md["userid"]
+	userid := md["userid"]
 	intUserId, _ := strconv.Atoi(userid[0])
 
 	session := sessions.Session{Values: map[interface{}]interface{}{"userID": intUserId}}
 	return context.WithValue(context.Background(), "session", &session)
 }
 
-func (s *server) GetFromSession(ctx context.Context, in *proto.Empty) (*proto.SafeStaff, error) {
+func (s *server) GetFromSession(ctx context.Context, _ *proto.Empty) (*proto.SafeStaff, error) {
 	ctx = makeContextFromMetaDataInContext(ctx)
 
 	safeStaff, err := s.staffUseCase.GetFromSession(ctx)

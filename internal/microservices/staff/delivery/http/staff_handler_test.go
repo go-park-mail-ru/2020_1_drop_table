@@ -238,6 +238,9 @@ func TestAdd(t *testing.T) {
 		}
 
 		req, err := http.NewRequest("POST", url, &buf)
+		if err != nil {
+			t.Error(err)
+		}
 		session := sessions.Session{Values: map[interface{}]interface{}{"userID": testCase.inputstaff.StaffID}}
 		req = req.WithContext(context.WithValue(req.Context(), "session", &session))
 		assert.NoError(t, err, message)
@@ -353,6 +356,9 @@ func TestUpdatePosition(t *testing.T) {
 
 		body, _ := json.Marshal(testCase.NewPosition)
 		req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+		if err != nil {
+			t.Error(err)
+		}
 		req = mux.SetURLVars(req, map[string]string{
 			"id": "228",
 		})

@@ -50,6 +50,10 @@ func main() {
 	}
 
 	grpcCafeConn, err := grpc.Dial(configs.GRPCCafeUrl, grpc.WithInsecure())
+	if err != nil {
+		log.Error().Msgf(err.Error())
+		return
+	}
 	grpcCafeClient := cafeClient.NewCafeClient(grpcCafeConn)
 
 	staffRepo := _staffRepo.NewPostgresStaffRepository(conn)

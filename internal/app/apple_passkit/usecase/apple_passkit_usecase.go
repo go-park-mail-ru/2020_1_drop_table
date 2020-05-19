@@ -269,6 +269,10 @@ func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int,
 	}
 
 	customerPoints, newLoyaltyInfo, err := loyaltySystem.CreatingCustomer(publishedCardDB.LoyaltyInfo)
+	if err != nil {
+		return nil, err
+	}
+
 	if newLoyaltyInfo != publishedCardDB.LoyaltyInfo {
 		publishedCardDB.LoyaltyInfo = newLoyaltyInfo
 		err = ap.passKitRepo.Update(ctx, publishedCardDB)

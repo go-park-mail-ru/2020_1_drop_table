@@ -43,7 +43,7 @@ func (c *SurveyHandler) SetSurveyTemplate(w http.ResponseWriter, r *http.Request
 	}
 	surv, err := fetchSurvey(r)
 	if err != nil {
-		message := fmt.Sprintf("bad json data")
+		message := "bad json data"
 		responses.SendSingleError(message, w)
 		return
 	}
@@ -74,7 +74,7 @@ func (c *SurveyHandler) SubmitSurvey(w http.ResponseWriter, r *http.Request) {
 	customerID := mux.Vars(r)["customerid"]
 	surv, err := fetchSurvey(r)
 	if err != nil {
-		message := fmt.Sprintf("bad json data")
+		message := "bad json data"
 		responses.SendSingleError(message, w)
 		return
 	}

@@ -21,7 +21,6 @@ func CheckAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 			}
 
 			next.ServeHTTP(w, r)
-			return
 		})
 }
 
@@ -44,9 +43,7 @@ func SetCSRF(next http.HandlerFunc) http.HandlerFunc {
 		func(w http.ResponseWriter, r *http.Request) {
 			generateCsrfLogic(w)
 			next.ServeHTTP(w, r)
-			return
 		})
-
 }
 
 func CheckCSRF(next http.HandlerFunc) http.HandlerFunc {
@@ -61,7 +58,6 @@ func CheckCSRF(next http.HandlerFunc) http.HandlerFunc {
 			}
 			generateCsrfLogic(w)
 			next.ServeHTTP(w, r)
-			return
 		})
 
 }
