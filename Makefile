@@ -40,12 +40,6 @@ test-coverage:
 	rm -rf cover
 	rm -rf cover2
 
-## Build project To DockerHub Repo
-build-for-deploy:
-	docker build -t droptable14/dependencies -f ${DOCKER_DIR}/builder.Dockerfile .
-	docker build -t droptable14/main_service -f ${DOCKER_DIR}/main_service.Dockerfile .
-	docker build -t droptable14/staff_service -f ${DOCKER_DIR}/staff.Dockerfile .
-	docker build -t droptable14/survey_service -f ${DOCKER_DIR}/survey.Dockerfile .
 
 ## coverage-html: generates HTML file with test coverage
 coverage-html:
