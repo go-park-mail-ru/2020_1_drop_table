@@ -17,18 +17,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-#      - name: Testing
-#        run: make test-coverage
-      - name: Login to DockerHub Registry
-        run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-      - name: ls
-        run: ls -la
-      - name: Build Docker image
-        run: sudo docker build -t droptable14/staffkek1 -f docker/staff.Dockerfile .
-      - name: Push the image
-        run: docker push droptable14/dependencies:${GITHUB_SHA::8} &&
-         docker push droptable14/main_service:${GITHUB_SHA::8} &&
-         docker push droptable14/staff_service:${GITHUB_SHA::8} &&
-         docker push droptable14/survey_service:${GITHUB_SHA::8}
+      - name: Testing
+        run: make test-coverage
+
+
+        
+
 
 
