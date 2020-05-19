@@ -24,7 +24,11 @@ jobs:
       - name: ls
         run: ls -la
       - name: Build Docker image
-        run: make build-for-deploy
+        run:
+          - docker build -t droptable14/dependencies:${GITHUB_SHA::8} -f ${DOCKER_DIR}/builder.Dockerfile .
+          - docker build -t droptable14/main_service:${GITHUB_SHA::8} -f ${DOCKER_DIR}/main_service.Dockerfile .
+          - docker build -t droptable14/staff_service:${GITHUB_SHA::8} -f ${DOCKER_DIR}/staff.Dockerfile .
+          - docker build -t droptable14/survey_service:${GITHUB_SHA::8} -f ${DOCKER_DIR}/survey.Dockerfile .
       - name: Push the image
         run: docker push droptable14/main_service
 
