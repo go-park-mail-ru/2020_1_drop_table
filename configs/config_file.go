@@ -39,6 +39,12 @@ type timeouts struct {
 
 var Timeouts timeouts
 
+type sessionName string
+
+const (
+	SessionStaffID sessionName = "session"
+)
+
 func init() {
 	PostgresPreferences = postgresPreferencesStruct{
 		User:     os.Getenv("PostgresUser"),

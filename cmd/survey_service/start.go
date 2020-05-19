@@ -51,10 +51,10 @@ func main() {
 
 	survRepo := surveyRepo.NewPostgresSurveyRepository(conn)
 
-	grpcConn, err := grpc.Dial(configs.GRPCStaffUrl, grpc.WithInsecure())
+	grpcConn, _ := grpc.Dial(configs.GRPCStaffUrl, grpc.WithInsecure())
 	grpcStaffClient := staffClient.NewStaffClient(grpcConn)
 
-	grpcCafeConn, err := grpc.Dial(configs.GRPCCafeUrl, grpc.WithInsecure())
+	grpcCafeConn, _ := grpc.Dial(configs.GRPCCafeUrl, grpc.WithInsecure())
 	grpcCafeClient := cafeClient.NewCafeClient(grpcCafeConn)
 
 	surveyUcase := surveyUsecase.NewSurveyUsecase(survRepo, grpcStaffClient, grpcCafeClient, timeoutContext)

@@ -484,6 +484,9 @@ func TestUpdateMeta(t *testing.T) {
 	assert.NoError(t, err)
 
 	emptyMetaJson, err := json.Marshal(meta.EmptyMeta)
+	if err != nil {
+		t.Error(err)
+	}
 
 	queryUpdate := `UPDATE ApplePassMeta
    SET meta=$1

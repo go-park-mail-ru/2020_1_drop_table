@@ -31,7 +31,9 @@ type applePassKitUsecase struct {
 	contextTimeout  time.Duration
 }
 
-func NewApplePassKitUsecase(passKitRepo apple_passkit.Repository, cafeRepo cafe.Repository, customerClient *customerClient.CustomerGRPC, passesGenerator passesGenerator.Generator, contextTimeout time.Duration, updateMeta passesGenerator.PassMeta) apple_passkit.Usecase {
+func NewApplePassKitUsecase(passKitRepo apple_passkit.Repository, cafeRepo cafe.Repository,
+	customerClient *customerClient.CustomerGRPC, passesGenerator passesGenerator.Generator,
+	contextTimeout time.Duration, updateMeta passesGenerator.PassMeta) apple_passkit.Usecase {
 	return &applePassKitUsecase{
 		passKitRepo:     passKitRepo,
 		cafeRepo:        cafeRepo,
@@ -43,7 +45,7 @@ func NewApplePassKitUsecase(passKitRepo apple_passkit.Repository, cafeRepo cafe.
 }
 
 func (ap *applePassKitUsecase) getOwnersCafe(ctx context.Context, cafeID int) (cafeModels.Cafe, error) {
-	session := ctx.Value("session").(*sessions.Session)
+	session := ctx.Value(configs.SessionStaffID).(*sessions.Session)
 
 	staffInterface, found := session.Values["userID"]
 	staffID, ok := staffInterface.(int)
@@ -181,11 +183,11 @@ func (ap *applePassKitUsecase) GetPass(c context.Context, cafeID int, Type strin
 	return ap.getImageUrls(passObj, cafeID), nil
 }
 
-func (ap *applePassKitUsecase) GetImage(c context.Context, imageName string, cafeID int, Type string,
+func (ap *applePassKitUsecase) GetImage(c context.Context, imageName string, cafeID int, PassType string,
 	published bool) ([]byte, error) {
-	passObj, err := ap.passKitRepo.GetPassByCafeID(c, cafeID, Type, true)
+	passObj, err := ap.passKitRepo.GetPassByCafeID(c, cafeID, PassType, true)
 	if err != nil {
-		passObj, err = ap.passKitRepo.GetPassByCafeID(c, cafeID, Type, false)
+		passObj, err = ap.passKitRepo.GetPassByCafeID(c, cafeID, PassType, false)
 	}
 	if err != nil {
 		return nil, err
@@ -269,6 +271,10 @@ func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int,
 	}
 
 	customerPoints, newLoyaltyInfo, err := loyaltySystem.CreatingCustomer(publishedCardDB.LoyaltyInfo)
+	if err != nil {
+		return nil, err
+	}
+
 	if newLoyaltyInfo != publishedCardDB.LoyaltyInfo {
 		publishedCardDB.LoyaltyInfo = newLoyaltyInfo
 		err = ap.passKitRepo.Update(ctx, publishedCardDB)
@@ -302,7 +308,7 @@ func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int,
 	structs.FillMap(newCustomer, passEnv)
 
 	if !published {
-		session := ctx.Value("session").(*sessions.Session)
+		session := ctx.Value(configs.SessionStaffID).(*sessions.Session)
 		staffInterface, found := session.Values["userID"]
 		staffID, ok := staffInterface.(int)
 		if !found || !ok || staffID != cafeObj.StaffID {

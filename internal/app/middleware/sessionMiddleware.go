@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"2020_1_drop_table/configs"
 	"2020_1_drop_table/internal/pkg/responses"
 	"context"
 	"fmt"
@@ -30,7 +31,7 @@ func (s *sessionMiddleware) SessionMiddleware(next http.Handler) http.Handler {
 				return
 			}
 		}
-		r = r.WithContext(context.WithValue(r.Context(), "session", session))
+		r = r.WithContext(context.WithValue(r.Context(), configs.SessionStaffID, session))
 		next.ServeHTTP(w, r)
 	})
 }

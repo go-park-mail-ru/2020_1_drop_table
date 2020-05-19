@@ -70,7 +70,7 @@ func (s *staffUsecase) GetByID(c context.Context, id int) (models.SafeStaff, err
 	ctx, cancel := context.WithTimeout(c, s.contextTimeout)
 	defer cancel()
 
-	session := ctx.Value("session").(*sessions.Session)
+	session := ctx.Value(configs.SessionStaffID).(*sessions.Session)
 
 	staffID, found := session.Values["userID"]
 	if !found || staffID != id {
@@ -90,7 +90,7 @@ func (s *staffUsecase) Update(c context.Context, newStaff models.SafeStaff) (mod
 	ctx, cancel := context.WithTimeout(c, s.contextTimeout)
 	defer cancel()
 
-	session := ctx.Value("session").(*sessions.Session)
+	session := ctx.Value(configs.SessionStaffID).(*sessions.Session)
 
 	staffID, found := session.Values["userID"]
 	if !found || staffID != newStaff.StaffID {
@@ -135,7 +135,7 @@ func (s *staffUsecase) GetFromSession(c context.Context) (models.SafeStaff, erro
 	ctx, cancel := context.WithTimeout(c, s.contextTimeout)
 	defer cancel()
 
-	session := ctx.Value("session").(*sessions.Session)
+	session := ctx.Value(configs.SessionStaffID).(*sessions.Session)
 
 	staffID, found := session.Values["userID"]
 	if !found || staffID == -1 {
@@ -146,7 +146,6 @@ func (s *staffUsecase) GetFromSession(c context.Context) (models.SafeStaff, erro
 }
 
 func (s *staffUsecase) GetQrForStaff(ctx context.Context, idCafe int, position string) (string, error) {
-
 	ctx, cancel := context.WithTimeout(ctx, s.contextTimeout)
 	defer cancel()
 	staffId, err := s.GetStaffId(ctx)
@@ -165,7 +164,7 @@ func (s *staffUsecase) GetQrForStaff(ctx context.Context, idCafe int, position s
 	if err != nil {
 		message := fmt.Sprintf("Cant find cafe with this owner because of -> %s", err)
 		if err.Error() == `rpc error: code = Unknown desc = sql: no rows in result set` {
-			message = fmt.Sprintf("User is not owner of cafe")
+			message = "User is not owner of cafe"
 		}
 		log.Error().Msgf(message)
 		return "", errors.New(message)
@@ -178,13 +177,16 @@ func (s *staffUsecase) GetQrForStaff(ctx context.Context, idCafe int, position s
 		}
 		uString := u.String()
 		err = s.staffRepo.AddUuid(ctx, uString, idCafe)
+		if err != nil {
+			return "", err
+		}
 		path, err := generateQRCode(uString, position)
 		if err != nil {
 			return "", err
 		}
 		return path, nil
 	}
-	message := fmt.Sprintf("User is not owner of this cafe")
+	message := "user is not owner of this cafe"
 	log.Error().Msgf(message)
 	return "", errors.New(message)
 }
@@ -221,7 +223,7 @@ func (s *staffUsecase) GetCafeId(c context.Context, uuid string) (int, error) {
 }
 
 func (s *staffUsecase) GetStaffId(c context.Context) (int, error) {
-	session := c.Value("session").(*sessions.Session)
+	session := c.Value(configs.SessionStaffID).(*sessions.Session)
 
 	staffID, ok := session.Values["userID"]
 	if !ok {
@@ -251,7 +253,7 @@ func (s *staffUsecase) GetStaffListByOwnerId(ctx context.Context, ownerId int) (
 }
 
 func (s *staffUsecase) CheckIfStaffInOwnerCafes(ctx context.Context, requestUser models.SafeStaff, staffId int) (bool, error) {
-	if requestUser.StaffID == staffId && requestUser.IsOwner == true {
+	if requestUser.StaffID == staffId && requestUser.IsOwner {
 		return true, nil
 	}
 	staffList, err := s.GetStaffListByOwnerId(ctx, requestUser.StaffID)

@@ -1,6 +1,7 @@
 package http
 
 import (
+	"2020_1_drop_table/configs"
 	"2020_1_drop_table/internal/app"
 	"2020_1_drop_table/internal/microservices/staff/mocks"
 	staffModels "2020_1_drop_table/internal/microservices/staff/models"
@@ -165,7 +166,8 @@ func TestEditStaff(t *testing.T) {
 	const url = "/api/v1/staff/"
 
 	mockstaffUcase := new(mocks.Usecase)
-	mockstaffUcase.On("Update", mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("models.SafeStaff")).Return(returnStaff, nil)
+	mockstaffUcase.On("Update", mock.AnythingOfType("*context.valueCtx"),
+		mock.AnythingOfType("models.SafeStaff")).Return(returnStaff, nil)
 	handler := StaffHandler{SUsecase: mockstaffUcase}
 	str, _ := json.Marshal(returnStaff)
 	buf, wr := createMultipartFormData(t, string(str))
@@ -187,7 +189,6 @@ func TestEditStaff(t *testing.T) {
 
 }
 
-//
 func TestAdd(t *testing.T) {
 	const url = "/api/v1/staff/"
 
@@ -223,8 +224,11 @@ func TestAdd(t *testing.T) {
 	for i, testCase := range testCases {
 		message := fmt.Sprintf("test case number: %d", i)
 		mockstaffUcase.On("Add",
-			mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("models.Staff")).Return(testCase.outputstaff, sql.ErrNoRows)
-		mockstaffUcase.On("GetCafeId", mock.AnythingOfType("*context.valueCtx"), "").Return(2, nil)
+			mock.AnythingOfType("*context.valueCtx"),
+			mock.AnythingOfType("models.Staff")).Return(testCase.outputstaff, sql.ErrNoRows)
+
+		mockstaffUcase.On("GetCafeId",
+			mock.AnythingOfType("*context.valueCtx"), "").Return(2, nil)
 		mockstaffUcase.On("DeleteQrCodes", "").Return(nil)
 
 		var buf bytes.Buffer
@@ -238,8 +242,11 @@ func TestAdd(t *testing.T) {
 		}
 
 		req, err := http.NewRequest("POST", url, &buf)
+		if err != nil {
+			t.Error(err)
+		}
 		session := sessions.Session{Values: map[interface{}]interface{}{"userID": testCase.inputstaff.StaffID}}
-		req = req.WithContext(context.WithValue(req.Context(), "session", &session))
+		req = req.WithContext(context.WithValue(req.Context(), configs.SessionStaffID, &session))
 		assert.NoError(t, err, message)
 		req.Header.Set("Content-Type", wr.FormDataContentType())
 
@@ -353,6 +360,9 @@ func TestUpdatePosition(t *testing.T) {
 
 		body, _ := json.Marshal(testCase.NewPosition)
 		req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+		if err != nil {
+			t.Error(err)
+		}
 		req = mux.SetURLVars(req, map[string]string{
 			"id": "228",
 		})

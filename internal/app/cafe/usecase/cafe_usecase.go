@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"2020_1_drop_table/configs"
 	"2020_1_drop_table/internal/app/cafe"
 	"2020_1_drop_table/internal/app/cafe/models"
 	globalModels "2020_1_drop_table/internal/app/models"
@@ -66,7 +67,7 @@ func (cu *cafeUsecase) Add(c context.Context, newCafe models.Cafe) (models.Cafe,
 	ctx, cancel := context.WithTimeout(c, cu.contextTimeout)
 	defer cancel()
 
-	session := ctx.Value("session").(*sessions.Session)
+	session := ctx.Value(configs.SessionStaffID).(*sessions.Session)
 
 	staffInterface, found := session.Values["userID"]
 	staffID, ok := staffInterface.(int)
@@ -109,7 +110,7 @@ func (cu *cafeUsecase) GetByOwnerID(c context.Context) ([]models.Cafe, error) {
 	ctx, cancel := context.WithTimeout(c, cu.contextTimeout)
 	defer cancel()
 
-	session := ctx.Value("session").(*sessions.Session)
+	session := ctx.Value(configs.SessionStaffID).(*sessions.Session)
 
 	staffInterface, found := session.Values["userID"]
 	staffID, ok := staffInterface.(int)
@@ -137,7 +138,7 @@ func (cu *cafeUsecase) Update(c context.Context, newCafe models.Cafe) (models.Ca
 		return models.Cafe{}, err
 	}
 
-	session := ctx.Value("session").(*sessions.Session)
+	session := ctx.Value(configs.SessionStaffID).(*sessions.Session)
 
 	staffInterface, found := session.Values["userID"]
 	staffID, ok := staffInterface.(int)

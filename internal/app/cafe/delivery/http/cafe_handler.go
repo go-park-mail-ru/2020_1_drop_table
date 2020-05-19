@@ -84,7 +84,6 @@ func (c *CafeHandler) AddCafeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	responses.SendOKAnswer(cafeObjWithGeo, w)
-	return
 }
 
 func (c *CafeHandler) EditCafeHandler(w http.ResponseWriter, r *http.Request) {
@@ -110,7 +109,6 @@ func (c *CafeHandler) EditCafeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	responses.SendOKAnswer(cafeDB, w)
-	return
 }
 
 func (c *CafeHandler) GetByOwnerIDHandler(w http.ResponseWriter, r *http.Request) {
@@ -121,7 +119,6 @@ func (c *CafeHandler) GetByOwnerIDHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	responses.SendOKAnswer(cafesObj, w)
-	return
 }
 
 func (c *CafeHandler) GetByIDHandler(w http.ResponseWriter, r *http.Request) {
@@ -138,7 +135,6 @@ func (c *CafeHandler) GetByIDHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	responses.SendOKAnswer(cafeObj, w)
-	return
 }
 
 func (c *CafeHandler) GetAllCafes(writer http.ResponseWriter, request *http.Request) {

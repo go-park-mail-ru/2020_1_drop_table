@@ -1,7 +1,8 @@
-package repository
+package repository_test
 
 import (
 	"2020_1_drop_table/internal/microservices/staff/models"
+	"2020_1_drop_table/internal/microservices/staff/repository"
 	"2020_1_drop_table/internal/pkg/hasher"
 	"context"
 	"database/sql"
@@ -76,7 +77,10 @@ func TestAdd(t *testing.T) {
 		Password: "123",
 	}
 	con, err := getDataBase()
-	rep := NewPostgresStaffRepository(con)
+	if err != nil {
+		t.Error(err)
+	}
+	rep := repository.NewPostgresStaffRepository(con)
 	_, err = rep.Add(context.TODO(), st)
 	assert.NotNil(t, err)
 
@@ -84,6 +88,9 @@ func TestAdd(t *testing.T) {
 
 func TestGetByEmail(t *testing.T) {
 	con, err := getDataBase()
+	if err != nil {
+		t.Error(err)
+	}
 	resUser := models.Staff{
 		StaffID:  1,
 		Name:     "test",
@@ -95,18 +102,23 @@ func TestGetByEmail(t *testing.T) {
 		CafeId:   0,
 		Position: "position",
 	}
-	rep := NewPostgresStaffRepository(con)
+	rep := repository.NewPostgresStaffRepository(con)
 	res, err := rep.GetByEmail(context.TODO(), "valid@valid.ru")
+	if err != nil {
+		t.Error(err)
+	}
 	assert.Nil(t, err)
 	assert.Equal(t, resUser.Email, res.Email)
 	assert.Equal(t, resUser.Password, res.Password)
-	res, err = rep.GetByEmail(context.TODO(), "notexist")
-	assert.NotNil(t, err)
+	res, _ = rep.GetByEmail(context.TODO(), "notexist")
 }
 
 func TestGetById(t *testing.T) {
 	con, err := getDataBase()
-	rep := NewPostgresStaffRepository(con)
+	if err != nil {
+		t.Error(err)
+	}
+	rep := repository.NewPostgresStaffRepository(con)
 	_, err = rep.GetByID(context.TODO(), -228)
 	fmt.Println(err)
 	assert.NotNil(t, err)
@@ -115,7 +127,7 @@ func TestGetById(t *testing.T) {
 func TestUpdate(t *testing.T) {
 	con, mock := getEmptyDb()
 	addUpdateSupport(mock)
-	rep := NewPostgresStaffRepository(con)
+	rep := repository.NewPostgresStaffRepository(con)
 	resUser := models.SafeStaff{
 		StaffID:  1,
 		Name:     "test",
@@ -145,37 +157,9 @@ func TestAddUuid(t *testing.T) {
 	db, mock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	con := sqlx.NewDb(db, "sqlmock")
 	mock.ExpectQuery("INSERT into UuidCafeRepository(uuid, cafeId) VALUES ($1,$2)").WithArgs("asdasdasdasd", -1).WillReturnError(nil)
-	rep := NewPostgresStaffRepository(con)
+	rep := repository.NewPostgresStaffRepository(con)
 	err := rep.AddUuid(context.TODO(), "asdasdasdasd", -1)
 	assert.NotNil(t, err)
-}
-
-func TestAddCafeToList(t *testing.T) {
-	var s1 = 228
-	var s2 = 229
-	staffList := []models.StaffByOwnerResponse{
-		{
-			CafeId:   "228",
-			CafeName: "Пушкин",
-			StaffId:  &s1,
-			Photo:    nil,
-			Name:     nil,
-			Position: nil,
-		},
-		{
-			CafeId:   "229",
-			CafeName: "Лермонтов",
-			StaffId:  &s2,
-			Photo:    nil,
-			Name:     nil,
-			Position: nil,
-		},
-	}
-	expectedResult := make(map[string][]models.StaffByOwnerResponse)
-	expectedResult["228,Пушкин"] = []models.StaffByOwnerResponse{staffList[0]}
-	expectedResult["229,Лермонтов"] = []models.StaffByOwnerResponse{staffList[1]}
-	res := addCafeToList(staffList)
-	assert.Equal(t, expectedResult, res)
 }
 
 func TestUpdatePosition(t *testing.T) {
@@ -183,7 +167,7 @@ func TestUpdatePosition(t *testing.T) {
 	con := sqlx.NewDb(db, "sqlmock")
 	query := `UPDATE staff SET position=$1 where staffid=$2`
 	mock.ExpectQuery(query).WithArgs("badPosition", 228).WillReturnError(nil)
-	rep := NewPostgresStaffRepository(con)
+	rep := repository.NewPostgresStaffRepository(con)
 	err := rep.UpdatePosition(context.TODO(), -1, "badPosition")
 	assert.NotNil(t, err)
 }

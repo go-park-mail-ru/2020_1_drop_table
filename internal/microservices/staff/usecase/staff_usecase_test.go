@@ -1,12 +1,14 @@
-package usecase
+package usecase_test
 
 import (
+	"2020_1_drop_table/configs"
 	cafeClientMock "2020_1_drop_table/internal/app/cafe/delivery/grpc/client/mocks"
 	cafeMock "2020_1_drop_table/internal/app/cafe/mocks"
 	cafeModels "2020_1_drop_table/internal/app/cafe/models"
 	globalModels "2020_1_drop_table/internal/app/models"
 	"2020_1_drop_table/internal/microservices/staff/mocks"
 	"2020_1_drop_table/internal/microservices/staff/models"
+	"2020_1_drop_table/internal/microservices/staff/usecase"
 	"2020_1_drop_table/internal/pkg/hasher"
 	"context"
 	"database/sql"
@@ -107,7 +109,7 @@ func TestAdd(t *testing.T) {
 	srepo := new(mocks.Repository)
 	emptyContext := context.TODO()
 	cafeRepo := new(cafeClientMock.CafeGRPCClientInterface)
-	s := NewStaffUsecase(srepo, cafeRepo, timeout)
+	s := usecase.NewStaffUsecase(srepo, cafeRepo, timeout)
 
 	for _, testCase := range testCases {
 		emailMatchesWithStaff := func(staff models.Staff) bool {
@@ -157,7 +159,7 @@ func TestGeById(t *testing.T) {
 
 	srepo := new(mocks.Repository)
 	cafeRepo := new(cafeClientMock.CafeGRPCClientInterface)
-	s := NewStaffUsecase(srepo, cafeRepo, timeout)
+	s := usecase.NewStaffUsecase(srepo, cafeRepo, timeout)
 
 	for _, testCase := range testCases {
 		srepo.On("GetByID",
@@ -165,10 +167,10 @@ func TestGeById(t *testing.T) {
 			testCase.expectedUser, testCase.expectedErr)
 		sessionUserID := testCase.id
 		session := sessions.Session{Values: map[interface{}]interface{}{"userID": sessionUserID}}
-		c := context.WithValue(context.Background(), "session", &session)
+		c := context.WithValue(context.Background(), configs.SessionStaffID, &session)
 		realUser, realErr := s.GetByID(c, testCase.id)
-		assert.Equal(t, testCase.expectedUser.Email, realUser.Email)
 		assert.Equal(t, testCase.expectedErr, realErr)
+		assert.Equal(t, testCase.expectedUser.Email, realUser.Email)
 
 	}
 }
@@ -202,7 +204,7 @@ func TestUpdate(t *testing.T) {
 
 	srepo := new(mocks.Repository)
 	cafeRepo := new(cafeClientMock.CafeGRPCClientInterface)
-	s := NewStaffUsecase(srepo, cafeRepo, timeout)
+	s := usecase.NewStaffUsecase(srepo, cafeRepo, timeout)
 
 	for _, testCase := range testCases {
 
@@ -212,7 +214,7 @@ func TestUpdate(t *testing.T) {
 
 		sessionUserID := testCase.user.StaffID
 		session := sessions.Session{Values: map[interface{}]interface{}{"userID": sessionUserID}}
-		c := context.WithValue(context.Background(), "session", &session)
+		c := context.WithValue(context.Background(), configs.SessionStaffID, &session)
 		realUser, realErr := s.Update(c, testCase.user)
 		fmt.Println(realUser)
 		assert.Equal(t, testCase.expectedUser.Email, realUser.Email)
@@ -260,7 +262,7 @@ func TestGet(t *testing.T) {
 	timeout := time.Second * 4
 	srepo := new(mocks.Repository)
 	cafeRepo := new(cafeClientMock.CafeGRPCClientInterface)
-	s := NewStaffUsecase(srepo, cafeRepo, timeout)
+	s := usecase.NewStaffUsecase(srepo, cafeRepo, timeout)
 
 	for _, testCase := range testCases {
 		testCase.form.Password, _ = hasher.HashAndSalt(nil, testCase.form.Password)
@@ -309,10 +311,11 @@ func TestGenerateQr(t *testing.T) {
 	cafeRepo.On("GetByID",
 		mock.AnythingOfType("*context.timerCtx"), 2).Return(
 		returnedCafe, nil)
-	srepo.On("AddUuid", mock.AnythingOfType("*context.timerCtx"), mock.AnythingOfType("string"), 2).Return(nil)
-	s := NewStaffUsecase(&srepo, &cafeRepo, timeout)
+	srepo.On("AddUuid", mock.AnythingOfType("*context.timerCtx"),
+		mock.AnythingOfType("string"), 2).Return(nil)
+	s := usecase.NewStaffUsecase(&srepo, &cafeRepo, timeout)
 	session := sessions.Session{Values: map[interface{}]interface{}{"userID": 228}}
-	c := context.WithValue(context.Background(), "session", &session)
+	c := context.WithValue(context.Background(), configs.SessionStaffID, &session)
 	_, err := s.GetQrForStaff(c, user.CafeId, user.Position)
 	assert.Nil(t, err)
 
@@ -322,7 +325,7 @@ func TestDelQr(t *testing.T) {
 	timeout := time.Second * 4
 	srepo := new(mocks.Repository)
 	cafeRepo := new(cafeClientMock.CafeGRPCClientInterface)
-	s := NewStaffUsecase(srepo, cafeRepo, timeout)
+	s := usecase.NewStaffUsecase(srepo, cafeRepo, timeout)
 	err := s.DeleteQrCodes("not exist")
 	assert.Equal(t, err.Error(), "remove media/qr/not exist.png: no such file or directory")
 }
@@ -349,9 +352,9 @@ func TestGetStaffList(t *testing.T) {
 	srepo.On("GetStaffListByOwnerId", mock.AnythingOfType("*context.valueCtx"), 2).Return(resMap, nil)
 
 	cafeRepo := new(cafeClientMock.CafeGRPCClientInterface)
-	s := NewStaffUsecase(srepo, cafeRepo, timeout)
+	s := usecase.NewStaffUsecase(srepo, cafeRepo, timeout)
 	session := sessions.Session{Values: map[interface{}]interface{}{"userID": 2}}
-	c := context.WithValue(context.Background(), "session", &session)
+	c := context.WithValue(context.Background(), configs.SessionStaffID, &session)
 	res, err := s.GetStaffListByOwnerId(c, 2)
 	assert.Equal(t, resMap, res)
 	assert.Nil(t, err)
@@ -374,10 +377,10 @@ func TestStaffUsecase_CheckIfStaffInOwnerCafes(t *testing.T) {
 	}
 
 	session := sessions.Session{Values: map[interface{}]interface{}{"userID": 228}}
-	c := context.WithValue(context.Background(), "session", &session)
+	c := context.WithValue(context.Background(), configs.SessionStaffID, &session)
 
 	session2 := sessions.Session{Values: map[interface{}]interface{}{"userID": 1}}
-	c2 := context.WithValue(context.Background(), "session", &session2)
+	c2 := context.WithValue(context.Background(), configs.SessionStaffID, &session2)
 
 	testCases := []testCaseStruct{
 		{
@@ -445,7 +448,7 @@ func TestStaffUsecase_CheckIfStaffInOwnerCafes(t *testing.T) {
 	timeout := time.Second * 4
 	srepo := mocks.Repository{}
 	cafeRepo := cafeMock.Repository{}
-	s := NewStaffUsecase(&srepo, &cafeRepo, timeout)
+	s := usecase.NewStaffUsecase(&srepo, &cafeRepo, timeout)
 
 	resMap := make(map[string][]models.StaffByOwnerResponse)
 	var staffId = testCases[0].InputData.StaffId
@@ -494,10 +497,10 @@ func TestStaffUsecase_DeleteStaffById(t *testing.T) {
 	}
 
 	session := sessions.Session{Values: map[interface{}]interface{}{"userID": 228}}
-	c := context.WithValue(context.Background(), "session", &session)
+	c := context.WithValue(context.Background(), configs.SessionStaffID, &session)
 
 	session2 := sessions.Session{Values: map[interface{}]interface{}{"userID": 1}}
-	c2 := context.WithValue(context.Background(), "session", &session2)
+	c2 := context.WithValue(context.Background(), configs.SessionStaffID, &session2)
 
 	testCases := []testCaseStruct{
 		{
@@ -565,7 +568,7 @@ func TestStaffUsecase_DeleteStaffById(t *testing.T) {
 	timeout := time.Second * 4
 	srepo := mocks.Repository{}
 	cafeRepo := cafeMock.Repository{}
-	s := NewStaffUsecase(&srepo, &cafeRepo, timeout)
+	s := usecase.NewStaffUsecase(&srepo, &cafeRepo, timeout)
 
 	resMap := make(map[string][]models.StaffByOwnerResponse)
 	var staffId = testCases[0].InputData.StaffId
@@ -615,10 +618,10 @@ func TestUpdatePosition(t *testing.T) {
 	}
 
 	session := sessions.Session{Values: map[interface{}]interface{}{"userID": 228}}
-	c := context.WithValue(context.Background(), "session", &session)
+	c := context.WithValue(context.Background(), configs.SessionStaffID, &session)
 
 	session2 := sessions.Session{Values: map[interface{}]interface{}{"userID": 1}}
-	c2 := context.WithValue(context.Background(), "session", &session2)
+	c2 := context.WithValue(context.Background(), configs.SessionStaffID, &session2)
 
 	testCases := []testCaseStruct{
 		{
@@ -666,7 +669,7 @@ func TestUpdatePosition(t *testing.T) {
 	timeout := time.Second * 4
 	srepo := mocks.Repository{}
 	cafeRepo := cafeMock.Repository{}
-	s := NewStaffUsecase(&srepo, &cafeRepo, timeout)
+	s := usecase.NewStaffUsecase(&srepo, &cafeRepo, timeout)
 
 	resMap := make(map[string][]models.StaffByOwnerResponse)
 	var staffId = testCases[0].InputData.StaffId
@@ -700,5 +703,4 @@ func TestUpdatePosition(t *testing.T) {
 		assert.Equal(t, testCase.OutputData.Err, errRes)
 
 	}
-
 }

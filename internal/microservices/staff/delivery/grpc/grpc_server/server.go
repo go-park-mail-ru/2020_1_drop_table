@@ -1,6 +1,7 @@
 package staff
 
 import (
+	"2020_1_drop_table/configs"
 	staff2 "2020_1_drop_table/internal/microservices/staff"
 	proto "2020_1_drop_table/internal/microservices/staff/delivery/grpc/protobuff"
 	"2020_1_drop_table/internal/microservices/staff/models"
@@ -40,20 +41,20 @@ func StartStaffGrpcServer(staffUCase staff2.Usecase, url string) {
 		}),
 	)
 	NewStaffServerGRPC(server, staffUCase)
-	server.Serve(list)
+	_ = server.Serve(list)
 }
 
 func makeContextFromMetaDataInContext(ctx context.Context) context.Context {
 	md, _ := metadata.FromIncomingContext(ctx)
 
-	userid, _ := md["userid"]
+	userid := md["userid"]
 	intUserId, _ := strconv.Atoi(userid[0])
 
 	session := sessions.Session{Values: map[interface{}]interface{}{"userID": intUserId}}
-	return context.WithValue(context.Background(), "session", &session)
+	return context.WithValue(context.Background(), configs.SessionStaffID, &session)
 }
 
-func (s *server) GetFromSession(ctx context.Context, in *proto.Empty) (*proto.SafeStaff, error) {
+func (s *server) GetFromSession(ctx context.Context, _ *proto.Empty) (*proto.SafeStaff, error) {
 	ctx = makeContextFromMetaDataInContext(ctx)
 
 	safeStaff, err := s.staffUseCase.GetFromSession(ctx)

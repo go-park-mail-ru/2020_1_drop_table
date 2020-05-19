@@ -28,7 +28,7 @@ func StartCustomerGrpcServer(customerUseCase customer.Usecase, url string) {
 		}),
 	)
 	NewCustomerServerGRPC(server, customerUseCase)
-	server.Serve(list)
+	_ = server.Serve(list)
 }
 
 func NewCustomerServerGRPC(gServer *grpc.Server, customerUCase customer.Usecase) {

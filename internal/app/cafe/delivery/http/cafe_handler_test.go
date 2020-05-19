@@ -366,7 +366,7 @@ func TestGetByOwnerIDHandler(t *testing.T) {
 		sqlErr     error
 	}
 
-	outputCafes := make([]cafeModels.Cafe, 7, 7)
+	outputCafes := make([]cafeModels.Cafe, 7)
 	err := faker.FakeData(&outputCafes)
 	assert.NoError(t, err)
 

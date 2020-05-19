@@ -1,6 +1,7 @@
 package staff
 
 import (
+	"2020_1_drop_table/configs"
 	staff "2020_1_drop_table/internal/microservices/staff/delivery/grpc/client"
 	staffMocks "2020_1_drop_table/internal/microservices/staff/mocks"
 	"2020_1_drop_table/internal/microservices/staff/models"
@@ -34,7 +35,7 @@ func TestGetById(t *testing.T) {
 	}
 
 	session := sessions.Session{Values: map[interface{}]interface{}{"userID": 228}}
-	ctx := context.WithValue(context.Background(), "session", &session)
+	ctx := context.WithValue(context.Background(), configs.SessionStaffID, &session)
 	emptContext := ctx
 
 	test1St := models.SafeStaff{
