@@ -18,7 +18,7 @@
       steps:
         - uses: actions/checkout@v1
         - name: Testing
-          run: make test-coverage
+          run: ls
 
     deploy:
       runs-on: ubuntu-latest
@@ -30,7 +30,7 @@
             envs: GITHUB_SHA
             host: ${{ secrets.HOST }}
             username: ${{ secrets.USERNAME }}
-            key: ${{ secrets.PRIVATE_KEY }}
+            password: ${{ secrets.PRIVATE_KEY }}
             script: git pull
         - name: run project
           uses: appleboy/ssh-action@master
@@ -38,7 +38,7 @@
             envs: GITHUB_SHA
             host: ${{ secrets.HOST }}
             username: ${{ secrets.USERNAME }}
-            key: ${{ secrets.PRIVATE_KEY }}
+            password: ${{ secrets.PRIVATE_KEY }}
             script: make run
 
 
