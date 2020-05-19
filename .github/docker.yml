@@ -1,0 +1,23 @@
+name: Docker Build
+
+on:
+  push:
+    branches:
+      - master
+      - dev
+      - testci
+  pull_request:
+    branches:
+      - master
+      - dev
+      - testci
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Testing
+        run: make test-coverage
+
+
