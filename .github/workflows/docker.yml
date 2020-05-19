@@ -18,7 +18,7 @@
       steps:
         - uses: actions/checkout@v1
         - name: Testing
-          run: ls
+          run: make test-coverage
 
     deploy:
       runs-on: ubuntu-latest
@@ -31,7 +31,7 @@
             host: ${{ secrets.HOST }}
             username: ${{ secrets.USERNAME }}
             password: ${{ secrets.PRIVATE_KEY }}
-            script: git pull
+            script: cd 2020_1_drop_table/ && git pull
         - name: run project
           uses: appleboy/ssh-action@master
           with:
