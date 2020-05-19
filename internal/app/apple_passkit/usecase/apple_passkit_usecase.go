@@ -45,7 +45,7 @@ func NewApplePassKitUsecase(passKitRepo apple_passkit.Repository, cafeRepo cafe.
 }
 
 func (ap *applePassKitUsecase) getOwnersCafe(ctx context.Context, cafeID int) (cafeModels.Cafe, error) {
-	session := ctx.Value("session").(*sessions.Session)
+	session := ctx.Value(configs.SessionStaffID).(*sessions.Session)
 
 	staffInterface, found := session.Values["userID"]
 	staffID, ok := staffInterface.(int)
@@ -308,7 +308,7 @@ func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int,
 	structs.FillMap(newCustomer, passEnv)
 
 	if !published {
-		session := ctx.Value("session").(*sessions.Session)
+		session := ctx.Value(configs.SessionStaffID).(*sessions.Session)
 		staffInterface, found := session.Values["userID"]
 		staffID, ok := staffInterface.(int)
 		if !found || !ok || staffID != cafeObj.StaffID {

@@ -1,6 +1,7 @@
 package permissions_test
 
 import (
+	"2020_1_drop_table/configs"
 	"2020_1_drop_table/internal/pkg/permissions"
 	"context"
 	"fmt"
@@ -48,7 +49,7 @@ func TestCheckAuth(t *testing.T) {
 
 	req := httptest.NewRequest("GET", "http://testing", nil)
 	session := sessions.Session{Values: map[interface{}]interface{}{"userID": 228}}
-	req = req.WithContext(context.WithValue(req.Context(), "session", &session))
+	req = req.WithContext(context.WithValue(req.Context(), configs.SessionStaffID, &session))
 
 	recorder := httptest.NewRecorder()
 	handlerToTest.ServeHTTP(recorder, req)

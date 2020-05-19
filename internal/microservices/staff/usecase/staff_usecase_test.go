@@ -1,6 +1,7 @@
 package usecase_test
 
 import (
+	"2020_1_drop_table/configs"
 	cafeClientMock "2020_1_drop_table/internal/app/cafe/delivery/grpc/client/mocks"
 	cafeMock "2020_1_drop_table/internal/app/cafe/mocks"
 	cafeModels "2020_1_drop_table/internal/app/cafe/models"
@@ -166,7 +167,7 @@ func TestGeById(t *testing.T) {
 			testCase.expectedUser, testCase.expectedErr)
 		sessionUserID := testCase.id
 		session := sessions.Session{Values: map[interface{}]interface{}{"userID": sessionUserID}}
-		c := context.WithValue(context.Background(), "session", &session)
+		c := context.WithValue(context.Background(), configs.SessionStaffID, &session)
 		realUser, realErr := s.GetByID(c, testCase.id)
 		assert.Equal(t, testCase.expectedErr, realErr)
 		assert.Equal(t, testCase.expectedUser.Email, realUser.Email)
@@ -213,7 +214,7 @@ func TestUpdate(t *testing.T) {
 
 		sessionUserID := testCase.user.StaffID
 		session := sessions.Session{Values: map[interface{}]interface{}{"userID": sessionUserID}}
-		c := context.WithValue(context.Background(), "session", &session)
+		c := context.WithValue(context.Background(), configs.SessionStaffID, &session)
 		realUser, realErr := s.Update(c, testCase.user)
 		fmt.Println(realUser)
 		assert.Equal(t, testCase.expectedUser.Email, realUser.Email)
@@ -310,10 +311,11 @@ func TestGenerateQr(t *testing.T) {
 	cafeRepo.On("GetByID",
 		mock.AnythingOfType("*context.timerCtx"), 2).Return(
 		returnedCafe, nil)
-	srepo.On("AddUuid", mock.AnythingOfType("*context.timerCtx"), mock.AnythingOfType("string"), 2).Return(nil)
+	srepo.On("AddUuid", mock.AnythingOfType("*context.timerCtx"),
+		mock.AnythingOfType("string"), 2).Return(nil)
 	s := usecase.NewStaffUsecase(&srepo, &cafeRepo, timeout)
 	session := sessions.Session{Values: map[interface{}]interface{}{"userID": 228}}
-	c := context.WithValue(context.Background(), "session", &session)
+	c := context.WithValue(context.Background(), configs.SessionStaffID, &session)
 	_, err := s.GetQrForStaff(c, user.CafeId, user.Position)
 	assert.Nil(t, err)
 
@@ -352,7 +354,7 @@ func TestGetStaffList(t *testing.T) {
 	cafeRepo := new(cafeClientMock.CafeGRPCClientInterface)
 	s := usecase.NewStaffUsecase(srepo, cafeRepo, timeout)
 	session := sessions.Session{Values: map[interface{}]interface{}{"userID": 2}}
-	c := context.WithValue(context.Background(), "session", &session)
+	c := context.WithValue(context.Background(), configs.SessionStaffID, &session)
 	res, err := s.GetStaffListByOwnerId(c, 2)
 	assert.Equal(t, resMap, res)
 	assert.Nil(t, err)
@@ -375,10 +377,10 @@ func TestStaffUsecase_CheckIfStaffInOwnerCafes(t *testing.T) {
 	}
 
 	session := sessions.Session{Values: map[interface{}]interface{}{"userID": 228}}
-	c := context.WithValue(context.Background(), "session", &session)
+	c := context.WithValue(context.Background(), configs.SessionStaffID, &session)
 
 	session2 := sessions.Session{Values: map[interface{}]interface{}{"userID": 1}}
-	c2 := context.WithValue(context.Background(), "session", &session2)
+	c2 := context.WithValue(context.Background(), configs.SessionStaffID, &session2)
 
 	testCases := []testCaseStruct{
 		{
@@ -495,10 +497,10 @@ func TestStaffUsecase_DeleteStaffById(t *testing.T) {
 	}
 
 	session := sessions.Session{Values: map[interface{}]interface{}{"userID": 228}}
-	c := context.WithValue(context.Background(), "session", &session)
+	c := context.WithValue(context.Background(), configs.SessionStaffID, &session)
 
 	session2 := sessions.Session{Values: map[interface{}]interface{}{"userID": 1}}
-	c2 := context.WithValue(context.Background(), "session", &session2)
+	c2 := context.WithValue(context.Background(), configs.SessionStaffID, &session2)
 
 	testCases := []testCaseStruct{
 		{
@@ -616,10 +618,10 @@ func TestUpdatePosition(t *testing.T) {
 	}
 
 	session := sessions.Session{Values: map[interface{}]interface{}{"userID": 228}}
-	c := context.WithValue(context.Background(), "session", &session)
+	c := context.WithValue(context.Background(), configs.SessionStaffID, &session)
 
 	session2 := sessions.Session{Values: map[interface{}]interface{}{"userID": 1}}
-	c2 := context.WithValue(context.Background(), "session", &session2)
+	c2 := context.WithValue(context.Background(), configs.SessionStaffID, &session2)
 
 	testCases := []testCaseStruct{
 		{

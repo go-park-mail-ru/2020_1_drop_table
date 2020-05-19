@@ -70,7 +70,7 @@ func (s *staffUsecase) GetByID(c context.Context, id int) (models.SafeStaff, err
 	ctx, cancel := context.WithTimeout(c, s.contextTimeout)
 	defer cancel()
 
-	session := ctx.Value("session").(*sessions.Session)
+	session := ctx.Value(configs.SessionStaffID).(*sessions.Session)
 
 	staffID, found := session.Values["userID"]
 	if !found || staffID != id {
@@ -90,7 +90,7 @@ func (s *staffUsecase) Update(c context.Context, newStaff models.SafeStaff) (mod
 	ctx, cancel := context.WithTimeout(c, s.contextTimeout)
 	defer cancel()
 
-	session := ctx.Value("session").(*sessions.Session)
+	session := ctx.Value(configs.SessionStaffID).(*sessions.Session)
 
 	staffID, found := session.Values["userID"]
 	if !found || staffID != newStaff.StaffID {
@@ -135,7 +135,7 @@ func (s *staffUsecase) GetFromSession(c context.Context) (models.SafeStaff, erro
 	ctx, cancel := context.WithTimeout(c, s.contextTimeout)
 	defer cancel()
 
-	session := ctx.Value("session").(*sessions.Session)
+	session := ctx.Value(configs.SessionStaffID).(*sessions.Session)
 
 	staffID, found := session.Values["userID"]
 	if !found || staffID == -1 {
@@ -223,7 +223,7 @@ func (s *staffUsecase) GetCafeId(c context.Context, uuid string) (int, error) {
 }
 
 func (s *staffUsecase) GetStaffId(c context.Context) (int, error) {
-	session := c.Value("session").(*sessions.Session)
+	session := c.Value(configs.SessionStaffID).(*sessions.Session)
 
 	staffID, ok := session.Values["userID"]
 	if !ok {

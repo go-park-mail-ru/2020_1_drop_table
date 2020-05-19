@@ -1,6 +1,7 @@
 package staff
 
 import (
+	"2020_1_drop_table/configs"
 	staff2 "2020_1_drop_table/internal/microservices/staff"
 	proto "2020_1_drop_table/internal/microservices/staff/delivery/grpc/protobuff"
 	"2020_1_drop_table/internal/microservices/staff/models"
@@ -50,7 +51,7 @@ func makeContextFromMetaDataInContext(ctx context.Context) context.Context {
 	intUserId, _ := strconv.Atoi(userid[0])
 
 	session := sessions.Session{Values: map[interface{}]interface{}{"userID": intUserId}}
-	return context.WithValue(context.Background(), "session", &session)
+	return context.WithValue(context.Background(), configs.SessionStaffID, &session)
 }
 
 func (s *server) GetFromSession(ctx context.Context, _ *proto.Empty) (*proto.SafeStaff, error) {

@@ -98,7 +98,7 @@ func (s *StaffHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session := r.Context().Value("session").(*sessions.Session)
+	session := r.Context().Value(configs.SessionStaffID).(*sessions.Session)
 
 	session.Values["userID"] = safeStaff.StaffID
 	err = session.Save(r, w)
@@ -139,7 +139,7 @@ func (s *StaffHandler) AddStaffHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session := r.Context().Value("session").(*sessions.Session)
+	session := r.Context().Value(configs.SessionStaffID).(*sessions.Session)
 	session.Values["userID"] = safeStaff.StaffID
 	err = session.Save(r, w)
 
@@ -181,7 +181,7 @@ func (s *StaffHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session := r.Context().Value("session").(*sessions.Session)
+	session := r.Context().Value(configs.SessionStaffID).(*sessions.Session)
 
 	session.Values["userID"] = safeStaff.StaffID
 	err = session.Save(r, w)

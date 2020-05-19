@@ -1,6 +1,7 @@
 package http
 
 import (
+	"2020_1_drop_table/configs"
 	"2020_1_drop_table/internal/app"
 	"2020_1_drop_table/internal/microservices/staff/mocks"
 	staffModels "2020_1_drop_table/internal/microservices/staff/models"
@@ -245,7 +246,7 @@ func TestAdd(t *testing.T) {
 			t.Error(err)
 		}
 		session := sessions.Session{Values: map[interface{}]interface{}{"userID": testCase.inputstaff.StaffID}}
-		req = req.WithContext(context.WithValue(req.Context(), "session", &session))
+		req = req.WithContext(context.WithValue(req.Context(), configs.SessionStaffID, &session))
 		assert.NoError(t, err, message)
 		req.Header.Set("Content-Type", wr.FormDataContentType())
 

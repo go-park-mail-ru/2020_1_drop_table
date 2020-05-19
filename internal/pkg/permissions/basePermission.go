@@ -1,6 +1,7 @@
 package permissions
 
 import (
+	"2020_1_drop_table/configs"
 	"2020_1_drop_table/internal/pkg/responses"
 	"github.com/gorilla/sessions"
 	uuid "github.com/nu7hatch/gouuid"
@@ -12,7 +13,7 @@ func CheckAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 
-			session := r.Context().Value("session").(*sessions.Session)
+			session := r.Context().Value(configs.SessionStaffID).(*sessions.Session)
 
 			staffID, found := session.Values["userID"]
 			if !found || staffID == -1 {

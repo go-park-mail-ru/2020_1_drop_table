@@ -1,6 +1,7 @@
 package usecase_test
 
 import (
+	"2020_1_drop_table/configs"
 	cafeMocks "2020_1_drop_table/internal/app/cafe/mocks"
 	cafeModels "2020_1_drop_table/internal/app/cafe/models"
 	_cafeUsecase "2020_1_drop_table/internal/app/cafe/usecase"
@@ -122,7 +123,7 @@ func TestAdd(t *testing.T) {
 
 		sessionUserID := testCase.staff.StaffID
 		session := sessions.Session{Values: map[interface{}]interface{}{"userID": sessionUserID}}
-		c := context.WithValue(context.Background(), "session", &session)
+		c := context.WithValue(context.Background(), configs.SessionStaffID, &session)
 
 		realCafe, err := cafeUsecase.Add(c, testCase.inputCafe)
 		if err == nil {
@@ -189,7 +190,7 @@ func TestGetByOwnerID(t *testing.T) {
 			testCase.expectedCafes, testCase.err)
 
 		session := sessions.Session{Values: map[interface{}]interface{}{"userID": testCase.staffID}}
-		c := context.WithValue(context.Background(), "session", &session)
+		c := context.WithValue(context.Background(), configs.SessionStaffID, &session)
 
 		realCafes, err := cafeUsecase.GetByOwnerID(c)
 		assert.Equal(t, testCase.expectedCafes, realCafes, message)
@@ -343,7 +344,7 @@ func TestUpdate(t *testing.T) {
 			testCase.outputCafe, nil)
 
 		session := sessions.Session{Values: map[interface{}]interface{}{"userID": testCase.staff.StaffID}}
-		c := context.WithValue(context.Background(), "session", &session)
+		c := context.WithValue(context.Background(), configs.SessionStaffID, &session)
 
 		realCafee, err := cafeUsecase.Update(c, testCase.inputCafe)
 		assert.Equal(t, testCase.err, err, message)

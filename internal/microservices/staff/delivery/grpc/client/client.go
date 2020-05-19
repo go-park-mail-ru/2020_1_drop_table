@@ -1,6 +1,7 @@
 package staff
 
 import (
+	"2020_1_drop_table/configs"
 	proto "2020_1_drop_table/internal/microservices/staff/delivery/grpc/protobuff"
 	"2020_1_drop_table/internal/microservices/staff/models"
 	"context"
@@ -45,7 +46,7 @@ func (s StaffClient) GetFromSession(ctx context.Context) (models.SafeStaff, erro
 	ctx = s.AddSessionInMetadata(ctx)
 	empt := proto.Empty{}
 	r, err := s.client.GetFromSession(ctx, &empt, grpc.EmptyCallOption{})
-	fmt.Println("in staff client: ", r,err)
+	fmt.Println("in staff client: ", r, err)
 	if err != nil {
 		fmt.Println("Unexpected Error", err)
 		return models.SafeStaff{}, err
@@ -65,7 +66,7 @@ func (s StaffClient) GetById(ctx context.Context, id int) (models.SafeStaff, err
 }
 
 func (s StaffClient) AddSessionInMetadata(ctx context.Context) context.Context {
-	value := ctx.Value("session").(*sessions.Session)
+	value := ctx.Value(configs.SessionStaffID).(*sessions.Session)
 	el := value.Values["userID"].(int)
 
 	return metadata.AppendToOutgoingContext(ctx, "userID", strconv.Itoa(el))
@@ -79,7 +80,7 @@ func (s StaffClient) AddSessionInMetadata(ctx context.Context) context.Context {
 //	}
 //	client := NewStaffClient(conn)
 //	session := sessions.Session{Values: map[interface{}]interface{}{"userID": 41}}
-//	ctx := context.WithValue(context.Background(), "session", &session)
+//	ctx := context.WithValue(context.Background(), configs.SessionStaffID, &session)
 //	client.GetFromSession(ctx)
 //
 //}

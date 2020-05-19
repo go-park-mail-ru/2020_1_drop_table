@@ -1,6 +1,7 @@
 package usecase_test
 
 import (
+	"2020_1_drop_table/configs"
 	cafeClientGRPCMock "2020_1_drop_table/internal/app/cafe/delivery/grpc/client/mocks"
 	models2 "2020_1_drop_table/internal/app/cafe/models"
 	globalModels "2020_1_drop_table/internal/app/models"
@@ -39,10 +40,10 @@ func TestSetTemplate(t *testing.T) {
 	}
 
 	session := sessions.Session{Values: map[interface{}]interface{}{"userID": 228}}
-	c := context.WithValue(context.Background(), "session", &session)
+	c := context.WithValue(context.Background(), configs.SessionStaffID, &session)
 
 	session2 := sessions.Session{Values: map[interface{}]interface{}{"userID": 1}}
-	c2 := context.WithValue(context.Background(), "session", &session2)
+	c2 := context.WithValue(context.Background(), configs.SessionStaffID, &session2)
 	//surveyErr := errors.New(`pq: duplicate key value violates unique constraint "surveytemplate_cafeid_key"`)
 	//surveyErr := pq.Error{Message:`pq: duplicate key value violates unique constraint "surveytemplate_cafeid_key"`}
 	testCases := []testCaseStruct{
@@ -166,7 +167,7 @@ func TestGetSurvey(t *testing.T) {
 	}
 
 	session := sessions.Session{Values: map[interface{}]interface{}{"userID": 228}}
-	c := context.WithValue(context.Background(), "session", &session)
+	c := context.WithValue(context.Background(), configs.SessionStaffID, &session)
 
 	testCases := []testCaseStruct{
 
@@ -226,7 +227,7 @@ func TestSubmitSurvey(t *testing.T) {
 	}
 
 	session := sessions.Session{Values: map[interface{}]interface{}{"userID": 228}}
-	c := context.WithValue(context.Background(), "session", &session)
+	c := context.WithValue(context.Background(), configs.SessionStaffID, &session)
 	var surveyErr = fmt.Errorf(`pq: invalid input syntax for type uuid: "%s"`, "Not valid UUID")
 	testCases := []testCaseStruct{
 
