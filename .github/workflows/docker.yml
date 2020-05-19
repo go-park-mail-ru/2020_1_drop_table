@@ -24,8 +24,8 @@ jobs:
       - name: Build Docker image
         run: sudo docker build -t dependencies -f ./docker/builder.Dockerfile . &&
           sudo docker build -t droptable14/main_service:${GITHUB_SHA::8} -f ./docker/main_service.Dockerfile . &&
-          sudo docker build -t droptable14/docker/staff_service:${GITHUB_SHA::8} -f ./docker/staff.Dockerfile . &&
-          sudo docker build -t droptable14/docker/survey_service:${GITHUB_SHA::8} -f ./docker/survey.Dockerfile .
+          sudo docker build -t droptable14/staff_service:${GITHUB_SHA::8} -f ./docker/staff.Dockerfile . &&
+          sudo docker build -t droptable14/survey_service:${GITHUB_SHA::8} -f ./docker/survey.Dockerfile .
 
       - name: Push the image
         run: docker push droptable14/main_service:${GITHUB_SHA::8} &&
@@ -42,7 +42,9 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PRIVATE_KEY }}
-          script: cd 2020_1_drop_table/ && git pull
+          script: cd 2020_1_drop_table/ && docker pull droptable14/main_service:${GITHUB_SHA::8} &&
+            docker pull droptable14/staff_service:${GITHUB_SHA::8} &&
+            docker pull droptable14/survey_service:${GITHUB_SHA::8}
       - name: run project
         uses: appleboy/ssh-action@master
         with:
@@ -50,6 +52,6 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PRIVATE_KEY }}
-          script: make run
+          script: docker rm -vf $$(docker ps -a -q) || true && cd 2020_1_drop_table/ && docker-compose up --build --no-deps
 
 
