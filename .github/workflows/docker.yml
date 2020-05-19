@@ -52,6 +52,6 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PRIVATE_KEY }}
-          script: docker rm -vf $$(docker ps -a -q) || true && cd 2020_1_drop_table/ && docker-compose up --build --no-deps
+          script: docker rm -vf $(docker ps -a -q) || true && cd 2020_1_drop_table/ && docker-compose up --build --no-deps
 
 
