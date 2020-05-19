@@ -18,7 +18,7 @@
       steps:
         - uses: actions/checkout@v1
         - name: Testing
-          run: ls -a
+          run: make test-coverage
 
     deploy:
       runs-on: ubuntu-latest
