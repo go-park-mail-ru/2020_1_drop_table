@@ -20,7 +20,7 @@ jobs:
 #      - name: Testing
 #        run: make test-coverage
       - name: Login to DockerHub Registry
-        run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+        run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u 228 --password-stdin
       - name: ls
         run: ls -la
       - name: Build Docker image
