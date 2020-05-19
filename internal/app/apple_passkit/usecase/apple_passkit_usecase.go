@@ -31,7 +31,9 @@ type applePassKitUsecase struct {
 	contextTimeout  time.Duration
 }
 
-func NewApplePassKitUsecase(passKitRepo apple_passkit.Repository, cafeRepo cafe.Repository, customerClient *customerClient.CustomerGRPC, passesGenerator passesGenerator.Generator, contextTimeout time.Duration, updateMeta passesGenerator.PassMeta) apple_passkit.Usecase {
+func NewApplePassKitUsecase(passKitRepo apple_passkit.Repository, cafeRepo cafe.Repository,
+	customerClient *customerClient.CustomerGRPC, passesGenerator passesGenerator.Generator,
+	contextTimeout time.Duration, updateMeta passesGenerator.PassMeta) apple_passkit.Usecase {
 	return &applePassKitUsecase{
 		passKitRepo:     passKitRepo,
 		cafeRepo:        cafeRepo,
@@ -181,11 +183,11 @@ func (ap *applePassKitUsecase) GetPass(c context.Context, cafeID int, Type strin
 	return ap.getImageUrls(passObj, cafeID), nil
 }
 
-func (ap *applePassKitUsecase) GetImage(c context.Context, imageName string, cafeID int, Type string,
+func (ap *applePassKitUsecase) GetImage(c context.Context, imageName string, cafeID int, PassType string,
 	published bool) ([]byte, error) {
-	passObj, err := ap.passKitRepo.GetPassByCafeID(c, cafeID, Type, true)
+	passObj, err := ap.passKitRepo.GetPassByCafeID(c, cafeID, PassType, true)
 	if err != nil {
-		passObj, err = ap.passKitRepo.GetPassByCafeID(c, cafeID, Type, false)
+		passObj, err = ap.passKitRepo.GetPassByCafeID(c, cafeID, PassType, false)
 	}
 	if err != nil {
 		return nil, err

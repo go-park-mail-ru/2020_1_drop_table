@@ -165,7 +165,8 @@ func TestEditStaff(t *testing.T) {
 	const url = "/api/v1/staff/"
 
 	mockstaffUcase := new(mocks.Usecase)
-	mockstaffUcase.On("Update", mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("models.SafeStaff")).Return(returnStaff, nil)
+	mockstaffUcase.On("Update", mock.AnythingOfType("*context.valueCtx"),
+		mock.AnythingOfType("models.SafeStaff")).Return(returnStaff, nil)
 	handler := StaffHandler{SUsecase: mockstaffUcase}
 	str, _ := json.Marshal(returnStaff)
 	buf, wr := createMultipartFormData(t, string(str))
@@ -187,7 +188,6 @@ func TestEditStaff(t *testing.T) {
 
 }
 
-//
 func TestAdd(t *testing.T) {
 	const url = "/api/v1/staff/"
 
@@ -223,8 +223,11 @@ func TestAdd(t *testing.T) {
 	for i, testCase := range testCases {
 		message := fmt.Sprintf("test case number: %d", i)
 		mockstaffUcase.On("Add",
-			mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("models.Staff")).Return(testCase.outputstaff, sql.ErrNoRows)
-		mockstaffUcase.On("GetCafeId", mock.AnythingOfType("*context.valueCtx"), "").Return(2, nil)
+			mock.AnythingOfType("*context.valueCtx"),
+			mock.AnythingOfType("models.Staff")).Return(testCase.outputstaff, sql.ErrNoRows)
+
+		mockstaffUcase.On("GetCafeId",
+			mock.AnythingOfType("*context.valueCtx"), "").Return(2, nil)
 		mockstaffUcase.On("DeleteQrCodes", "").Return(nil)
 
 		var buf bytes.Buffer

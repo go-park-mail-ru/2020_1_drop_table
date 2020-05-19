@@ -1,0 +1,3 @@
+linters-settings:
+  ignore: fmt:.*,io/ioutil:^Read.*/^Close*
+  skip-files: configs/
