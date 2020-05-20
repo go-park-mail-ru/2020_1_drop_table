@@ -165,7 +165,7 @@ func (cu *cafeUsecase) GetAllCafes(ctx context.Context, since int, limit int, se
 	ctx, cancel := context.WithTimeout(ctx, cu.contextTimeout)
 	defer cancel()
 	if search != "" {
-		cafes, err := cu.cafeRepo.SearchCafes(ctx, search, limit, since)
+		cafes, err := cu.cafeRepo.SearchCafes(ctx, search, since, limit)
 		return cafes, err
 	}
 	cafes, err := cu.cafeRepo.GetAllCafes(ctx, since, limit)

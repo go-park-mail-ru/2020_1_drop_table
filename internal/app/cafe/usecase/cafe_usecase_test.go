@@ -353,3 +353,94 @@ func TestUpdate(t *testing.T) {
 		}
 	}
 }
+
+func TestCafeUsecase_GetAllCafes(t *testing.T) {
+	type updateTestCase struct {
+		search    string
+		since     int
+		limit     int
+		cafesList []cafeModels.Cafe
+	}
+
+	var search string
+	err := faker.FakeData(&search)
+	assert.NoError(t, err)
+
+	var since int
+	err = faker.FakeData(&since)
+	assert.NoError(t, err)
+
+	var limit int
+	err = faker.FakeData(&limit)
+	assert.NoError(t, err)
+
+	var cafesList []cafeModels.Cafe
+	err = faker.FakeData(&cafesList)
+	assert.NoError(t, err)
+
+	testCases := []updateTestCase{
+		//Test OK(search)
+		{
+			search:    search,
+			since:     since,
+			limit:     limit,
+			cafesList: cafesList,
+		},
+		//Test OK(get all)
+		{
+			search:    "",
+			since:     since,
+			limit:     limit,
+			cafesList: cafesList,
+		},
+	}
+
+	for i, testCase := range testCases {
+		message := fmt.Sprintf("test case number: %d", i)
+
+		mockCafeRepo := new(cafeMocks.Repository)
+		mockStaffGRPCClient := new(staffClientMock.StaffClientInterface)
+		mockGeoCoder := new(geoMocks.GoogleGeoCoder)
+
+		cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffGRPCClient, time.Second*2, mockGeoCoder)
+
+		limitMatches := func(limit int) bool {
+			assert.Equal(t, testCase.limit, limit, message)
+			return testCase.limit == limit
+		}
+
+		sinceMatches := func(since int) bool {
+			assert.Equal(t, testCase.since, since, message)
+			return testCase.since == since
+		}
+
+		if testCase.search != "" {
+			searchMatches := func(search string) bool {
+				assert.Equal(t, testCase.search, search, message)
+				return testCase.search == search
+			}
+
+			mockCafeRepo.On("SearchCafes",
+				mock.AnythingOfType("*context.timerCtx"), mock.MatchedBy(searchMatches),
+				mock.MatchedBy(sinceMatches), mock.MatchedBy(limitMatches),
+			).Return(
+				testCase.cafesList, nil)
+		} else {
+			mockCafeRepo.On("GetAllCafes",
+				mock.AnythingOfType("*context.timerCtx"),
+				mock.MatchedBy(sinceMatches), mock.MatchedBy(limitMatches)).Return(
+				testCase.cafesList, nil)
+		}
+
+		realCafesList, err := cafeUsecase.GetAllCafes(context.Background(), testCase.since,
+			testCase.limit, testCase.search)
+
+		assert.NoError(t, err, message)
+		if err == nil {
+			for i := range testCase.cafesList {
+				message += fmt.Sprintf(", i: %d", i)
+				assert.Equal(t, testCase.cafesList[i], realCafesList[i])
+			}
+		}
+	}
+}
