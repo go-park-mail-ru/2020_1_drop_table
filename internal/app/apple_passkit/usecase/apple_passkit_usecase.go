@@ -78,7 +78,7 @@ func (ap *applePassKitUsecase) UpdatePass(c context.Context, pass models.ApplePa
 	}
 
 	if cafeObj.CafeID != pass.CafeID {
-		return models.UpdateResponse{}, err
+		return models.UpdateResponse{}, globalModels.ErrForbidden
 	}
 
 	loyaltySystem, ok := loyaltySystems.LoyaltySystems[pass.Type]
