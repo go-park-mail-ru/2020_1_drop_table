@@ -188,10 +188,7 @@ func (ap *applePassKitUsecase) GetPass(c context.Context, cafeID int, Type strin
 
 func (ap *applePassKitUsecase) GetImage(c context.Context, imageName string, cafeID int, PassType string,
 	published bool) ([]byte, error) {
-	passObj, err := ap.passKitRepo.GetPassByCafeID(c, cafeID, PassType, true)
-	if err != nil {
-		passObj, err = ap.passKitRepo.GetPassByCafeID(c, cafeID, PassType, false)
-	}
+	passObj, err := ap.passKitRepo.GetPassByCafeID(c, cafeID, PassType, published)
 	if err != nil {
 		return nil, err
 	}
