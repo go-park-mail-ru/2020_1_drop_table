@@ -40,11 +40,14 @@ test-coverage:
 	rm -rf cover
 	rm -rf cover2
 
+
 ## coverage-html: generates HTML file with test coverage
 coverage-html:
 	go test -covermode=atomic -coverpkg=./... -coverprofile=cover ./...
 	go tool cover -html=cover
 	rm -rf cover
+
+
 
 ## run-background: run process in background(available after build)
 run-background:
