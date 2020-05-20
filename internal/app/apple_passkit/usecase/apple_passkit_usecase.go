@@ -6,7 +6,7 @@ import (
 	"2020_1_drop_table/internal/app/apple_passkit/models"
 	"2020_1_drop_table/internal/app/cafe"
 	cafeModels "2020_1_drop_table/internal/app/cafe/models"
-	customerClient "2020_1_drop_table/internal/app/customer/delivery/grpc/client"
+	"2020_1_drop_table/internal/app/customer"
 	customerModels "2020_1_drop_table/internal/app/customer/models"
 	globalModels "2020_1_drop_table/internal/app/models"
 	passesGenerator "2020_1_drop_table/internal/pkg/apple_pass_generator"
@@ -27,19 +27,19 @@ type applePassKitUsecase struct {
 	cafeRepo        cafe.Repository
 	passesGenerator passesGenerator.Generator
 	passesMeta      passesGenerator.PassMeta
-	customerClient  *customerClient.CustomerGRPC
+	customerUCase   customer.Usecase
 	contextTimeout  time.Duration
 }
 
 func NewApplePassKitUsecase(passKitRepo apple_passkit.Repository, cafeRepo cafe.Repository,
-	customerClient *customerClient.CustomerGRPC, passesGenerator passesGenerator.Generator,
+	customerClient customer.Usecase, passesGenerator passesGenerator.Generator,
 	contextTimeout time.Duration, updateMeta passesGenerator.PassMeta) apple_passkit.Usecase {
 	return &applePassKitUsecase{
 		passKitRepo:     passKitRepo,
 		cafeRepo:        cafeRepo,
 		passesGenerator: passesGenerator,
 		passesMeta:      updateMeta,
-		customerClient:  customerClient,
+		customerUCase:   customerClient,
 		contextTimeout:  contextTimeout,
 	}
 }
@@ -290,7 +290,7 @@ func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int,
 		SurveyResult: "{}",
 	}
 
-	newCustomer, err = ap.customerClient.Add(ctx, newCustomer)
+	newCustomer, err = ap.customerUCase.Add(ctx, newCustomer)
 	if err != nil {
 		return nil, err
 	}

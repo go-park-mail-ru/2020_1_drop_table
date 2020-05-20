@@ -10,7 +10,6 @@ import (
 	_cafeHttpDeliver "2020_1_drop_table/internal/app/cafe/delivery/http"
 	_cafeRepo "2020_1_drop_table/internal/app/cafe/repository"
 	_cafeUsecase "2020_1_drop_table/internal/app/cafe/usecase"
-	customer "2020_1_drop_table/internal/app/customer/delivery/grpc/client"
 	server2 "2020_1_drop_table/internal/app/customer/delivery/grpc/server"
 	_customerHttpDeliver "2020_1_drop_table/internal/app/customer/delivery/http"
 	_customerRepo "2020_1_drop_table/internal/app/customer/repository"
@@ -73,13 +72,6 @@ func main() {
 	}
 	grpcStaffClient := staffClient.NewStaffClient(grpcConn)
 
-	grpcCustomerConn, err := grpc.Dial(configs.GRPCCustomerUrl, grpc.WithInsecure())
-	if err != nil {
-		log.Error().Msg(err.Error())
-		return
-	}
-	grpcCustomerClient := customer.NewCustomerClient(grpcCustomerConn)
-
 	geoCoder := geo.NewGoogleGeoCoder(configs.GoogleMapAPIKey, "ru", "ru")
 
 	cafeUsecase := _cafeUsecase.NewCafeUsecase(cafeRepo, grpcStaffClient, timeoutContext, geoCoder)
@@ -89,13 +81,8 @@ func main() {
 		configs.AppleWWDR, configs.AppleCertificate, configs.AppleKey, configs.ApplePassword)
 
 	customerRepo := _customerRepo.NewPostgresCustomerRepository(conn)
-
 	applePassKitRepo := _appleRepo.NewPostgresApplePassRepository(conn)
 
-	applePassKitUcase := _appleUsecase.NewApplePassKitUsecase(applePassKitRepo, cafeRepo, grpcCustomerClient,
-		&applePassGenerator, timeoutContext, &meta.Meta{})
-
-	_appleHttpDeliver.NewPassKitHandler(r, applePassKitUcase)
 	statRepo := repository.NewPostgresStatisticsRepository(conn)
 
 	grpcCafeConn, err := grpc.Dial(configs.GRPCCafeUrl, grpc.WithInsecure())
@@ -110,6 +97,14 @@ func main() {
 	customerUseCase := _customerUseCase.NewCustomerUsecase(customerRepo, applePassKitRepo, grpcStaffClient,
 		timeoutContext, statUcase)
 	_customerHttpDeliver.NewCustomerHandler(r, customerUseCase)
+
+	customerUCase := _customerUseCase.NewCustomerUsecase(customerRepo, applePassKitRepo, grpcStaffClient,
+		timeoutContext, statUcase)
+
+	applePassKitUcase := _appleUsecase.NewApplePassKitUsecase(applePassKitRepo, cafeRepo, customerUCase,
+		&applePassGenerator, timeoutContext, &meta.Meta{})
+
+	_appleHttpDeliver.NewPassKitHandler(r, applePassKitUcase)
 
 	go server.StartCafeGrpcServer(cafeUsecase, configs.GRPCCafeUrl)
 	go server2.StartCustomerGrpcServer(customerUseCase, configs.GRPCCustomerUrl)
