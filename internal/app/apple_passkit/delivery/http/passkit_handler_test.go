@@ -365,3 +365,124 @@ func TestApplePassKitHandler_GetImageHandler(t *testing.T) {
 		}
 	}
 }
+
+func TestApplePassKitHandler_GenerateNewPass(t *testing.T) {
+	type passHttpResponse struct {
+		Data   []byte
+		Errors []responses.HttpError
+	}
+
+	type getImageHandlerTestCase struct {
+		CafeID            string
+		loyaltySystemType string
+		published         string
+		err               error
+		httpError         bool
+		httpErrors        passHttpResponse
+		response          *bytes.Buffer
+	}
+
+	var cafeID int
+	err := faker.FakeData(&cafeID)
+	assert.NoError(t, err)
+
+	var data map[string]string
+	err = faker.FakeData(&data)
+	assert.NoError(t, err)
+
+	var fakeImage []byte
+	err = faker.FakeData(&fakeImage)
+	assert.NoError(t, err)
+
+	newBuffer := new(bytes.Buffer)
+	newBuffer.Write(fakeImage)
+
+	testCases := []getImageHandlerTestCase{
+		//Test OK
+		{
+			CafeID:            strconv.Itoa(cafeID),
+			loyaltySystemType: "coffee_cup",
+			published:         "true",
+			err:               nil,
+			response:          newBuffer,
+		},
+		//Test err cafeID not int
+		{
+			CafeID:            "not int",
+			loyaltySystemType: "coffee_cup",
+			published:         "true",
+			err:               nil,
+			httpError:         true,
+			httpErrors: passHttpResponse{
+				Data: nil,
+				Errors: []responses.HttpError{
+					{
+						Code:    400,
+						Message: "bad id: not int",
+					},
+				},
+			},
+		},
+		//Test err published not bool
+		{
+			CafeID:            strconv.Itoa(cafeID),
+			loyaltySystemType: "coffee_cup",
+			published:         "not bool",
+			err:               nil,
+			httpError:         true,
+			httpErrors: passHttpResponse{
+				Data: nil,
+				Errors: []responses.HttpError{
+					{
+						Code:    400,
+						Message: "strconv.ParseBool: parsing \"not bool\": invalid syntax",
+					},
+				},
+			},
+		},
+	}
+
+	for i, testCase := range testCases {
+		message := fmt.Sprintf("test case number: %d", i)
+
+		mockPassUcase := new(passMocks.Usecase)
+		handler := applePassKitHandler{passesUsecace: mockPassUcase}
+
+		mockPassUcase.On("GeneratePassObject",
+			mock.AnythingOfType("*context.valueCtx"),
+			mock.AnythingOfType("int"), mock.AnythingOfType("string"),
+			mock.AnythingOfType("bool")).Return(testCase.response, testCase.err)
+
+		url := fmt.Sprintf("/api/v1/cafe/%s/apple_pass/%s/new_customer",
+			testCase.CafeID, testCase.loyaltySystemType)
+
+		req, err := http.NewRequest(echo.GET, url, nil)
+		assert.NoError(t, err, message)
+
+		req = mux.SetURLVars(req, map[string]string{
+			"id":                  testCase.CafeID,
+			"loyalty_system_type": testCase.loyaltySystemType,
+		})
+		req.URL.RawQuery = fmt.Sprintf("published=%s", testCase.published)
+
+		respWriter := httptest.NewRecorder()
+
+		handler.GenerateNewPass(respWriter, req)
+
+		resp := respWriter.Result()
+		body, err := ioutil.ReadAll(resp.Body)
+		assert.NoError(t, err, message)
+
+		if testCase.httpError {
+			var response passHttpResponse
+			err = json.Unmarshal(body, &response)
+			assert.NoError(t, err, message)
+			assert.Equal(t, testCase.httpErrors, response, message)
+		} else {
+			headerValue := "attachment; filename=loyaltyCard.pkpass"
+			assert.Equal(t, resp.Header.Get("Content-Disposition"), headerValue)
+			assert.Equal(t, resp.Header.Get("Content-Type"), "application/vnd.apple.pkpass")
+			assert.Equal(t, body, testCase.response.Bytes())
+		}
+	}
+}
