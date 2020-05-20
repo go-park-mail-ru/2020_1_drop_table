@@ -175,7 +175,10 @@ func (ap *applePassKitUsecase) getImageUrls(passObj models.ApplePassDB, cafeID i
 
 func (ap *applePassKitUsecase) GetPass(c context.Context, cafeID int, Type string,
 	published bool) (map[string]string, error) {
-	passObj, err := ap.passKitRepo.GetPassByCafeID(c, cafeID, Type, published)
+	ctx, cancel := context.WithTimeout(c, ap.contextTimeout)
+	defer cancel()
+
+	passObj, err := ap.passKitRepo.GetPassByCafeID(ctx, cafeID, Type, published)
 	if err != nil {
 		return nil, err
 	}
