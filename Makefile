@@ -42,7 +42,7 @@ coverage:
 
 
 ## coverage-html: generates HTML file with test coverage
-coverage-html:
+test-html:
 	go test -covermode=atomic -coverpkg=./... -coverprofile=cover ./...
 	go tool cover -html=cover
 	rm -rf cover
