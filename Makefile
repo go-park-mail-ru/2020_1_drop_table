@@ -33,9 +33,9 @@ run:
 	docker-compose up --build --no-deps
 
 ## test-coverage: get final code coverage
-test-coverage:
+coverage:
 	go test -covermode=atomic -coverpkg=./... -coverprofile=cover ./...
-	cat cover | fgrep -v "mock" | fgrep -v "pb.go" | fgrep -v "easyjson" > cover2
+	cat cover | fgrep -v "mock" | fgrep -v "pb.go" | fgrep -v "easyjson" | fgrep -v "start.go" > cover2
 	go tool cover -func=cover2
 	rm -rf cover
 	rm -rf cover2
