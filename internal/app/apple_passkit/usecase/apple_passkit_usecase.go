@@ -298,11 +298,6 @@ func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int,
 		return nil, err
 	}
 
-	cafeObj, err := ap.cafeRepo.GetByID(ctx, cafeID)
-	if err != nil {
-		return nil, err
-	}
-
 	passEnv, err := ap.updateMeta(ctx, cafeID)
 	if err != nil {
 		return nil, err
@@ -311,6 +306,11 @@ func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int,
 	structs.FillMap(newCustomer, passEnv)
 
 	if !published {
+		cafeObj, err := ap.cafeRepo.GetByID(ctx, cafeID)
+		if err != nil {
+			return nil, err
+		}
+
 		session := ctx.Value(configs.SessionStaffID).(*sessions.Session)
 		staffInterface, found := session.Values["userID"]
 		staffID, ok := staffInterface.(int)
