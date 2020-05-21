@@ -328,7 +328,7 @@ func TestGetByIDHandler(t *testing.T) {
 			mock.AnythingOfType("*context.valueCtx"), mock.MatchedBy(idMatches)).
 			Return(testCase.outputCafe, testCase.sqlErr)
 
-		req, err := http.NewRequest(echo.POST, url, nil)
+		req, err := http.NewRequest(echo.GET, url, nil)
 		assert.NoError(t, err, message)
 		req = mux.SetURLVars(req, map[string]string{
 			"id": testCase.cafeID,
@@ -404,7 +404,7 @@ func TestGetByOwnerIDHandler(t *testing.T) {
 		mockCafeUcase.On("GetByOwnerID",
 			mock.AnythingOfType("*context.emptyCtx")).Return(testCase.outputCafe, testCase.sqlErr)
 
-		req, err := http.NewRequest(echo.POST, url, nil)
+		req, err := http.NewRequest(echo.GET, url, nil)
 		assert.NoError(t, err, message)
 
 		respWriter := httptest.NewRecorder()
