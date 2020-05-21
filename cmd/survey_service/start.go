@@ -36,10 +36,12 @@ func main() {
 
 	timeoutContext := configs.Timeouts.ContextTimeout
 
-	connStr := fmt.Sprintf("user=%s password=%s dbname=postgres sslmode=disable port=%s",
+	connStr := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable port=%s host=%s",
 		configs.PostgresPreferences.User,
 		configs.PostgresPreferences.Password,
-		configs.PostgresPreferences.Port)
+		configs.PostgresPreferences.DBName,
+		configs.PostgresPreferences.Port,
+		configs.PostgresPreferences.Host)
 
 	conn, err := sqlx.Open("postgres", connStr)
 	if err != nil {
@@ -49,10 +51,10 @@ func main() {
 
 	survRepo := surveyRepo.NewPostgresSurveyRepository(conn)
 
-	grpcConn, err := grpc.Dial(configs.GRPCStaffUrl, grpc.WithInsecure())
+	grpcConn, _ := grpc.Dial(configs.GRPCStaffUrl, grpc.WithInsecure())
 	grpcStaffClient := staffClient.NewStaffClient(grpcConn)
 
-	grpcCafeConn, err := grpc.Dial(configs.GRPCCafeUrl, grpc.WithInsecure())
+	grpcCafeConn, _ := grpc.Dial(configs.GRPCCafeUrl, grpc.WithInsecure())
 	grpcCafeClient := cafeClient.NewCafeClient(grpcCafeConn)
 
 	surveyUcase := surveyUsecase.NewSurveyUsecase(survRepo, grpcStaffClient, grpcCafeClient, timeoutContext)
@@ -68,5 +70,6 @@ func main() {
 		WriteTimeout: configs.Timeouts.WriteTimeout,
 		ReadTimeout:  configs.Timeouts.ReadTimeout,
 	}
+	fmt.Println("survey server started at ", configs.HTTPSurveyUrl)
 	log.Error().Msgf(srv.ListenAndServe().Error())
 }

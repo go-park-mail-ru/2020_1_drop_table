@@ -2,7 +2,6 @@ package http
 
 import (
 	globalModels "2020_1_drop_table/internal/app/models"
-	http2 "2020_1_drop_table/internal/microservices/survey/delivery/http"
 	"2020_1_drop_table/internal/microservices/survey/mocks"
 	"2020_1_drop_table/internal/pkg/responses"
 	"bytes"
@@ -57,7 +56,7 @@ func TestSetSurveyTemplate(t *testing.T) {
 	}
 
 	mockSurveyUcase := new(mocks.Usecase)
-	handler := http2.SurveyHandler{SurveyUC: mockSurveyUcase}
+	handler := SurveyHandler{SurveyUC: mockSurveyUcase}
 
 	testCases := []addCafeHandlerTestCase{
 		//Test not Valid
@@ -119,7 +118,7 @@ func TestGetSurveyTemplate(t *testing.T) {
 	}
 
 	mockSurveyUcase := new(mocks.Usecase)
-	handler := http2.SurveyHandler{SurveyUC: mockSurveyUcase}
+	handler := SurveyHandler{SurveyUC: mockSurveyUcase}
 
 	testCases := []addCafeHandlerTestCase{
 		//Test OK
@@ -181,7 +180,7 @@ func TestSubmitSurvey(t *testing.T) {
 	}
 
 	mockSurveyUcase := new(mocks.Usecase)
-	handler := http2.SurveyHandler{SurveyUC: mockSurveyUcase}
+	handler := SurveyHandler{SurveyUC: mockSurveyUcase}
 
 	testCases := []addCafeHandlerTestCase{
 		//Test not OK

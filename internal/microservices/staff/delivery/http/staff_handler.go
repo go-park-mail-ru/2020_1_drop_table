@@ -3,6 +3,7 @@ package http
 import (
 	"2020_1_drop_table/configs"
 	"2020_1_drop_table/internal/app"
+	"2020_1_drop_table/internal/app/middleware"
 	globalModels "2020_1_drop_table/internal/app/models"
 	"2020_1_drop_table/internal/microservices/staff"
 	"2020_1_drop_table/internal/microservices/staff/models"
@@ -16,6 +17,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 type StaffHandler struct {
@@ -26,17 +28,35 @@ func NewStaffHandler(r *mux.Router, us staff.Usecase) {
 	handler := StaffHandler{
 		SUsecase: us,
 	}
-	r.HandleFunc("/api/v1/staff", permissions.SetCSRF(handler.RegisterHandler)).Methods("POST")
-	r.HandleFunc("/api/v1/get_current_staff/", permissions.SetCSRF(handler.GetCurrentStaffHandler)).Methods("GET")
-	r.HandleFunc("/api/v1/staff/login", permissions.SetCSRF(handler.LoginHandler)).Methods("POST")
-	r.HandleFunc("/api/v1/staff/{id:[0-9]+}", permissions.SetCSRF(permissions.CheckAuthenticated(handler.GetStaffByIdHandler))).Methods("GET")
-	r.HandleFunc("/api/v1/staff/{id:[0-9]+}", permissions.CheckCSRF(permissions.CheckAuthenticated(handler.EditStaffHandler))).Methods("PUT")
-	r.HandleFunc("/api/v1/staff/generateQr/{id:[0-9]+}", permissions.SetCSRF(handler.GenerateQrHandler)).Methods("GET")
-	r.HandleFunc("/api/v1/add_staff", permissions.SetCSRF(handler.AddStaffHandler)).Methods("POST")
-	r.HandleFunc("/api/v1/staff/get_staff_list/{id:[0-9]+}", permissions.SetCSRF(handler.GetStaffListHandler)).Methods("GET")
-	r.HandleFunc("/api/v1/staff/delete_staff/{id:[0-9]+}", permissions.CheckCSRF(handler.DeleteStaff)).Methods("POST")
-	r.HandleFunc("/api/v1/staff/update_position/{id:[0-9]+}", permissions.CheckCSRF(handler.UpdatePosition)).Methods("POST")
+	r.HandleFunc("/api/v1/staff",
+		permissions.SetCSRF(handler.RegisterHandler)).Methods("POST")
 
+	r.HandleFunc("/api/v1/get_current_staff/",
+		permissions.SetCSRF(handler.GetCurrentStaffHandler)).Methods("GET")
+
+	r.HandleFunc("/api/v1/staff/{id:[0-9]+}",
+		permissions.SetCSRF(permissions.CheckAuthenticated(handler.GetStaffByIdHandler))).Methods("GET")
+
+	r.HandleFunc("/api/v1/staff/{id:[0-9]+}",
+		permissions.CheckCSRF(permissions.CheckAuthenticated(handler.EditStaffHandler))).Methods("PUT")
+
+	r.HandleFunc("/api/v1/staff/generateQr/{id:[0-9]+}",
+		permissions.SetCSRF(handler.GenerateQrHandler)).Methods("GET")
+
+	r.HandleFunc("/api/v1/add_staff",
+		permissions.SetCSRF(handler.AddStaffHandler)).Methods("POST")
+
+	r.HandleFunc("/api/v1/staff/get_staff_list/{id:[0-9]+}",
+		permissions.SetCSRF(handler.GetStaffListHandler)).Methods("GET")
+
+	r.HandleFunc("/api/v1/staff/delete_staff/{id:[0-9]+}",
+		permissions.CheckCSRF(handler.DeleteStaff)).Methods("POST")
+
+	r.HandleFunc("/api/v1/staff/update_position/{id:[0-9]+}",
+		permissions.CheckCSRF(handler.UpdatePosition)).Methods("POST")
+
+	r.HandleFunc("/api/v1/staff/login", permissions.SetCSRF(handler.LoginHandler)).Methods("POST")
+	r.HandleFunc("/api/v1/staff/logout", handler.Logout).Methods("POST")
 }
 
 func (s *StaffHandler) fetchStaff(r *http.Request) (models.Staff, error) {
@@ -78,7 +98,7 @@ func (s *StaffHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session := r.Context().Value("session").(*sessions.Session)
+	session := r.Context().Value(configs.SessionStaffID).(*sessions.Session)
 
 	session.Values["userID"] = safeStaff.StaffID
 	err = session.Save(r, w)
@@ -119,7 +139,7 @@ func (s *StaffHandler) AddStaffHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session := r.Context().Value("session").(*sessions.Session)
+	session := r.Context().Value(configs.SessionStaffID).(*sessions.Session)
 	session.Values["userID"] = safeStaff.StaffID
 	err = session.Save(r, w)
 
@@ -161,7 +181,7 @@ func (s *StaffHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session := r.Context().Value("session").(*sessions.Session)
+	session := r.Context().Value(configs.SessionStaffID).(*sessions.Session)
 
 	session.Values["userID"] = safeStaff.StaffID
 	err = session.Save(r, w)
@@ -171,7 +191,6 @@ func (s *StaffHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	responses.SendOKAnswer(safeStaff, w)
-	return
 }
 
 func (s *StaffHandler) GetStaffByIdHandler(w http.ResponseWriter, r *http.Request) {
@@ -190,7 +209,6 @@ func (s *StaffHandler) GetStaffByIdHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	responses.SendOKAnswer(safeStaff, w)
-	return
 }
 
 func (s *StaffHandler) GetCurrentStaffHandler(w http.ResponseWriter, r *http.Request) {
@@ -202,7 +220,6 @@ func (s *StaffHandler) GetCurrentStaffHandler(w http.ResponseWriter, r *http.Req
 	}
 
 	responses.SendOKAnswer(staffObj, w)
-	return
 }
 
 func (s *StaffHandler) EditStaffHandler(w http.ResponseWriter, r *http.Request) {
@@ -230,7 +247,6 @@ func (s *StaffHandler) EditStaffHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	responses.SendOKAnswer(staffObj, w)
-	return
 }
 
 func (s *StaffHandler) GenerateQrHandler(w http.ResponseWriter, r *http.Request) {
@@ -242,7 +258,7 @@ func (s *StaffHandler) GenerateQrHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	if position == "" {
-		message := fmt.Sprintf("dont send position in GET params")
+		message := "dont send position in GET params"
 		responses.SendSingleError(message, w)
 		return
 	}
@@ -313,4 +329,26 @@ func (s *StaffHandler) UpdatePosition(w http.ResponseWriter, r *http.Request) {
 	}
 	responses.SendOKAnswer(newPosition, w)
 
+}
+
+func (s *StaffHandler) Logout(w http.ResponseWriter, _ *http.Request) {
+	authCookie := &http.Cookie{
+		Name:     middleware.SessionCookieName,
+		Value:    "",
+		Path:     "/",
+		Expires:  time.Unix(0, 0),
+		HttpOnly: true,
+	}
+	http.SetCookie(w, authCookie)
+
+	csrfCookie := &http.Cookie{
+		Name:     "csrf",
+		Value:    "",
+		Path:     "/",
+		Expires:  time.Unix(0, 0),
+		HttpOnly: true,
+	}
+	http.SetCookie(w, csrfCookie)
+
+	responses.SendOKAnswer("", w)
 }

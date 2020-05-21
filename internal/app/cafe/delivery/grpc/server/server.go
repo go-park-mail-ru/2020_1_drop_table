@@ -1,7 +1,6 @@
 package server
 
 import (
-	"2020_1_drop_table/configs"
 	"2020_1_drop_table/internal/app/cafe"
 	proto "2020_1_drop_table/internal/app/cafe/delivery/grpc/protobuff"
 	"2020_1_drop_table/internal/app/cafe/models"
@@ -19,8 +18,8 @@ type server struct {
 	cafeUseCase cafe.Usecase
 }
 
-func StartCafeGrpcServer(cafeUseCase cafe.Usecase) {
-	list, err := net.Listen("tcp", configs.GRPCCafeUrl)
+func StartCafeGrpcServer(cafeUseCase cafe.Usecase, url string) {
+	list, err := net.Listen("tcp", url)
 	if err != nil {
 		log.Err(err)
 	}
@@ -30,7 +29,7 @@ func StartCafeGrpcServer(cafeUseCase cafe.Usecase) {
 		}),
 	)
 	NewCafeServerGRPC(server, cafeUseCase)
-	server.Serve(list)
+	_ = server.Serve(list)
 }
 
 func NewCafeServerGRPC(gServer *grpc.Server, cafeUCase cafe.Usecase) {
@@ -44,6 +43,19 @@ func NewCafeServerGRPC(gServer *grpc.Server, cafeUCase cafe.Usecase) {
 func (s *server) GetByID(ctx context.Context, id *proto.ID) (*proto.Cafe, error) {
 	cafeObj, err := s.cafeUseCase.GetByID(ctx, int(id.Id))
 	return cafeModelToProto(cafeObj), err
+}
+
+func (s *server) GetByOwnerID(ctx context.Context, id *proto.ID) (*proto.ListCafe, error) {
+	cafeList, err := s.cafeUseCase.GetByOwnerIDWithOwnerID(ctx, int(id.Id))
+	return &proto.ListCafe{Cafe: cafeListToProto(cafeList)}, err
+}
+
+func cafeListToProto(cafeList []models.Cafe) []*proto.Cafe {
+	var resList []*proto.Cafe
+	for _, caf := range cafeList {
+		resList = append(resList, cafeModelToProto(caf))
+	}
+	return resList
 }
 
 func cafeModelToProto(cafe models.Cafe) *proto.Cafe {

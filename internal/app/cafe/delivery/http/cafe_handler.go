@@ -28,6 +28,7 @@ func NewCafeHandler(r *mux.Router, us cafe.Usecase) {
 	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}", permissions.SetCSRF(handler.GetByIDHandler)).Methods("GET")
 	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}", permissions.CheckCSRF(permissions.CheckAuthenticated(handler.EditCafeHandler))).Methods("PUT")
 	r.HandleFunc("/api/v1/cafe/get_all", handler.GetAllCafes).Methods("GET")
+	r.HandleFunc("/api/v1/cafe/get_by_geo", handler.GetCafeListByGeoAndRadius).Methods("GET")
 }
 
 func (c *CafeHandler) fetchCafe(r *http.Request) (models.Cafe, error) {
@@ -56,6 +57,19 @@ func (c *CafeHandler) fetchCafe(r *http.Request) (models.Cafe, error) {
 	return cafeObj, nil
 }
 
+func (c *CafeHandler) GetCafeListByGeoAndRadius(w http.ResponseWriter, r *http.Request) {
+	latitude := r.FormValue("latitude")
+	longitude := r.FormValue("longitude")
+	radius := r.FormValue("radius")
+
+	res, err := c.CUsecase.GetCafeSortedByRadius(r.Context(), latitude, longitude, radius)
+	if err != nil {
+		responses.SendSingleError(err.Error(), w)
+		return
+	}
+	responses.SendOKAnswer(res, w)
+}
+
 func (c *CafeHandler) AddCafeHandler(w http.ResponseWriter, r *http.Request) {
 	cafeObj, err := c.fetchCafe(r)
 	if err != nil {
@@ -63,14 +77,13 @@ func (c *CafeHandler) AddCafeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cafeObj, err = c.CUsecase.Add(r.Context(), cafeObj)
+	cafeObjWithGeo, err := c.CUsecase.Add(r.Context(), cafeObj)
 	if err != nil {
 		responses.SendSingleError(err.Error(), w)
 		return
 	}
 
-	responses.SendOKAnswer(cafeObj, w)
-	return
+	responses.SendOKAnswer(cafeObjWithGeo, w)
 }
 
 func (c *CafeHandler) EditCafeHandler(w http.ResponseWriter, r *http.Request) {
@@ -96,7 +109,6 @@ func (c *CafeHandler) EditCafeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	responses.SendOKAnswer(cafeDB, w)
-	return
 }
 
 func (c *CafeHandler) GetByOwnerIDHandler(w http.ResponseWriter, r *http.Request) {
@@ -107,7 +119,6 @@ func (c *CafeHandler) GetByOwnerIDHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	responses.SendOKAnswer(cafesObj, w)
-	return
 }
 
 func (c *CafeHandler) GetByIDHandler(w http.ResponseWriter, r *http.Request) {
@@ -124,17 +135,17 @@ func (c *CafeHandler) GetByIDHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	responses.SendOKAnswer(cafeObj, w)
-	return
 }
 
 func (c *CafeHandler) GetAllCafes(writer http.ResponseWriter, request *http.Request) {
 	limit, err := strconv.Atoi(request.FormValue("limit"))
 	since, err2 := strconv.Atoi(request.FormValue("since"))
+	search := request.FormValue("searchBy")
 	if err != nil || err2 != nil {
 		responses.SendSingleError("Bad GET params", writer)
 		return
 	}
-	cafes, err := c.CUsecase.GetAllCafes(request.Context(), since, limit)
+	cafes, err := c.CUsecase.GetAllCafes(request.Context(), since, limit, search)
 	if err != nil {
 		responses.SendSingleError(err.Error(), writer)
 		return

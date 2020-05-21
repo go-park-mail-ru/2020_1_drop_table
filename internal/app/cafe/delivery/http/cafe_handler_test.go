@@ -328,7 +328,7 @@ func TestGetByIDHandler(t *testing.T) {
 			mock.AnythingOfType("*context.valueCtx"), mock.MatchedBy(idMatches)).
 			Return(testCase.outputCafe, testCase.sqlErr)
 
-		req, err := http.NewRequest(echo.POST, url, nil)
+		req, err := http.NewRequest(echo.GET, url, nil)
 		assert.NoError(t, err, message)
 		req = mux.SetURLVars(req, map[string]string{
 			"id": testCase.cafeID,
@@ -366,7 +366,7 @@ func TestGetByOwnerIDHandler(t *testing.T) {
 		sqlErr     error
 	}
 
-	outputCafes := make([]cafeModels.Cafe, 7, 7)
+	outputCafes := make([]cafeModels.Cafe, 7)
 	err := faker.FakeData(&outputCafes)
 	assert.NoError(t, err)
 
@@ -404,12 +404,221 @@ func TestGetByOwnerIDHandler(t *testing.T) {
 		mockCafeUcase.On("GetByOwnerID",
 			mock.AnythingOfType("*context.emptyCtx")).Return(testCase.outputCafe, testCase.sqlErr)
 
-		req, err := http.NewRequest(echo.POST, url, nil)
+		req, err := http.NewRequest(echo.GET, url, nil)
 		assert.NoError(t, err, message)
 
 		respWriter := httptest.NewRecorder()
 
 		handler.GetByOwnerIDHandler(respWriter, req)
+
+		resp := respWriter.Result()
+		body, err := ioutil.ReadAll(resp.Body)
+		assert.NoError(t, err, message)
+		var responseStruct cafeHttpResponse
+		err = json.Unmarshal(body, &responseStruct)
+		assert.NoError(t, err, message)
+
+		errs := responseStruct.Errors
+		cafes := testCase.outputCafe
+
+		assert.Equal(t, testCase.httpErrs, errs, message)
+		assert.Equal(t, testCase.outputCafe, cafes, message)
+	}
+}
+
+func TestCafeHandler_GetAllCafes(t *testing.T) {
+	type cafeHttpResponse struct {
+		Data   []cafeModels.Cafe
+		Errors []responses.HttpError
+	}
+
+	type testCase struct {
+		inputData  map[string]string
+		outputCafe []cafeModels.Cafe
+		httpErrs   []responses.HttpError
+		useCaseErr error
+	}
+
+	outputCafes := make([]cafeModels.Cafe, 7)
+	err := faker.FakeData(&outputCafes)
+	assert.NoError(t, err)
+
+	var limit int
+	err = faker.FakeData(&limit)
+	assert.NoError(t, err)
+
+	var since int
+	err = faker.FakeData(&since)
+	assert.NoError(t, err)
+
+	var search string
+	err = faker.FakeData(&search)
+	assert.NoError(t, err)
+
+	for i := range outputCafes {
+		outputCafes[i].CloseTime = outputCafes[i].CloseTime.UTC()
+		outputCafes[i].OpenTime = outputCafes[i].OpenTime.UTC()
+	}
+
+	testCases := []testCase{
+		//Test OK
+		{
+			inputData: map[string]string{
+				"limit":  strconv.Itoa(limit),
+				"since":  strconv.Itoa(since),
+				"search": search,
+			},
+			outputCafe: outputCafes,
+			httpErrs:   nil,
+			useCaseErr: nil,
+		},
+		//Test bad GET params
+		{
+			httpErrs: []responses.HttpError{
+				{
+					Code:    400,
+					Message: "Bad GET params",
+				},
+			},
+		},
+		//Test use case error
+		{
+			inputData: map[string]string{
+				"limit":  strconv.Itoa(limit),
+				"since":  strconv.Itoa(since),
+				"search": search,
+			},
+			useCaseErr: sql.ErrNoRows,
+			httpErrs: []responses.HttpError{
+				{
+					Code:    400,
+					Message: sql.ErrNoRows.Error(),
+				},
+			},
+		},
+	}
+
+	for i, testCase := range testCases {
+		message := fmt.Sprintf("test case number: %d", i)
+
+		mockCafeUcase := new(cafeMocks.Usecase)
+		handler := cafeHandlers.CafeHandler{CUsecase: mockCafeUcase}
+
+		mockCafeUcase.On("GetAllCafes",
+			mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("int"),
+			mock.AnythingOfType("int"), mock.AnythingOfType("string"),
+		).Return(testCase.outputCafe, testCase.useCaseErr)
+
+		req, err := http.NewRequest(echo.GET, url, nil)
+		assert.NoError(t, err, message)
+
+		req.URL.RawQuery = fmt.Sprintf(
+			"limit=%s&since=%s&searchBy=%s",
+			testCase.inputData["limit"], testCase.inputData["since"], testCase.inputData["searchBy"])
+
+		respWriter := httptest.NewRecorder()
+
+		handler.GetAllCafes(respWriter, req)
+
+		resp := respWriter.Result()
+		body, err := ioutil.ReadAll(resp.Body)
+		assert.NoError(t, err, message)
+		var responseStruct cafeHttpResponse
+		err = json.Unmarshal(body, &responseStruct)
+		assert.NoError(t, err, message)
+
+		errs := responseStruct.Errors
+		cafes := testCase.outputCafe
+
+		assert.Equal(t, testCase.httpErrs, errs, message)
+		assert.Equal(t, testCase.outputCafe, cafes, message)
+	}
+}
+
+func TestCafeHandler_GetCafeListByGeoAndRadius(t *testing.T) {
+	type cafeHttpResponse struct {
+		Data   []cafeModels.Cafe
+		Errors []responses.HttpError
+	}
+
+	type testCase struct {
+		inputData  map[string]string
+		outputCafe []cafeModels.Cafe
+		httpErrs   []responses.HttpError
+		useCaseErr error
+	}
+
+	outputCafes := make([]cafeModels.Cafe, 7)
+	err := faker.FakeData(&outputCafes)
+	assert.NoError(t, err)
+
+	var latitude int
+	err = faker.FakeData(&latitude)
+	assert.NoError(t, err)
+
+	var longitude int
+	err = faker.FakeData(&longitude)
+	assert.NoError(t, err)
+
+	var radius int
+	err = faker.FakeData(&radius)
+	assert.NoError(t, err)
+
+	for i := range outputCafes {
+		outputCafes[i].CloseTime = outputCafes[i].CloseTime.UTC()
+		outputCafes[i].OpenTime = outputCafes[i].OpenTime.UTC()
+	}
+
+	testCases := []testCase{
+		//Test OK
+		{
+			inputData: map[string]string{
+				"latitude":  strconv.Itoa(latitude),
+				"longitude": strconv.Itoa(longitude),
+				"radius":    strconv.Itoa(radius),
+			},
+			outputCafe: outputCafes,
+			httpErrs:   nil,
+			useCaseErr: nil,
+		},
+		//Test use case error
+		{
+			inputData: map[string]string{
+				"latitude":  strconv.Itoa(latitude),
+				"longitude": strconv.Itoa(longitude),
+				"radius":    strconv.Itoa(radius),
+			},
+			useCaseErr: sql.ErrNoRows,
+			httpErrs: []responses.HttpError{
+				{
+					Code:    400,
+					Message: sql.ErrNoRows.Error(),
+				},
+			},
+		},
+	}
+
+	for i, testCase := range testCases {
+		message := fmt.Sprintf("test case number: %d", i)
+
+		mockCafeUcase := new(cafeMocks.Usecase)
+		handler := cafeHandlers.CafeHandler{CUsecase: mockCafeUcase}
+
+		mockCafeUcase.On("GetCafeSortedByRadius",
+			mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"),
+			mock.AnythingOfType("string"), mock.AnythingOfType("string"),
+		).Return(testCase.outputCafe, testCase.useCaseErr)
+
+		req, err := http.NewRequest(echo.GET, url, nil)
+		assert.NoError(t, err, message)
+
+		req.URL.RawQuery = fmt.Sprintf(
+			"latitude=%s&longitude=%s&radius=%s",
+			testCase.inputData["latitude"], testCase.inputData["longitude"], testCase.inputData["radius"])
+
+		respWriter := httptest.NewRecorder()
+
+		handler.GetCafeListByGeoAndRadius(respWriter, req)
 
 		resp := respWriter.Result()
 		body, err := ioutil.ReadAll(resp.Body)

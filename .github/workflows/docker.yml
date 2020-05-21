@@ -1,0 +1,64 @@
+name: Docker Build
+
+on:
+  push:
+    branches:
+      - master
+      - dev
+  pull_request:
+    branches:
+      - master
+      - dev
+
+jobs:
+  linter:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v1
+        with:
+          version: v1.26
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Testing
+        run: make coverage
+      - name: Login to DockerHub Registry
+        run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+      - name: Build Docker image
+        run: sudo docker build -t dependencies -f ./docker/builder.Dockerfile . &&
+          sudo docker build -t droptable14/main_service:${GITHUB_SHA::8} -f ./docker/main_service.Dockerfile . &&
+          sudo docker build -t droptable14/staff_service:${GITHUB_SHA::8} -f ./docker/staff.Dockerfile . &&
+          sudo docker build -t droptable14/survey_service:${GITHUB_SHA::8} -f ./docker/survey.Dockerfile .
+
+      - name: Push the image
+        run: docker push droptable14/main_service:${GITHUB_SHA::8} &&
+          docker push droptable14/staff_service:${GITHUB_SHA::8} &&
+          docker push droptable14/survey_service:${GITHUB_SHA::8}
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: pull project
+        uses: appleboy/ssh-action@master
+        with:
+          envs: GITHUB_SHA
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PRIVATE_KEY }}
+          script: cd 2020_1_drop_table/ && docker pull droptable14/main_service:${GITHUB_SHA::8} &&
+            docker pull droptable14/staff_service:${GITHUB_SHA::8} &&
+            docker pull droptable14/survey_service:${GITHUB_SHA::8}
+      - name: run project
+        uses: appleboy/ssh-action@master
+        with:
+          envs: GITHUB_SHA
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PRIVATE_KEY }}
+          script: docker rm -vf $(docker ps -a -q) || true && cd 2020_1_drop_table/ && docker-compose up -d --build --no-deps
+
+

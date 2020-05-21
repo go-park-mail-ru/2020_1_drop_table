@@ -179,6 +179,28 @@ func TestGetPassHandler(t *testing.T) {
 			data:     data,
 			httpErrs: nil,
 		},
+		{
+			cafeID:  "not int",
+			publish: "true",
+			data:    nil,
+			httpErrs: []responses.HttpError{
+				{
+					Code:    400,
+					Message: "bad id: not int",
+				},
+			},
+		},
+		{
+			cafeID:  strconv.Itoa(cafeID),
+			publish: "not bool",
+			data:    nil,
+			httpErrs: []responses.HttpError{
+				{
+					Code:    400,
+					Message: "strconv.ParseBool: parsing \"not bool\": invalid syntax",
+				},
+			},
+		},
 	}
 
 	for i, testCase := range testCases {
@@ -198,7 +220,7 @@ func TestGetPassHandler(t *testing.T) {
 		req = mux.SetURLVars(req, map[string]string{
 			"id": testCase.cafeID,
 		})
-		req.URL.RawQuery = fmt.Sprintf("publish=%s", testCase.publish)
+		req.URL.RawQuery = fmt.Sprintf("published=%s", testCase.publish)
 
 		respWriter := httptest.NewRecorder()
 
@@ -217,5 +239,250 @@ func TestGetPassHandler(t *testing.T) {
 
 		assert.Equal(t, testCase.httpErrs, errs, message)
 		assert.Equal(t, testCase.data, pass, message)
+	}
+}
+
+func TestApplePassKitHandler_GetImageHandler(t *testing.T) {
+	type passHttpResponse struct {
+		Data   []byte
+		Errors []responses.HttpError
+	}
+
+	type getImageHandlerTestCase struct {
+		imageName         string
+		CafeID            string
+		loyaltySystemType string
+		published         string
+		err               error
+		httpError         bool
+		httpErrors        passHttpResponse
+		response          []byte
+	}
+
+	var cafeID int
+	err := faker.FakeData(&cafeID)
+	assert.NoError(t, err)
+
+	var data map[string]string
+	err = faker.FakeData(&data)
+	assert.NoError(t, err)
+
+	var fakeImage []byte
+	err = faker.FakeData(&fakeImage)
+	assert.NoError(t, err)
+
+	testCases := []getImageHandlerTestCase{
+		//Test OK
+		{
+			imageName:         "icon@2x.png",
+			CafeID:            strconv.Itoa(cafeID),
+			loyaltySystemType: "coffee_cup",
+			published:         "true",
+			err:               nil,
+			response:          fakeImage,
+		},
+		//Test err cafeID not int
+		{
+			imageName:         "icon@2x.png",
+			CafeID:            "not int",
+			loyaltySystemType: "coffee_cup",
+			published:         "true",
+			err:               nil,
+			httpError:         true,
+			httpErrors: passHttpResponse{
+				Data: nil,
+				Errors: []responses.HttpError{
+					{
+						Code:    400,
+						Message: "bad id: not int",
+					},
+				},
+			},
+		},
+		//Test err published not bool
+		{
+			imageName:         "icon@2x.png",
+			CafeID:            strconv.Itoa(cafeID),
+			loyaltySystemType: "coffee_cup",
+			published:         "not bool",
+			err:               nil,
+			httpError:         true,
+			httpErrors: passHttpResponse{
+				Data: nil,
+				Errors: []responses.HttpError{
+					{
+						Code:    400,
+						Message: "strconv.ParseBool: parsing \"not bool\": invalid syntax",
+					},
+				},
+			},
+		},
+	}
+
+	for i, testCase := range testCases {
+		message := fmt.Sprintf("test case number: %d", i)
+
+		mockPassUcase := new(passMocks.Usecase)
+		handler := applePassKitHandler{passesUsecace: mockPassUcase}
+
+		mockPassUcase.On("GetImage",
+			mock.AnythingOfType("*context.valueCtx"),
+			mock.AnythingOfType("string"), mock.AnythingOfType("int"),
+			mock.AnythingOfType("string"), mock.AnythingOfType("bool")).
+			Return(testCase.response, testCase.err)
+
+		url := fmt.Sprintf("/api/v1/cafe/%s/apple_pass/%s/%s",
+			testCase.CafeID, testCase.loyaltySystemType, testCase.imageName)
+
+		req, err := http.NewRequest(echo.GET, url, nil)
+		assert.NoError(t, err, message)
+
+		req = mux.SetURLVars(req, map[string]string{
+			"id":                  testCase.CafeID,
+			"image_name":          testCase.imageName,
+			"loyalty_system_type": testCase.loyaltySystemType,
+		})
+		req.URL.RawQuery = fmt.Sprintf("published=%s", testCase.published)
+
+		respWriter := httptest.NewRecorder()
+
+		handler.GetImageHandler(respWriter, req)
+
+		resp := respWriter.Result()
+		body, err := ioutil.ReadAll(resp.Body)
+		assert.NoError(t, err, message)
+
+		if testCase.httpError {
+			var response passHttpResponse
+			err = json.Unmarshal(body, &response)
+			assert.NoError(t, err, message)
+			assert.Equal(t, testCase.httpErrors, response, message)
+		} else {
+			fileName := fmt.Sprintf("attachment; filename=%s.png", testCase.imageName)
+			assert.Equal(t, resp.Header.Get("Content-Disposition"), fileName)
+			assert.Equal(t, resp.Header.Get("Content-Type"), "image/png")
+			assert.Equal(t, body, testCase.response)
+		}
+	}
+}
+
+func TestApplePassKitHandler_GenerateNewPass(t *testing.T) {
+	type passHttpResponse struct {
+		Data   []byte
+		Errors []responses.HttpError
+	}
+
+	type getImageHandlerTestCase struct {
+		CafeID            string
+		loyaltySystemType string
+		published         string
+		err               error
+		httpError         bool
+		httpErrors        passHttpResponse
+		response          *bytes.Buffer
+	}
+
+	var cafeID int
+	err := faker.FakeData(&cafeID)
+	assert.NoError(t, err)
+
+	var data map[string]string
+	err = faker.FakeData(&data)
+	assert.NoError(t, err)
+
+	var fakeImage []byte
+	err = faker.FakeData(&fakeImage)
+	assert.NoError(t, err)
+
+	newBuffer := new(bytes.Buffer)
+	newBuffer.Write(fakeImage)
+
+	testCases := []getImageHandlerTestCase{
+		//Test OK
+		{
+			CafeID:            strconv.Itoa(cafeID),
+			loyaltySystemType: "coffee_cup",
+			published:         "true",
+			err:               nil,
+			response:          newBuffer,
+		},
+		//Test err cafeID not int
+		{
+			CafeID:            "not int",
+			loyaltySystemType: "coffee_cup",
+			published:         "true",
+			err:               nil,
+			httpError:         true,
+			httpErrors: passHttpResponse{
+				Data: nil,
+				Errors: []responses.HttpError{
+					{
+						Code:    400,
+						Message: "bad id: not int",
+					},
+				},
+			},
+		},
+		//Test err published not bool
+		{
+			CafeID:            strconv.Itoa(cafeID),
+			loyaltySystemType: "coffee_cup",
+			published:         "not bool",
+			err:               nil,
+			httpError:         true,
+			httpErrors: passHttpResponse{
+				Data: nil,
+				Errors: []responses.HttpError{
+					{
+						Code:    400,
+						Message: "strconv.ParseBool: parsing \"not bool\": invalid syntax",
+					},
+				},
+			},
+		},
+	}
+
+	for i, testCase := range testCases {
+		message := fmt.Sprintf("test case number: %d", i)
+
+		mockPassUcase := new(passMocks.Usecase)
+		handler := applePassKitHandler{passesUsecace: mockPassUcase}
+
+		mockPassUcase.On("GeneratePassObject",
+			mock.AnythingOfType("*context.valueCtx"),
+			mock.AnythingOfType("int"), mock.AnythingOfType("string"),
+			mock.AnythingOfType("bool")).Return(testCase.response, testCase.err)
+
+		url := fmt.Sprintf("/api/v1/cafe/%s/apple_pass/%s/new_customer",
+			testCase.CafeID, testCase.loyaltySystemType)
+
+		req, err := http.NewRequest(echo.GET, url, nil)
+		assert.NoError(t, err, message)
+
+		req = mux.SetURLVars(req, map[string]string{
+			"id":                  testCase.CafeID,
+			"loyalty_system_type": testCase.loyaltySystemType,
+		})
+		req.URL.RawQuery = fmt.Sprintf("published=%s", testCase.published)
+
+		respWriter := httptest.NewRecorder()
+
+		handler.GenerateNewPass(respWriter, req)
+
+		resp := respWriter.Result()
+		body, err := ioutil.ReadAll(resp.Body)
+		assert.NoError(t, err, message)
+
+		if testCase.httpError {
+			var response passHttpResponse
+			err = json.Unmarshal(body, &response)
+			assert.NoError(t, err, message)
+			assert.Equal(t, testCase.httpErrors, response, message)
+		} else {
+			headerValue := "attachment; filename=loyaltyCard.pkpass"
+			assert.Equal(t, resp.Header.Get("Content-Disposition"), headerValue)
+			assert.Equal(t, resp.Header.Get("Content-Type"), "application/vnd.apple.pkpass")
+			assert.Equal(t, body, testCase.response.Bytes())
+		}
 	}
 }

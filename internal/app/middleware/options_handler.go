@@ -13,6 +13,5 @@ func AddOptionsRequest(r *mux.Router) {
 			" Accept-Encoding, X-CSRF-Token, Authorization, Access-Control-Request-Headers,"+
 			" Access-Control-Request-Method, Connection, Host, Origin, User-Agent, Referer, Cache-Control, X-header")
 		w.WriteHeader(http.StatusNoContent)
-		return
 	})
 }

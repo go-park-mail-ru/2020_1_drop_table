@@ -27,6 +27,26 @@ func (c *CafeGRPC) GetByID(ctx context.Context, id int) (models.Cafe, error) {
 	return cafeProtoToModel(cafeProto), err
 }
 
+func (c *CafeGRPC) GetByOwnerId(ctx context.Context, id int) ([]models.Cafe, error) {
+	idProto := &proto.ID{}
+	idProto.Id = int64(id)
+
+	cafeList, err := c.client.GetByOwnerID(ctx, idProto)
+	return cafeListProtoToModel(cafeList), err
+
+}
+
+func cafeListProtoToModel(listCafe *proto.ListCafe) []models.Cafe {
+	if listCafe == nil {
+		return []models.Cafe{}
+	}
+	var resList []models.Cafe
+	for _, cafe := range listCafe.Cafe {
+		resList = append(resList, cafeProtoToModel(cafe))
+	}
+	return resList
+}
+
 func cafeProtoToModel(cafe *proto.Cafe) models.Cafe {
 	if cafe == nil {
 		return models.Cafe{}

@@ -5,28 +5,32 @@ import (
 	"2020_1_drop_table/internal/app/customer"
 	"2020_1_drop_table/internal/app/customer/models"
 	globalModels "2020_1_drop_table/internal/app/models"
+	"2020_1_drop_table/internal/app/statistics"
 	staffClient "2020_1_drop_table/internal/microservices/staff/delivery/grpc/client"
 	loyaltySystems "2020_1_drop_table/internal/pkg/apple_pass_generator/loyalty_systems"
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 )
 
 type customerUsecase struct {
-	customerRepo   customer.Repository
-	passKitRepo    apple_passkit.Repository
-	staffClient    staffClient.StaffClientInterface
-	contextTimeout time.Duration
+	customerRepo      customer.Repository
+	passKitRepo       apple_passkit.Repository
+	staffClient       staffClient.StaffClientInterface
+	statisticsUsecase statistics.Usecase
+	contextTimeout    time.Duration
 }
 
 func NewCustomerUsecase(c customer.Repository, p apple_passkit.Repository, clientInterface staffClient.StaffClientInterface,
-	timeout time.Duration) customer.Usecase {
+	timeout time.Duration, statUsecase statistics.Usecase) customer.Usecase {
 
 	return &customerUsecase{
-		contextTimeout: timeout,
-		passKitRepo:    p,
-		customerRepo:   c,
-		staffClient:    clientInterface,
+		contextTimeout:    timeout,
+		passKitRepo:       p,
+		customerRepo:      c,
+		staffClient:       clientInterface,
+		statisticsUsecase: statUsecase,
 	}
 }
 
@@ -59,16 +63,20 @@ func (u customerUsecase) GetPoints(ctx context.Context, uuid string) (string, er
 func (u customerUsecase) SetPoints(ctx context.Context, uuid string, points string) error {
 	ctx, cancel := context.WithTimeout(ctx, u.contextTimeout)
 	defer cancel()
+	currTime := time.Now()
 
 	requestStaff, err := u.staffClient.GetFromSession(ctx)
 	if err != nil {
+		fmt.Println("err here: ", err)
 		if err == sql.ErrNoRows {
 			return globalModels.ErrForbidden
 		}
 		return err
 	}
+
 	targetCustomer, err := u.customerRepo.GetByID(ctx, uuid)
 	if err != nil {
+		fmt.Println("err here 2: ", err)
 		if err == sql.ErrNoRows {
 			return globalModels.ErrNotFound
 		}
@@ -78,22 +86,37 @@ func (u customerUsecase) SetPoints(ctx context.Context, uuid string, points stri
 		return globalModels.ErrForbidden
 	}
 
+	fmt.Println("here1")
 	pass, err := u.passKitRepo.GetPassByCafeID(ctx, targetCustomer.CafeID, targetCustomer.Type, true)
 	if err != nil {
 		return err
 	}
+	fmt.Println("here2", pass, err)
 
 	loyaltySystem, ok := loyaltySystems.LoyaltySystems[targetCustomer.Type]
 	if !ok {
 		return err
 	}
 
+	fmt.Println("here3", loyaltySystem, ok)
+
 	newPoints, err := loyaltySystem.SettingPoints(pass.LoyaltyInfo, targetCustomer.Points, points)
 	if err != nil {
 		return err
 	}
 
+	fmt.Println("here4", newPoints, err)
+
+	//todo check if this work all together
+	err = u.statisticsUsecase.AddData(newPoints, currTime, targetCustomer.CustomerID, requestStaff.StaffID, requestStaff.CafeId)
+	if err != nil {
+
+		return err
+	}
+	fmt.Println("here5", err)
+
 	_, err = u.customerRepo.SetLoyaltyPoints(ctx, newPoints, uuid)
+	fmt.Println("here6", err)
 	return err
 }
 

@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"2020_1_drop_table/configs"
 	"2020_1_drop_table/internal/pkg/responses"
 	"context"
 	"fmt"
@@ -8,7 +9,7 @@ import (
 	"net/http"
 )
 
-const sessionCookieName = "authCookie"
+const SessionCookieName = "authCookie"
 
 type sessionMiddleware struct {
 	sessionRepo *redistore.RediStore
@@ -16,7 +17,7 @@ type sessionMiddleware struct {
 
 func (s *sessionMiddleware) SessionMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session, err := s.sessionRepo.Get(r, sessionCookieName)
+		session, err := s.sessionRepo.Get(r, SessionCookieName)
 		if err != nil {
 			errMessage := fmt.Sprintf("err: %s, while getting cookie", err.Error())
 			responses.SendServerError(errMessage, w)
@@ -29,11 +30,8 @@ func (s *sessionMiddleware) SessionMiddleware(next http.Handler) http.Handler {
 				responses.SendServerError(err.Error(), w)
 				return
 			}
-
 		}
-
-		r = r.WithContext(context.WithValue(r.Context(), "session", session))
-
+		r = r.WithContext(context.WithValue(r.Context(), configs.SessionStaffID, session))
 		next.ServeHTTP(w, r)
 	})
 }

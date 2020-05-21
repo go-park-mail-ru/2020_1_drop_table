@@ -4,6 +4,8 @@ import (
 	"time"
 )
 
+//easyjson -all cafe.go
+
 //easyjson:json
 type Cafe struct {
 	CafeID      int       `json:"id"`
@@ -14,4 +16,5 @@ type Cafe struct {
 	OpenTime    time.Time `json:"openTime"`
 	CloseTime   time.Time `json:"closeTime"`
 	Photo       string    `json:"photo"`
+	Location    string    `json:"location" db:"location_str"`
 }

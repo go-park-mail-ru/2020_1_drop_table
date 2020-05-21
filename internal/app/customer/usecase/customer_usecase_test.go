@@ -5,6 +5,7 @@ import (
 	passKitModels "2020_1_drop_table/internal/app/apple_passkit/models"
 	customerMocks "2020_1_drop_table/internal/app/customer/mocks"
 	customerModels "2020_1_drop_table/internal/app/customer/models"
+	statisticsMock "2020_1_drop_table/internal/app/statistics/mocks"
 	staffClientGRPCMOCK "2020_1_drop_table/internal/microservices/staff/delivery/grpc/client/mocks"
 	staffMocks "2020_1_drop_table/internal/microservices/staff/mocks"
 	staffModels "2020_1_drop_table/internal/microservices/staff/models"
@@ -71,7 +72,8 @@ func TestCustomerUsecase_GetCustomer(t *testing.T) {
 			testCase.customer, nil)
 
 		staffClient := new(staffClientGRPCMOCK.StaffClientInterface)
-		cafeUsecase := NewCustomerUsecase(mockCustomerRepo, mockPassKitRepo, staffClient, time.Second*2)
+		statisticsMockUsecse := new(statisticsMock.Usecase)
+		cafeUsecase := NewCustomerUsecase(mockCustomerRepo, mockPassKitRepo, staffClient, time.Second*2, statisticsMockUsecse)
 
 		customer, err := cafeUsecase.GetCustomer(context.Background(), testCase.customer.CustomerID)
 
@@ -116,7 +118,8 @@ func TestCustomerUsecase_GetPoints(t *testing.T) {
 			testCase.customer, nil)
 
 		staffClient := new(staffClientGRPCMOCK.StaffClientInterface)
-		cafeUsecase := NewCustomerUsecase(mockCustomerRepo, mockPassKitRepo, staffClient, time.Second*2)
+		statisticsMockUsecse := new(statisticsMock.Usecase)
+		cafeUsecase := NewCustomerUsecase(mockCustomerRepo, mockPassKitRepo, staffClient, time.Second*2, statisticsMockUsecse)
 
 		customerPoints, err := cafeUsecase.GetPoints(context.Background(), testCase.customer.CustomerID)
 
@@ -220,8 +223,9 @@ func TestCustomerUsecase_SetPoints(t *testing.T) {
 			mock.AnythingOfType("*context.timerCtx"),
 			mock.MatchedBy(newPointsMatches), mock.MatchedBy(newCustomerIdMatches)).Return(
 			testCase.newCustomer, nil)
-
-		cafeUsecase := NewCustomerUsecase(mockCustomerRepo, mockPassKitRepo, staffClient, time.Second*2)
+		statisticsMockUsecse := new(statisticsMock.Usecase)
+		statisticsMockUsecse.On("AddData", mock.AnythingOfType("string"), mock.AnythingOfType("time.Time"), mock.AnythingOfType("string"), mock.AnythingOfType("int"), mock.AnythingOfType("int")).Return(nil)
+		cafeUsecase := NewCustomerUsecase(mockCustomerRepo, mockPassKitRepo, staffClient, time.Second*2, statisticsMockUsecse)
 
 		err = cafeUsecase.SetPoints(context.Background(), testCase.newCustomer.CustomerID, testCase.newCustomer.Points)
 

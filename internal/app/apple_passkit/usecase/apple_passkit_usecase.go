@@ -6,7 +6,7 @@ import (
 	"2020_1_drop_table/internal/app/apple_passkit/models"
 	"2020_1_drop_table/internal/app/cafe"
 	cafeModels "2020_1_drop_table/internal/app/cafe/models"
-	customerClient "2020_1_drop_table/internal/app/customer/delivery/grpc/client"
+	"2020_1_drop_table/internal/app/customer"
 	customerModels "2020_1_drop_table/internal/app/customer/models"
 	globalModels "2020_1_drop_table/internal/app/models"
 	passesGenerator "2020_1_drop_table/internal/pkg/apple_pass_generator"
@@ -27,23 +27,25 @@ type applePassKitUsecase struct {
 	cafeRepo        cafe.Repository
 	passesGenerator passesGenerator.Generator
 	passesMeta      passesGenerator.PassMeta
-	customerClient  *customerClient.CustomerGRPC
+	customerUCase   customer.Usecase
 	contextTimeout  time.Duration
 }
 
-func NewApplePassKitUsecase(passKitRepo apple_passkit.Repository, cafeRepo cafe.Repository, customerClient *customerClient.CustomerGRPC, passesGenerator passesGenerator.Generator, contextTimeout time.Duration, updateMeta passesGenerator.PassMeta) apple_passkit.Usecase {
+func NewApplePassKitUsecase(passKitRepo apple_passkit.Repository, cafeRepo cafe.Repository,
+	customerClient customer.Usecase, passesGenerator passesGenerator.Generator,
+	contextTimeout time.Duration, updateMeta passesGenerator.PassMeta) apple_passkit.Usecase {
 	return &applePassKitUsecase{
 		passKitRepo:     passKitRepo,
 		cafeRepo:        cafeRepo,
 		passesGenerator: passesGenerator,
 		passesMeta:      updateMeta,
-		customerClient:  customerClient,
+		customerUCase:   customerClient,
 		contextTimeout:  contextTimeout,
 	}
 }
 
 func (ap *applePassKitUsecase) getOwnersCafe(ctx context.Context, cafeID int) (cafeModels.Cafe, error) {
-	session := ctx.Value("session").(*sessions.Session)
+	session := ctx.Value(configs.SessionStaffID).(*sessions.Session)
 
 	staffInterface, found := session.Values["userID"]
 	staffID, ok := staffInterface.(int)
@@ -76,7 +78,7 @@ func (ap *applePassKitUsecase) UpdatePass(c context.Context, pass models.ApplePa
 	}
 
 	if cafeObj.CafeID != pass.CafeID {
-		return models.UpdateResponse{}, err
+		return models.UpdateResponse{}, globalModels.ErrForbidden
 	}
 
 	loyaltySystem, ok := loyaltySystems.LoyaltySystems[pass.Type]
@@ -153,22 +155,30 @@ func (ap *applePassKitUsecase) getImageUrls(passObj models.ApplePassDB, cafeID i
 	serverStartUrl := fmt.Sprintf("%s/%s/cafe/%d/apple_pass/%s", configs.ServerUrl, configs.ApiVersion,
 		cafeID, passObj.Type)
 
-	return map[string]string{
+	passMap := map[string]string{
 		"design":       passObj.Design,
 		"type":         passObj.Type,
 		"loyalty_info": passObj.LoyaltyInfo,
-		"icon":         fmt.Sprintf("%s/icon", serverStartUrl),
-		"icon2x":       fmt.Sprintf("%s/icon2x", serverStartUrl),
-		"logo":         fmt.Sprintf("%s/logo", serverStartUrl),
-		"logo2x":       fmt.Sprintf("%s/logo2x", serverStartUrl),
-		"strip":        fmt.Sprintf("%s/strip", serverStartUrl),
-		"strip2x":      fmt.Sprintf("%s/strip2x", serverStartUrl),
 	}
+
+	allImages := map[string][]byte{"icon": passObj.Icon, "icon2x": passObj.Icon2x,
+		"logo": passObj.Logo, "logo2x": passObj.Logo2x, "strip": passObj.Strip, "strip2x": passObj.Strip2x}
+
+	for imageName, imageData := range allImages {
+		if len(imageData) != 0 {
+			passMap[imageName] = fmt.Sprintf("%s/%s", serverStartUrl, imageName)
+		}
+	}
+
+	return passMap
 }
 
 func (ap *applePassKitUsecase) GetPass(c context.Context, cafeID int, Type string,
 	published bool) (map[string]string, error) {
-	passObj, err := ap.passKitRepo.GetPassByCafeID(c, cafeID, Type, published)
+	ctx, cancel := context.WithTimeout(c, ap.contextTimeout)
+	defer cancel()
+
+	passObj, err := ap.passKitRepo.GetPassByCafeID(ctx, cafeID, Type, published)
 	if err != nil {
 		return nil, err
 	}
@@ -176,12 +186,12 @@ func (ap *applePassKitUsecase) GetPass(c context.Context, cafeID int, Type strin
 	return ap.getImageUrls(passObj, cafeID), nil
 }
 
-func (ap *applePassKitUsecase) GetImage(c context.Context, imageName string, cafeID int, Type string,
+func (ap *applePassKitUsecase) GetImage(c context.Context, imageName string, cafeID int, PassType string,
 	published bool) ([]byte, error) {
-	passObj, err := ap.passKitRepo.GetPassByCafeID(c, cafeID, Type, true)
-	if err != nil {
-		passObj, err = ap.passKitRepo.GetPassByCafeID(c, cafeID, Type, true)
-	}
+	ctx, cancel := context.WithTimeout(c, ap.contextTimeout)
+	defer cancel()
+
+	passObj, err := ap.passKitRepo.GetPassByCafeID(ctx, cafeID, PassType, published)
 	if err != nil {
 		return nil, err
 	}
@@ -264,6 +274,10 @@ func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int,
 	}
 
 	customerPoints, newLoyaltyInfo, err := loyaltySystem.CreatingCustomer(publishedCardDB.LoyaltyInfo)
+	if err != nil {
+		return nil, err
+	}
+
 	if newLoyaltyInfo != publishedCardDB.LoyaltyInfo {
 		publishedCardDB.LoyaltyInfo = newLoyaltyInfo
 		err = ap.passKitRepo.Update(ctx, publishedCardDB)
@@ -279,12 +293,7 @@ func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int,
 		SurveyResult: "{}",
 	}
 
-	newCustomer, err = ap.customerClient.Add(ctx, newCustomer)
-	if err != nil {
-		return nil, err
-	}
-
-	cafeObj, err := ap.cafeRepo.GetByID(ctx, cafeID)
+	newCustomer, err = ap.customerUCase.Add(ctx, newCustomer)
 	if err != nil {
 		return nil, err
 	}
@@ -297,7 +306,12 @@ func (ap *applePassKitUsecase) GeneratePassObject(c context.Context, cafeID int,
 	structs.FillMap(newCustomer, passEnv)
 
 	if !published {
-		session := ctx.Value("session").(*sessions.Session)
+		cafeObj, err := ap.cafeRepo.GetByID(ctx, cafeID)
+		if err != nil {
+			return nil, err
+		}
+
+		session := ctx.Value(configs.SessionStaffID).(*sessions.Session)
 		staffInterface, found := session.Values["userID"]
 		staffID, ok := staffInterface.(int)
 		if !found || !ok || staffID != cafeObj.StaffID {

@@ -36,10 +36,12 @@ func main() {
 
 	timeoutContext := configs.Timeouts.ContextTimeout
 
-	connStr := fmt.Sprintf("user=%s password=%s dbname=postgres sslmode=disable port=%s",
+	connStr := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable port=%s host=%s",
 		configs.PostgresPreferences.User,
 		configs.PostgresPreferences.Password,
-		configs.PostgresPreferences.Port)
+		configs.PostgresPreferences.DBName,
+		configs.PostgresPreferences.Port,
+		configs.PostgresPreferences.Host)
 
 	conn, err := sqlx.Open("postgres", connStr)
 	if err != nil {
@@ -48,12 +50,16 @@ func main() {
 	}
 
 	grpcCafeConn, err := grpc.Dial(configs.GRPCCafeUrl, grpc.WithInsecure())
+	if err != nil {
+		log.Error().Msgf(err.Error())
+		return
+	}
 	grpcCafeClient := cafeClient.NewCafeClient(grpcCafeConn)
 
 	staffRepo := _staffRepo.NewPostgresStaffRepository(conn)
 	staffUsecase := _staffUsecase.NewStaffUsecase(&staffRepo, grpcCafeClient, timeoutContext)
 
-	go grpcServer.StartStaffGrpcServer(staffUsecase)
+	go grpcServer.StartStaffGrpcServer(staffUsecase, configs.GRPCStaffUrl)
 	staffHandler.NewStaffHandler(r, staffUsecase)
 
 	//static server
@@ -70,5 +76,6 @@ func main() {
 		WriteTimeout: configs.Timeouts.WriteTimeout,
 		ReadTimeout:  configs.Timeouts.ReadTimeout,
 	}
+	fmt.Println("staff server started at ", configs.HTTPStaffUrl)
 	log.Error().Msgf(srv.ListenAndServe().Error())
 }

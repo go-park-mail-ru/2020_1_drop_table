@@ -1,7 +1,6 @@
 package server
 
 import (
-	"2020_1_drop_table/configs"
 	"2020_1_drop_table/internal/app/customer"
 	proto "2020_1_drop_table/internal/app/customer/delivery/grpc/protobuff"
 	"2020_1_drop_table/internal/app/customer/models"
@@ -18,8 +17,8 @@ type server struct {
 	customerUseCase customer.Usecase
 }
 
-func StartCustomerGrpcServer(customerUseCase customer.Usecase) {
-	list, err := net.Listen("tcp", configs.GRPCCustomerUrl)
+func StartCustomerGrpcServer(customerUseCase customer.Usecase, url string) {
+	list, err := net.Listen("tcp", url)
 	if err != nil {
 		log.Err(err)
 	}
@@ -29,7 +28,7 @@ func StartCustomerGrpcServer(customerUseCase customer.Usecase) {
 		}),
 	)
 	NewCustomerServerGRPC(server, customerUseCase)
-	server.Serve(list)
+	_ = server.Serve(list)
 }
 
 func NewCustomerServerGRPC(gServer *grpc.Server, customerUCase customer.Usecase) {

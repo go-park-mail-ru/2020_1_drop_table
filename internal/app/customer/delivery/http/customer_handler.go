@@ -18,7 +18,7 @@ func NewCustomerHandler(r *mux.Router, us customer.Usecase) {
 	handler := CustomerHandler{CUsecase: us}
 	r.HandleFunc("/api/v1/customers/{uuid}/points/", permissions.SetCSRF(handler.GetPoints)).Methods("GET")
 	r.HandleFunc("/api/v1/customers/{uuid}/customer/", permissions.SetCSRF(handler.GetCustomer)).Methods("GET")
-	r.HandleFunc("/api/v1/customers/{uuid}/", permissions.CheckCSRF(handler.SetPoints)).Methods("PUT")
+	r.HandleFunc("/api/v1/customers/{uuid}/", handler.SetPoints).Methods("PUT") //todo checkcsrf
 
 }
 
@@ -50,7 +50,6 @@ func (h CustomerHandler) SetPoints(writer http.ResponseWriter, r *http.Request) 
 		responses.SendSingleError(err.Error(), writer)
 		return
 	}
-
 	err = h.CUsecase.SetPoints(r.Context(), uuid, string(body))
 	if err != nil {
 		responses.SendSingleError(err.Error(), writer)

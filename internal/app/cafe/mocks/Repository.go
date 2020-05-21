@@ -79,13 +79,13 @@ func (_m *Repository) GetByID(ctx context.Context, id int) (models.Cafe, error) 
 	return r0, r1
 }
 
-// GetByOwnerID provides a mock function with given fields: ctx, staffID
-func (_m *Repository) GetByOwnerID(ctx context.Context, staffID int) ([]models.Cafe, error) {
-	ret := _m.Called(ctx, staffID)
+// GetByOwnerId provides a mock function with given fields: ctx, ownerId
+func (_m *Repository) GetByOwnerId(ctx context.Context, ownerId int) ([]models.Cafe, error) {
+	ret := _m.Called(ctx, ownerId)
 
 	var r0 []models.Cafe
 	if rf, ok := ret.Get(0).(func(context.Context, int) []models.Cafe); ok {
-		r0 = rf(ctx, staffID)
+		r0 = rf(ctx, ownerId)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]models.Cafe)
@@ -94,7 +94,53 @@ func (_m *Repository) GetByOwnerID(ctx context.Context, staffID int) ([]models.C
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
-		r1 = rf(ctx, staffID)
+		r1 = rf(ctx, ownerId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetCafeSortedByRadius provides a mock function with given fields: ctx, latitude, longitude, radius
+func (_m *Repository) GetCafeSortedByRadius(ctx context.Context, latitude string, longitude string, radius string) ([]models.Cafe, error) {
+	ret := _m.Called(ctx, latitude, longitude, radius)
+
+	var r0 []models.Cafe
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) []models.Cafe); ok {
+		r0 = rf(ctx, latitude, longitude, radius)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Cafe)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string) error); ok {
+		r1 = rf(ctx, latitude, longitude, radius)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// SearchCafes provides a mock function with given fields: ctx, searchBy, limit, since
+func (_m *Repository) SearchCafes(ctx context.Context, searchBy string, limit int, since int) ([]models.Cafe, error) {
+	ret := _m.Called(ctx, searchBy, limit, since)
+
+	var r0 []models.Cafe
+	if rf, ok := ret.Get(0).(func(context.Context, string, int, int) []models.Cafe); ok {
+		r0 = rf(ctx, searchBy, limit, since)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Cafe)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string, int, int) error); ok {
+		r1 = rf(ctx, searchBy, limit, since)
 	} else {
 		r1 = ret.Error(1)
 	}
