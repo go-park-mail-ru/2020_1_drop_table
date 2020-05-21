@@ -51,6 +51,7 @@ services:
       - "6379:6379"
     volumes:
       - $PWD/redis-data:/data
+    user: redis
 
   postgres:
     image: kartoza/postgis:12.0
