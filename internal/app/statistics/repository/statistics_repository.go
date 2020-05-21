@@ -9,6 +9,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -26,7 +27,7 @@ func generateWhereStatement(cafeList []cafeModels.Cafe) string {
 }
 
 func generateDateTruncStatement(typ string) string {
-	if typ == "MONTH" {
+	if strings.ToUpper(typ) == "MONTH" {
 		return `date_trunc('MONTH', time)`
 	}
 	return `date_trunc('DAY', time)`

@@ -33,21 +33,18 @@ run:
 	docker-compose up --build --no-deps
 
 ## test-coverage: get final code coverage
-test-coverage:
+coverage:
 	go test -covermode=atomic -coverpkg=./... -coverprofile=cover ./...
-	cat cover | fgrep -v "mock" | fgrep -v "pb.go" | fgrep -v "easyjson" > cover2
+	cat cover | fgrep -v "mock" | fgrep -v "pb.go" | fgrep -v "easyjson" | fgrep -v "start.go" > cover2
 	go tool cover -func=cover2
 	rm -rf cover
 	rm -rf cover2
 
-
 ## coverage-html: generates HTML file with test coverage
-coverage-html:
+test-html:
 	go test -covermode=atomic -coverpkg=./... -coverprofile=cover ./...
 	go tool cover -html=cover
 	rm -rf cover
-
-
 
 ## run-background: run process in background(available after build)
 run-background:

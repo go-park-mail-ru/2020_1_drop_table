@@ -23,13 +23,13 @@ type customerUsecase struct {
 }
 
 func NewCustomerUsecase(c customer.Repository, p apple_passkit.Repository, clientInterface staffClient.StaffClientInterface,
-	timeout time.Duration,statUsecase statistics.Usecase) customer.Usecase {
+	timeout time.Duration, statUsecase statistics.Usecase) customer.Usecase {
 
 	return &customerUsecase{
-		contextTimeout: timeout,
-		passKitRepo:    p,
-		customerRepo:   c,
-		staffClient:    clientInterface,
+		contextTimeout:    timeout,
+		passKitRepo:       p,
+		customerRepo:      c,
+		staffClient:       clientInterface,
 		statisticsUsecase: statUsecase,
 	}
 }
@@ -67,17 +67,16 @@ func (u customerUsecase) SetPoints(ctx context.Context, uuid string, points stri
 
 	requestStaff, err := u.staffClient.GetFromSession(ctx)
 	if err != nil {
-		fmt.Println("err here: ",err)
+		fmt.Println("err here: ", err)
 		if err == sql.ErrNoRows {
 			return globalModels.ErrForbidden
 		}
 		return err
 	}
 
-
 	targetCustomer, err := u.customerRepo.GetByID(ctx, uuid)
 	if err != nil {
-		fmt.Println("err here 2: ",err)
+		fmt.Println("err here 2: ", err)
 		if err == sql.ErrNoRows {
 			return globalModels.ErrNotFound
 		}
@@ -92,21 +91,21 @@ func (u customerUsecase) SetPoints(ctx context.Context, uuid string, points stri
 	if err != nil {
 		return err
 	}
-	fmt.Println("here2",pass,err)
+	fmt.Println("here2", pass, err)
 
 	loyaltySystem, ok := loyaltySystems.LoyaltySystems[targetCustomer.Type]
 	if !ok {
 		return err
 	}
 
-	fmt.Println("here3",loyaltySystem,ok)
+	fmt.Println("here3", loyaltySystem, ok)
 
 	newPoints, err := loyaltySystem.SettingPoints(pass.LoyaltyInfo, targetCustomer.Points, points)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("here4",newPoints,err)
+	fmt.Println("here4", newPoints, err)
 
 	//todo check if this work all together
 	err = u.statisticsUsecase.AddData(newPoints, currTime, targetCustomer.CustomerID, requestStaff.StaffID, requestStaff.CafeId)
@@ -114,10 +113,10 @@ func (u customerUsecase) SetPoints(ctx context.Context, uuid string, points stri
 
 		return err
 	}
-	fmt.Println("here5",err)
+	fmt.Println("here5", err)
 
 	_, err = u.customerRepo.SetLoyaltyPoints(ctx, newPoints, uuid)
-	fmt.Println("here6",err)
+	fmt.Println("here6", err)
 	return err
 }
 
