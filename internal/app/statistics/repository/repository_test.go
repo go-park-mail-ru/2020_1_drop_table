@@ -3,7 +3,6 @@ package repository
 import (
 	"2020_1_drop_table/configs"
 	cafeModels "2020_1_drop_table/internal/app/cafe/models"
-	"2020_1_drop_table/internal/app/statistics/models"
 	"context"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/gorilla/sessions"
@@ -19,8 +18,8 @@ func TestAdd(t *testing.T) {
 		typ      string
 		Since    string
 		To       string
-		output   []models.StatisticsGraphRawStruct
-		err      error
+		//output   []models.StatisticsGraphRawStruct
+		//err      error
 		ctx context.Context
 	}
 
@@ -73,31 +72,31 @@ func TestAdd(t *testing.T) {
 			typ:   "MONTH",
 			Since: "test",
 			To:    time.Now().String(),
-			output: []models.StatisticsGraphRawStruct{
-				{
-					Count:   1,
-					Date:    time.Time{},
-					CafeId:  1,
-					StaffId: 322,
-				},
-				{
-					Count:   0,
-					Date:    time.Time{},
-					CafeId:  2,
-					StaffId: 228,
-				},
-			},
-			err: nil,
+			//output: []models.StatisticsGraphRawStruct{
+			//	{
+			//		Count:   1,
+			//		Date:    time.Time{},
+			//		CafeId:  1,
+			//		StaffId: 322,
+			//	},
+			//	{
+			//		Count:   0,
+			//		Date:    time.Time{},
+			//		CafeId:  2,
+			//		StaffId: 228,
+			//	},
+			//},
+			//err:      nil,
 			cafeList: cafeList,
-			ctx: c,
+			ctx:      c,
 		},
 	}
 
 	for _, testCase := range testCases {
 
-		rep:=NewPostgresStatisticsRepository(sqlxDB)
-		_,err:=rep.GetGraphsDataFromRepo(testCase.ctx,testCase.cafeList,testCase.typ,testCase.Since,testCase.To)
-		assert.NotNil(t,err)
+		rep := NewPostgresStatisticsRepository(sqlxDB)
+		_, err := rep.GetGraphsDataFromRepo(testCase.ctx, testCase.cafeList, testCase.typ, testCase.Since, testCase.To)
+		assert.NotNil(t, err)
 	}
 
 }
