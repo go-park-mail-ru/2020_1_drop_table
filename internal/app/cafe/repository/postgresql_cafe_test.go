@@ -344,3 +344,248 @@ func TestUpdate(t *testing.T) {
 		}
 	}
 }
+
+func TestPostgresCafeRepository_SearchCafes(t *testing.T) {
+	type TestCase struct {
+		cafesArray []cafeModels.Cafe
+		searchBy   string
+		limit      int
+		since      int
+		err        error
+	}
+
+	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	sqlxDB := sqlx.NewDb(db, "sqlmock")
+
+	var searchBy string
+	err = faker.FakeData(&searchBy)
+	assert.NoError(t, err)
+
+	var limit int
+	err = faker.FakeData(&limit)
+	assert.NoError(t, err)
+
+	var since int
+	err = faker.FakeData(&since)
+	assert.NoError(t, err)
+
+	outputCafeArray := make([]cafeModels.Cafe, 5)
+	err = faker.FakeData(&outputCafeArray)
+	assert.NoError(t, err)
+
+	columnNames := []string{
+		"cafeid",
+		"cafename",
+		"address",
+		"description",
+		"staffid",
+		"opentime",
+		"closetime",
+		"photo",
+		"location_str",
+	}
+
+	query := `  SELECT CafeID,CafeName,Address,Description,StaffID,OpenTime,CloseTime,Photo,location_str
+				FROM cafe
+				WHERE CafeName % $1
+				   or Address % $1
+				   or CafeName LIKE '%' || $1 || '%'
+				   or Address  LIKE '%' || $1 || '%'
+				limit $2
+				offset $3`
+
+	testCases := []TestCase{
+		//Test OK
+		{
+			searchBy: searchBy,
+			limit:    limit,
+			since:    since,
+		},
+	}
+
+	for i, testCase := range testCases {
+		message := fmt.Sprintf("test case number: %d", i)
+
+		rows := sqlmock.NewRows(columnNames)
+		for _, cafe := range testCase.cafesArray {
+			rows.AddRow(cafe.CafeID, cafe.CafeName, cafe.Address, cafe.Description, cafe.StaffID, cafe.OpenTime,
+				cafe.CloseTime, cafe.Photo, cafe.Location)
+		}
+
+		mock.ExpectQuery(query).WithArgs(testCase.searchBy, testCase.limit, testCase.since).WillReturnRows(rows)
+
+		rep := repository.NewPostgresCafeRepository(sqlxDB)
+
+		cafesObj, err := rep.SearchCafes(context.Background(), testCase.searchBy,
+			testCase.limit, testCase.since)
+
+		assert.Equal(t, testCase.err, err, message)
+		if err == nil {
+			assert.Equal(t, testCase.cafesArray, cafesObj, message)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("there were unfulfilled expectations: %s", err)
+		}
+	}
+}
+
+func TestPostgresCafeRepository_GetCafeSortedByRadius(t *testing.T) {
+	type TestCase struct {
+		cafesArray []cafeModels.Cafe
+		latitude   string
+		longitude  string
+		radius     string
+		err        error
+	}
+
+	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	sqlxDB := sqlx.NewDb(db, "sqlmock")
+
+	var latitude string
+	err = faker.FakeData(&latitude)
+	assert.NoError(t, err)
+
+	var longitude string
+	err = faker.FakeData(&longitude)
+	assert.NoError(t, err)
+
+	var radius string
+	err = faker.FakeData(&radius)
+	assert.NoError(t, err)
+
+	outputCafeArray := make([]cafeModels.Cafe, 5)
+	err = faker.FakeData(&outputCafeArray)
+	assert.NoError(t, err)
+
+	columnNames := []string{
+		"cafeid",
+		"cafename",
+		"address",
+		"description",
+		"staffid",
+		"opentime",
+		"closetime",
+		"photo",
+		"location_str",
+	}
+
+	query := `SELECT CafeID,CafeName,Address,Description,StaffID,OpenTime,CloseTime,Photo,location_str
+              FROM cafe where ST_Distance(location::geography, $1::geography)<$2 
+              ORDER BY location <-> $1`
+
+	testCases := []TestCase{
+		//Test OK
+		{
+			latitude:  latitude,
+			longitude: longitude,
+			radius:    radius,
+		},
+	}
+
+	for i, testCase := range testCases {
+		message := fmt.Sprintf("test case number: %d", i)
+
+		rows := sqlmock.NewRows(columnNames)
+		for _, cafe := range testCase.cafesArray {
+			rows.AddRow(cafe.CafeID, cafe.CafeName, cafe.Address, cafe.Description, cafe.StaffID, cafe.OpenTime,
+				cafe.CloseTime, cafe.Photo, cafe.Location)
+		}
+		point := repository.GeneratePointToGeo(testCase.latitude, testCase.longitude)
+		mock.ExpectQuery(query).WithArgs(point, testCase.radius).WillReturnRows(rows)
+
+		rep := repository.NewPostgresCafeRepository(sqlxDB)
+
+		cafesObj, err := rep.GetCafeSortedByRadius(context.Background(), testCase.latitude,
+			testCase.longitude, testCase.radius)
+
+		assert.Equal(t, testCase.err, err, message)
+		if err == nil {
+			assert.Equal(t, testCase.cafesArray, cafesObj, message)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("there were unfulfilled expectations: %s", err)
+		}
+	}
+}
+
+func TestPostgresCafeRepository_GetAllCafes(t *testing.T) {
+	type TestCase struct {
+		cafesArray []cafeModels.Cafe
+		limit      int
+		since      int
+		err        error
+	}
+
+	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	sqlxDB := sqlx.NewDb(db, "sqlmock")
+
+	var limit int
+	err = faker.FakeData(&limit)
+	assert.NoError(t, err)
+
+	var since int
+	err = faker.FakeData(&since)
+	assert.NoError(t, err)
+
+	outputCafeArray := make([]cafeModels.Cafe, 5)
+	err = faker.FakeData(&outputCafeArray)
+	assert.NoError(t, err)
+
+	columnNames := []string{
+		"cafeid",
+		"cafename",
+		"address",
+		"description",
+		"staffid",
+		"opentime",
+		"closetime",
+		"photo",
+		"location_str",
+	}
+
+	query := `SELECT CafeID,CafeName,Address,Description,StaffID,OpenTime,CloseTime,Photo,location_str from cafe OFFSET $1 LIMIT $2`
+
+	testCases := []TestCase{
+		//Test OK
+		{
+			since: since,
+			limit: limit,
+		},
+	}
+
+	for i, testCase := range testCases {
+		message := fmt.Sprintf("test case number: %d", i)
+
+		rows := sqlmock.NewRows(columnNames)
+		for _, cafe := range testCase.cafesArray {
+			rows.AddRow(cafe.CafeID, cafe.CafeName, cafe.Address, cafe.Description, cafe.StaffID, cafe.OpenTime,
+				cafe.CloseTime, cafe.Photo, cafe.Location)
+		}
+		mock.ExpectQuery(query).WithArgs(testCase.since, testCase.limit).WillReturnRows(rows)
+
+		rep := repository.NewPostgresCafeRepository(sqlxDB)
+
+		cafesObj, err := rep.GetAllCafes(context.Background(), testCase.since,
+			testCase.limit)
+
+		assert.Equal(t, testCase.err, err, message)
+		if err == nil {
+			assert.Equal(t, testCase.cafesArray, cafesObj, message)
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("there were unfulfilled expectations: %s", err)
+		}
+	}
+}

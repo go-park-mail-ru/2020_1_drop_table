@@ -422,7 +422,7 @@ func TestCafeUsecase_GetAllCafes(t *testing.T) {
 
 			mockCafeRepo.On("SearchCafes",
 				mock.AnythingOfType("*context.timerCtx"), mock.MatchedBy(searchMatches),
-				mock.MatchedBy(sinceMatches), mock.MatchedBy(limitMatches),
+				mock.MatchedBy(limitMatches), mock.MatchedBy(sinceMatches),
 			).Return(
 				testCase.cafesList, nil)
 		} else {
