@@ -74,9 +74,6 @@ func main() {
 
 	geoCoder := geo.NewGoogleGeoCoder(configs.GoogleMapAPIKey, "ru", "ru")
 
-	cafeUsecase := _cafeUsecase.NewCafeUsecase(cafeRepo, grpcStaffClient, timeoutContext, geoCoder)
-	_cafeHttpDeliver.NewCafeHandler(r, cafeUsecase)
-
 	applePassGenerator := apple_pass_generator.NewGenerator(
 		configs.AppleWWDR, configs.AppleCertificate, configs.AppleKey, configs.ApplePassword)
 
@@ -105,6 +102,9 @@ func main() {
 		&applePassGenerator, timeoutContext, &meta.Meta{})
 
 	_appleHttpDeliver.NewPassKitHandler(r, applePassKitUcase)
+
+	cafeUsecase := _cafeUsecase.NewCafeUsecase(cafeRepo, grpcStaffClient, timeoutContext, geoCoder, applePassKitUcase)
+	_cafeHttpDeliver.NewCafeHandler(r, cafeUsecase)
 
 	go server.StartCafeGrpcServer(cafeUsecase, configs.GRPCCafeUrl)
 	go server2.StartCustomerGrpcServer(customerUseCase, configs.GRPCCustomerUrl)

@@ -27,8 +27,9 @@ func NewCafeHandler(r *mux.Router, us cafe.Usecase) {
 	r.HandleFunc("/api/v1/cafe", permissions.SetCSRF(handler.GetByOwnerIDHandler)).Methods("GET")
 	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}", permissions.SetCSRF(handler.GetByIDHandler)).Methods("GET")
 	r.HandleFunc("/api/v1/cafe/{id:[0-9]+}", permissions.CheckCSRF(permissions.CheckAuthenticated(handler.EditCafeHandler))).Methods("PUT")
-	r.HandleFunc("/api/v1/cafe/get_all", handler.GetAllCafes).Methods("GET")
-	r.HandleFunc("/api/v1/cafe/get_by_geo", handler.GetCafeListByGeoAndRadius).Methods("GET")
+	r.HandleFunc("/api/v1/cafe/get_all", permissions.SetCSRF(handler.GetAllCafes)).Methods("GET")
+	r.HandleFunc("/api/v1/cafe/get_by_geo", permissions.SetCSRF(handler.GetCafeListByGeoAndRadius)).Methods("GET")
+	r.HandleFunc("/api/v1/cafe/with_pass/{id:[0-9]+}", permissions.SetCSRF(handler.GetByIDWithPassInfoHandler)).Methods("GET")
 }
 
 func (c *CafeHandler) fetchCafe(r *http.Request) (models.Cafe, error) {
@@ -134,6 +135,22 @@ func (c *CafeHandler) GetByIDHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	responses.SendOKAnswer(cafeObj, w)
+}
+
+func (c *CafeHandler) GetByIDWithPassInfoHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(mux.Vars(r)["id"])
+	typ := r.FormValue("type")
+	if err != nil {
+		message := fmt.Sprintf("bad id: %s", mux.Vars(r)["id"])
+		responses.SendSingleError(message, w)
+		return
+	}
+	cafeObj, err := c.CUsecase.GetByIDWithPassInfo(r.Context(), id, typ)
+	if err != nil {
+		responses.SendSingleError(err.Error(), w)
+		return
+	}
 	responses.SendOKAnswer(cafeObj, w)
 }
 
