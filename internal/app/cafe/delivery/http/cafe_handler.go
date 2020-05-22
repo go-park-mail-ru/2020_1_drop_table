@@ -140,13 +140,12 @@ func (c *CafeHandler) GetByIDHandler(w http.ResponseWriter, r *http.Request) {
 
 func (c *CafeHandler) GetByIDWithPassInfoHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(mux.Vars(r)["id"])
-	typ := r.FormValue("type")
 	if err != nil {
 		message := fmt.Sprintf("bad id: %s", mux.Vars(r)["id"])
 		responses.SendSingleError(message, w)
 		return
 	}
-	cafeObj, err := c.CUsecase.GetByIDWithPassInfo(r.Context(), id, typ)
+	cafeObj, err := c.CUsecase.GetByIDWithPassInfo(r.Context(), id)
 	if err != nil {
 		responses.SendSingleError(err.Error(), w)
 		return

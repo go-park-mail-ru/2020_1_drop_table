@@ -79,20 +79,20 @@ func (_m *Usecase) GetByID(c context.Context, id int) (models.Cafe, error) {
 	return r0, r1
 }
 
-// GetByIDWithPassInfo provides a mock function with given fields: ctx, id, typ
-func (_m *Usecase) GetByIDWithPassInfo(ctx context.Context, id int, typ string) (models.CafeWithPassInfo, error) {
-	ret := _m.Called(ctx, id, typ)
+// GetByIDWithPassInfo provides a mock function with given fields: ctx, id
+func (_m *Usecase) GetByIDWithPassInfo(ctx context.Context, id int) (models.CafeWithPassInfo, error) {
+	ret := _m.Called(ctx, id)
 
 	var r0 models.CafeWithPassInfo
-	if rf, ok := ret.Get(0).(func(context.Context, int, string) models.CafeWithPassInfo); ok {
-		r0 = rf(ctx, id, typ)
+	if rf, ok := ret.Get(0).(func(context.Context, int) models.CafeWithPassInfo); ok {
+		r0 = rf(ctx, id)
 	} else {
 		r0 = ret.Get(0).(models.CafeWithPassInfo)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, int, string) error); ok {
-		r1 = rf(ctx, id, typ)
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, id)
 	} else {
 		r1 = ret.Error(1)
 	}
