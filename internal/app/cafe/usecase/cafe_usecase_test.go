@@ -34,7 +34,7 @@ func TestAdd(t *testing.T) {
 	mockStaffGRPCClient := new(staffClientMock.StaffClientInterface)
 	mockGeoCoder := new(geoMocks.GoogleGeoCoder)
 
-	cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffGRPCClient, time.Second*2, mockGeoCoder)
+	cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffGRPCClient, time.Second*2, mockGeoCoder, nil)
 	var owner staffModels.SafeStaff
 	err := faker.FakeData(&owner)
 	assert.NoError(t, err)
@@ -145,7 +145,7 @@ func TestGetByOwnerID(t *testing.T) {
 	mockCafeRepo := new(cafeMocks.Repository)
 	mockStaffGRPCClient := new(staffClientMock.StaffClientInterface)
 	mockGeoCoder := new(geoMocks.GoogleGeoCoder)
-	cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffGRPCClient, time.Second*2, mockGeoCoder)
+	cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffGRPCClient, time.Second*2, mockGeoCoder, nil)
 
 	var owner staffModels.SafeStaff
 	err := faker.FakeData(&owner)
@@ -208,7 +208,7 @@ func TestGetByID(t *testing.T) {
 	mockStaffGRPCClient := new(staffClientMock.StaffClientInterface)
 	mockGeoCoder := new(geoMocks.GoogleGeoCoder)
 
-	cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffGRPCClient, time.Second*2, mockGeoCoder)
+	cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffGRPCClient, time.Second*2, mockGeoCoder, nil)
 
 	ownerID := 1
 
@@ -262,7 +262,7 @@ func TestUpdate(t *testing.T) {
 	mockStaffGRPCClient := new(staffClientMock.StaffClientInterface)
 	mockGeoCoder := new(geoMocks.GoogleGeoCoder)
 
-	cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffGRPCClient, time.Second*2, mockGeoCoder)
+	cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffGRPCClient, time.Second*2, mockGeoCoder, nil)
 
 	var owner staffModels.SafeStaff
 	err := faker.FakeData(&owner)
@@ -402,7 +402,7 @@ func TestCafeUsecase_GetAllCafes(t *testing.T) {
 		mockStaffGRPCClient := new(staffClientMock.StaffClientInterface)
 		mockGeoCoder := new(geoMocks.GoogleGeoCoder)
 
-		cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffGRPCClient, time.Second*2, mockGeoCoder)
+		cafeUsecase := _cafeUsecase.NewCafeUsecase(mockCafeRepo, mockStaffGRPCClient, time.Second*2, mockGeoCoder, nil)
 
 		limitMatches := func(limit int) bool {
 			assert.Equal(t, testCase.limit, limit, message)

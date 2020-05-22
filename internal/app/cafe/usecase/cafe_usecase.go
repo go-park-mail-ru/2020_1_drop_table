@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"2020_1_drop_table/configs"
+	"2020_1_drop_table/internal/app/apple_passkit"
 	"2020_1_drop_table/internal/app/cafe"
 	"2020_1_drop_table/internal/app/cafe/models"
 	globalModels "2020_1_drop_table/internal/app/models"
@@ -19,6 +20,7 @@ type cafeUsecase struct {
 	staffGrpcClient staffClient.StaffClientInterface
 	contextTimeout  time.Duration
 	geoCoder        geo.GoogleGeoCoder
+	passKitUsecase  apple_passkit.Usecase
 }
 
 func (cu *cafeUsecase) GetCafeSortedByRadius(ctx context.Context, latitude string, longitude string, radius string) ([]models.Cafe, error) {
@@ -31,12 +33,13 @@ func (cu *cafeUsecase) GetByOwnerIDWithOwnerID(ctx context.Context, ownerID int)
 }
 
 func NewCafeUsecase(c cafe.Repository, stClient staffClient.StaffClientInterface,
-	timeout time.Duration, geoCoder geo.GoogleGeoCoder) cafe.Usecase {
+	timeout time.Duration, geoCoder geo.GoogleGeoCoder, passUCase apple_passkit.Usecase) cafe.Usecase {
 	return &cafeUsecase{
 		cafeRepo:        c,
 		contextTimeout:  timeout,
 		staffGrpcClient: stClient,
 		geoCoder:        geoCoder,
+		passKitUsecase:  passUCase,
 	}
 }
 
@@ -170,4 +173,29 @@ func (cu *cafeUsecase) GetAllCafes(ctx context.Context, since int, limit int, se
 	}
 	cafes, err := cu.cafeRepo.GetAllCafes(ctx, since, limit)
 	return cafes, err
+}
+
+func (cu *cafeUsecase) GetByIDWithPassInfo(ctx context.Context, id int, typ string) (models.CafeWithPassInfo, error) {
+	ctx, cancel := context.WithTimeout(ctx, cu.contextTimeout)
+	defer cancel()
+	rawCafe, err := cu.cafeRepo.GetByID(ctx, id)
+	if err != nil {
+		return models.CafeWithPassInfo{}, err
+	}
+	passInfo, err := cu.passKitUsecase.GetPass(ctx, id, typ, true)
+	if err != nil {
+		passInfo = nil
+	}
+	updCafe := models.CafeWithPassInfo{
+		CafeID:      rawCafe.CafeID,
+		CafeName:    rawCafe.CafeName,
+		Address:     rawCafe.Address,
+		Description: rawCafe.Description,
+		OpenTime:    rawCafe.OpenTime,
+		CloseTime:   rawCafe.CloseTime,
+		Photo:       rawCafe.Photo,
+		Location:    rawCafe.Location,
+		PassInfo:    passInfo,
+	}
+	return updCafe, nil
 }

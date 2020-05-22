@@ -13,4 +13,5 @@ type Usecase interface {
 	Update(c context.Context, newCafe models.Cafe) (models.Cafe, error)
 	GetAllCafes(ctx context.Context, since int, limit int, search string) ([]models.Cafe, error)
 	GetCafeSortedByRadius(ctx context.Context, latitude string, longitude string, radius string) ([]models.Cafe, error)
+	GetByIDWithPassInfo(ctx context.Context, id int, typ string) (models.CafeWithPassInfo, error)
 }
