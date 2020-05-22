@@ -7,6 +7,7 @@ import (
 	"2020_1_drop_table/internal/app/cafe/models"
 	globalModels "2020_1_drop_table/internal/app/models"
 	staffClient "2020_1_drop_table/internal/microservices/staff/delivery/grpc/client"
+	loyaltySystems "2020_1_drop_table/internal/pkg/apple_pass_generator/loyalty_systems"
 	geo "2020_1_drop_table/internal/pkg/google_geocoder"
 	"context"
 	"fmt"
@@ -175,16 +176,22 @@ func (cu *cafeUsecase) GetAllCafes(ctx context.Context, since int, limit int, se
 	return cafes, err
 }
 
-func (cu *cafeUsecase) GetByIDWithPassInfo(ctx context.Context, id int, typ string) (models.CafeWithPassInfo, error) {
+func (cu *cafeUsecase) GetByIDWithPassInfo(ctx context.Context, id int) (models.CafeWithPassInfo, error) {
 	ctx, cancel := context.WithTimeout(ctx, cu.contextTimeout)
 	defer cancel()
 	rawCafe, err := cu.cafeRepo.GetByID(ctx, id)
 	if err != nil {
 		return models.CafeWithPassInfo{}, err
 	}
-	passInfo, err := cu.passKitUsecase.GetPass(ctx, id, typ, true)
-	if err != nil {
-		passInfo = nil
+
+	allLoyaltyInfo := make(map[string]map[string]string)
+	for systemName := range loyaltySystems.LoyaltySystems {
+		passInfo, err := cu.passKitUsecase.GetPass(ctx, id, systemName, true)
+		if err != nil {
+			allLoyaltyInfo = nil
+			break
+		}
+		allLoyaltyInfo[systemName] = passInfo
 	}
 	updCafe := models.CafeWithPassInfo{
 		CafeID:      rawCafe.CafeID,
@@ -195,7 +202,7 @@ func (cu *cafeUsecase) GetByIDWithPassInfo(ctx context.Context, id int, typ stri
 		CloseTime:   rawCafe.CloseTime,
 		Photo:       rawCafe.Photo,
 		Location:    rawCafe.Location,
-		PassInfo:    passInfo,
+		PassInfo:    allLoyaltyInfo,
 	}
 	return updCafe, nil
 }

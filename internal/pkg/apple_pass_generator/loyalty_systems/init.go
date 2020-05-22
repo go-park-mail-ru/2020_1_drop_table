@@ -18,4 +18,5 @@ func init() {
 			newPurchasesVarName: "new_purchases",
 		},
 	}
+
 }
