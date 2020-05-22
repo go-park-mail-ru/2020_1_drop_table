@@ -59,7 +59,7 @@ func TestApplePassKitUsecase_GetPass(t *testing.T) {
 		cafeID, passObj.Type)
 	for imageName, imageData := range allImages {
 		if len(imageData) != 0 {
-			passMap[imageName] = fmt.Sprintf("%s/%s", serverStartUrl, imageName)
+			passMap[imageName] = fmt.Sprintf("%s/%s?published=%t", serverStartUrl, imageName, published)
 		}
 	}
 
