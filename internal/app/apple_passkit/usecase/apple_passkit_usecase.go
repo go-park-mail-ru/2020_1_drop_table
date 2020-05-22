@@ -151,7 +151,7 @@ func (ap *applePassKitUsecase) UpdatePass(c context.Context, pass models.ApplePa
 	return response, nil
 }
 
-func (ap *applePassKitUsecase) getImageUrls(passObj models.ApplePassDB, cafeID int) map[string]string {
+func (ap *applePassKitUsecase) getImageUrls(passObj models.ApplePassDB, cafeID int, published bool) map[string]string {
 	serverStartUrl := fmt.Sprintf("%s/%s/cafe/%d/apple_pass/%s", configs.ServerUrl, configs.ApiVersion,
 		cafeID, passObj.Type)
 
@@ -166,7 +166,7 @@ func (ap *applePassKitUsecase) getImageUrls(passObj models.ApplePassDB, cafeID i
 
 	for imageName, imageData := range allImages {
 		if len(imageData) != 0 {
-			passMap[imageName] = fmt.Sprintf("%s/%s", serverStartUrl, imageName)
+			passMap[imageName] = fmt.Sprintf("%s/%s?published=%t", serverStartUrl, imageName, published)
 		}
 	}
 
@@ -183,7 +183,7 @@ func (ap *applePassKitUsecase) GetPass(c context.Context, cafeID int, Type strin
 		return nil, err
 	}
 
-	return ap.getImageUrls(passObj, cafeID), nil
+	return ap.getImageUrls(passObj, cafeID, published), nil
 }
 
 func (ap *applePassKitUsecase) GetImage(c context.Context, imageName string, cafeID int, PassType string,
