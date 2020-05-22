@@ -13,8 +13,10 @@ import (
 func NewLoggingMiddleware(metrics *metrics.PromMetrics) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			msg := fmt.Sprintf("URL: %s, METHOD: %s", r.RequestURI, r.Method)
-			log.Info().Msgf(msg)
+			if r.RequestURI != "/metrics" {
+				msg := fmt.Sprintf("URL: %s, METHOD: %s", r.RequestURI, r.Method)
+				log.Info().Msgf(msg)
+			}
 
 			reqTime := time.Now()
 			next.ServeHTTP(w, r)
