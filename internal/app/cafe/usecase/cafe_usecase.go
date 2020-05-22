@@ -188,8 +188,8 @@ func (cu *cafeUsecase) GetByIDWithPassInfo(ctx context.Context, id int) (models.
 	for systemName := range loyaltySystems.LoyaltySystems {
 		passInfo, err := cu.passKitUsecase.GetPass(ctx, id, systemName, true)
 		if err != nil {
-			allLoyaltyInfo = nil
-			break
+			allLoyaltyInfo[systemName] = nil
+			continue
 		}
 		allLoyaltyInfo[systemName] = passInfo
 	}
