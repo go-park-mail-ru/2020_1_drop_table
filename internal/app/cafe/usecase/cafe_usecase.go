@@ -185,12 +185,19 @@ func (cu *cafeUsecase) GetByIDWithPassInfo(ctx context.Context, id int) (models.
 	}
 
 	allLoyaltyInfo := make(map[string]map[string]string)
+
 	for systemName := range loyaltySystems.LoyaltySystems {
 		passInfo, err := cu.passKitUsecase.GetPass(ctx, id, systemName, true)
 		if err != nil {
 			allLoyaltyInfo[systemName] = nil
 			continue
 		}
+		publishedPassURL := fmt.Sprintf("%s/%s/cafe/%d/apple_pass/%s/new_customer?published=true",
+			configs.ServerUrl, configs.ApiVersion, id, systemName)
+		QrUrl := fmt.Sprintf("%s/media/qr/%d_%s_published.png",
+			configs.ServerUrl, id, systemName)
+		passInfo["QrUrl"] = QrUrl
+		passInfo["publishedPassURL"] = publishedPassURL
 		allLoyaltyInfo[systemName] = passInfo
 	}
 	updCafe := models.CafeWithPassInfo{
