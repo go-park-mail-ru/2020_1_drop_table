@@ -5,7 +5,6 @@ import (
 	proto "2020_1_drop_table/internal/microservices/staff/delivery/grpc/protobuff"
 	"2020_1_drop_table/internal/microservices/staff/models"
 	"context"
-	"fmt"
 	"github.com/gorilla/sessions"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -46,9 +45,7 @@ func (s StaffClient) GetFromSession(ctx context.Context) (models.SafeStaff, erro
 	ctx = s.AddSessionInMetadata(ctx)
 	empt := proto.Empty{}
 	r, err := s.client.GetFromSession(ctx, &empt, grpc.EmptyCallOption{})
-	fmt.Println("in staff client: ", r, err)
 	if err != nil {
-		fmt.Println("Unexpected Error", err)
 		return models.SafeStaff{}, err
 	}
 	return transformStaffFromRPC(r), err
@@ -59,7 +56,6 @@ func (s StaffClient) GetById(ctx context.Context, id int) (models.SafeStaff, err
 	idGrpc := proto.Id{Id: int64(id)}
 	safeStaff, err := s.client.GetById(ctx, &idGrpc, grpc.EmptyCallOption{})
 	if err != nil {
-		fmt.Println("Unexpected Error", err)
 		return models.SafeStaff{}, err
 	}
 	return transformStaffFromRPC(safeStaff), err

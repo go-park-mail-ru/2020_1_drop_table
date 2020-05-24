@@ -328,7 +328,6 @@ func TestUpdate(t *testing.T) {
 
 		err := rep.Update(context.Background(), testCase.inputPass)
 		assert.Equal(t, testCase.err, err, message)
-		fmt.Println(err)
 		if err := mock.ExpectationsWereMet(); err != nil {
 			t.Errorf("there were unfulfilled expectations: %s", err)
 		}

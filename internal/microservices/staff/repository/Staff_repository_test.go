@@ -6,7 +6,6 @@ import (
 	"2020_1_drop_table/internal/pkg/hasher"
 	"context"
 	"database/sql"
-	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
@@ -120,7 +119,6 @@ func TestGetById(t *testing.T) {
 	}
 	rep := repository.NewPostgresStaffRepository(con)
 	_, err = rep.GetByID(context.TODO(), -228)
-	fmt.Println(err)
 	assert.NotNil(t, err)
 }
 

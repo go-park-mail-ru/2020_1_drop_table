@@ -4,7 +4,6 @@ import (
 	"2020_1_drop_table/configs"
 	"2020_1_drop_table/internal/pkg/permissions"
 	"context"
-	"fmt"
 	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -30,7 +29,6 @@ func TestSetCsrf(t *testing.T) {
 func TestCheckCsrf(t *testing.T) {
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		csrf := w.Header().Get("csrf")
-		fmt.Println(csrf)
 		assert.Equal(t, "", csrf)
 	})
 	handlerToTest := permissions.CheckCSRF(nextHandler)

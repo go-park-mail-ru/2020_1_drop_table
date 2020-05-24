@@ -296,9 +296,7 @@ func TestDeleteStaff(t *testing.T) {
 		},
 	}
 
-	for i, testCase := range testCases {
-		message := fmt.Sprintf("test case number: %d", i)
-		fmt.Println(message)
+	for _, testCase := range testCases {
 		mockstaffUcase.On("DeleteStaffById",
 			mock.AnythingOfType("*context.valueCtx"), testCase.staffID).Return(testCase.errors)
 
@@ -352,9 +350,7 @@ func TestUpdatePosition(t *testing.T) {
 		},
 	}
 
-	for i, testCase := range testCases {
-		message := fmt.Sprintf("test case number: %d", i)
-		fmt.Println(message)
+	for _, testCase := range testCases {
 		mockstaffUcase.On("UpdatePosition",
 			mock.AnythingOfType("*context.valueCtx"), testCase.StaffId, testCase.NewPosition.Position).Return(nil)
 
@@ -369,7 +365,6 @@ func TestUpdatePosition(t *testing.T) {
 		var m map[string]interface{}
 		err = json.NewDecoder(req.Body).Decode(&m)
 		req.Header.Set("Content-Type", "application/json")
-		fmt.Println(err, m)
 		respWriter := httptest.NewRecorder()
 		handler.UpdatePosition(respWriter, req)
 

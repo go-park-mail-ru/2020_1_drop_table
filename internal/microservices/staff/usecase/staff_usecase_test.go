@@ -13,7 +13,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -216,7 +215,6 @@ func TestUpdate(t *testing.T) {
 		session := sessions.Session{Values: map[interface{}]interface{}{"userID": sessionUserID}}
 		c := context.WithValue(context.Background(), configs.SessionStaffID, &session)
 		realUser, realErr := s.Update(c, testCase.user)
-		fmt.Println(realUser)
 		assert.Equal(t, testCase.expectedUser.Email, realUser.Email)
 		if testCase.expectedUser.Email == "email@email.ru" {
 			assert.Nil(t, realErr)
