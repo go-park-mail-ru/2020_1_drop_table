@@ -45,10 +45,16 @@ func (c *CoffeeCup) CreatingCustomer(loyaltyInfo string) (customerPoints, newLoy
 	return fmt.Sprintf(`{"%s": 0, "%s": %d}`, c.PointsVarName, c.InfoVarName, DBMap[c.InfoVarName]), loyaltyInfo, nil
 }
 
-func (c *CoffeeCup) SettingPoints(_, _, reqPoints string) (newPoints string, err error) {
+func (c *CoffeeCup) SettingPoints(_, dbPoints, reqPoints string) (newPoints string, err error) {
 	var reqMap map[string]int
+	var dbMap map[string]int
 
 	err = UnmarshalEmptyString([]byte(reqPoints), &reqMap)
+	if err != nil {
+		return "", err
+	}
+
+	err = UnmarshalEmptyString([]byte(dbPoints), &dbMap)
 	if err != nil {
 		return "", err
 	}
@@ -62,6 +68,7 @@ func (c *CoffeeCup) SettingPoints(_, _, reqPoints string) (newPoints string, err
 		return "", ErrValidationCoffeeCups
 	}
 
-	newPointsJson := fmt.Sprintf(`{"%s": %d}`, c.PointsVarName, pointsReq)
+	newPointsJson := fmt.Sprintf(`{"%s": %d, "%s": %d}`,
+		c.PointsVarName, pointsReq, c.InfoVarName, dbMap[c.InfoVarName])
 	return newPointsJson, nil
 }
